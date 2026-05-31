@@ -52,7 +52,9 @@
                   [title]="pin.item.title"
                   (mapClick)="openInfo(infoWindow, marker, pin.item)" />
               }
-              <map-directions-renderer [directions]="$any(directionsResult())" [options]="rendererOptions" />
+              @if (directionsResult()) {
+                <map-directions-renderer [directions]="directionsResult()!" [options]="rendererOptions" />
+              }
               <map-info-window #infoWindow="mapInfoWindow">
                 @if (activePin()) {
                   <div class="info-window">
