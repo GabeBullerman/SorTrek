@@ -20,14 +20,20 @@ try {
   console.warn('Could not load .env.local:', e.message);
 }
 
-const aiAdvisor    = require('../api/ai-advisor');
-const emailScraper = require('../api/email-scraper');
-const findPlans    = require('../api/find-plans');
+const aiAdvisor         = require('../api/ai-advisor');
+const emailScraper      = require('../api/email-scraper');
+const findPlans         = require('../api/find-plans');
+const plaidLink         = require('../api/plaid-link');
+const plaidExchange     = require('../api/plaid-exchange');
+const plaidTransactions = require('../api/plaid-transactions');
 
 const routes = {
-  '/api/ai-advisor':    aiAdvisor,
-  '/api/email-scraper': emailScraper,
-  '/api/find-plans':    findPlans,
+  '/api/ai-advisor':         aiAdvisor,
+  '/api/email-scraper':      emailScraper,
+  '/api/find-plans':         findPlans,
+  '/api/plaid-link':         plaidLink,
+  '/api/plaid-exchange':     plaidExchange,
+  '/api/plaid-transactions': plaidTransactions,
 };
 
 // Wrap Node's ServerResponse with Vercel-compatible helpers

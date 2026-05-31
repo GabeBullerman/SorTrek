@@ -1,0 +1,48 @@
+<div class="converter">
+  <h3>Currency Converter</h3>
+
+  <mat-form-field appearance="outline" class="full">
+    <mat-label>Amount</mat-label>
+    <input matInput type="number" min="0"
+           [ngModel]="amount()" (ngModelChange)="amount.set($event)" />
+  </mat-form-field>
+
+  <div class="currency-row">
+    <mat-form-field appearance="outline" class="currency-field">
+      <mat-label>From</mat-label>
+      <mat-select [ngModel]="fromCode()" (ngModelChange)="fromCode.set($event)">
+        @for (c of currencies; track c.code) {
+          <mat-option [value]="c.code">{{ c.code }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <button mat-icon-button class="swap-btn" (click)="swap()" matTooltip="Swap currencies">
+      <mat-icon>swap_horiz</mat-icon>
+    </button>
+
+    <mat-form-field appearance="outline" class="currency-field">
+      <mat-label>To</mat-label>
+      <mat-select [ngModel]="toCode()" (ngModelChange)="toCode.set($event)">
+        @for (c of currencies; track c.code) {
+          <mat-option [value]="c.code">{{ c.code }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <button mat-flat-button color="primary" class="convert-btn"
+          (click)="convert()" [disabled]="loading()">
+    @if (loading()) { <mat-spinner diameter="18"></mat-spinner> }
+    @else           { <mat-icon>calculate</mat-icon> }
+    Convert
+  </button>
+
+  @if (result() !== null) {
+    <div class="result">
+      <div class="result-amount">{{ formatResult(result()!) }} <span class="result-code">{{ toCode() }}</span></div>
+      <div class="result-rate">{{ rateInfo() }}</div>
+      <div class="result-note">ECB rates via frankfurter.app</div>
+    </div>
+  }
+</div>

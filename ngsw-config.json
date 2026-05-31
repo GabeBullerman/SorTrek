@@ -1,0 +1,46 @@
+{
+  "$schema": "./node_modules/@angular/service-worker/config/schema.json",
+  "index": "/index.html",
+  "assetGroups": [
+    {
+      "name": "app-shell",
+      "installMode": "prefetch",
+      "resources": {
+        "files": ["/favicon.ico", "/index.html", "/manifest.webmanifest", "/*.css", "/*.js"]
+      }
+    },
+    {
+      "name": "assets",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": ["/*.png", "/*.jpg", "/*.jpeg", "/*.svg", "/*.webp", "/*.woff2"]
+      }
+    }
+  ],
+  "dataGroups": [
+    {
+      "name": "weather",
+      "urls": [
+        "https://api.open-meteo.com/**",
+        "https://geocoding-api.open-meteo.com/**"
+      ],
+      "cacheConfig": {
+        "maxSize": 20,
+        "maxAge": "6h",
+        "timeout": "10s",
+        "strategy": "freshness"
+      }
+    },
+    {
+      "name": "exchange-rates",
+      "urls": ["https://api.frankfurter.app/**"],
+      "cacheConfig": {
+        "maxSize": 30,
+        "maxAge": "12h",
+        "timeout": "10s",
+        "strategy": "freshness"
+      }
+    }
+  ]
+}

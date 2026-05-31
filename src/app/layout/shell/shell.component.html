@@ -35,9 +35,22 @@
         <mat-icon>menu</mat-icon>
       </button>
       <span class="toolbar-spacer"></span>
+      <!-- Currency converter popover -->
+      <button mat-icon-button [matMenuTriggerFor]="converterMenu" matTooltip="Currency converter">
+        <mat-icon>currency_exchange</mat-icon>
+      </button>
+      <mat-menu #converterMenu xPosition="before">
+        <div (click)="$event.stopPropagation()">
+          <app-currency-converter />
+        </div>
+      </mat-menu>
+
       @if (currentUser$ | async; as user) {
-        <button mat-icon-button [matMenuTriggerFor]="userMenu" matTooltip="Account">
+        <button mat-icon-button [routerLink]="'/profile'" matTooltip="Profile">
           <mat-icon>account_circle</mat-icon>
+        </button>
+        <button mat-icon-button [matMenuTriggerFor]="userMenu" matTooltip="Account">
+          <mat-icon>more_vert</mat-icon>
         </button>
         <mat-menu #userMenu>
           <div class="user-menu-header">
@@ -45,6 +58,9 @@
             <small>{{ user.email }}</small>
           </div>
           <mat-divider></mat-divider>
+          <button mat-menu-item [routerLink]="'/profile'">
+            <mat-icon>manage_accounts</mat-icon> Profile
+          </button>
           <button mat-menu-item (click)="logout()">
             <mat-icon>logout</mat-icon> Sign Out
           </button>

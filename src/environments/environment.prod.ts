@@ -9,4 +9,5 @@ export const environment = {
     appId: 'YOUR_APP_ID',
   },
   googleMapsApiKey: 'YOUR_GOOGLE_MAPS_API_KEY',
+  vapidKey: 'YOUR_VAPID_KEY',
 };

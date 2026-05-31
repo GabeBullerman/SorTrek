@@ -35,7 +35,9 @@
         <mat-card class="stat-card">
           <mat-icon>payments</mat-icon>
           <div>
-            <div class="stat-value">{{ totalCost(bookings, items) | currency: trip.currency }}</div>
+            <div class="stat-value">
+              <app-money [amount]="totalCost(bookings, items)" [currency]="trip.currency" />
+            </div>
             <div class="stat-label">Total Spent</div>
           </div>
         </mat-card>

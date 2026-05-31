@@ -14,6 +14,7 @@ import { ItineraryService } from '../../../core/services/itinerary.service';
 import { BookingService } from '../../../core/services/booking.service';
 import { GoogleMapsLoaderService } from '../../../core/services/google-maps-loader.service';
 import { WeatherService, WeatherDay } from '../../../core/services/weather.service';
+import { MoneyComponent } from '../../../shared/components/money/money.component';
 import { ItineraryItem } from '../../../core/models/itinerary-item.model';
 import { Booking } from '../../../core/models/booking.model';
 
@@ -37,6 +38,7 @@ export interface TripDay {
     MatCardModule, MatIconModule, MatButtonModule,
     MatSelectModule, MatFormFieldModule, MatProgressSpinnerModule,
     GoogleMap, MapMarker, MapInfoWindow, MapDirectionsRenderer,
+    MoneyComponent,
   ],
   providers: [MapDirectionsService],
   templateUrl: './overview.component.html',

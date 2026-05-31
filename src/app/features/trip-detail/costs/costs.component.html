@@ -63,13 +63,9 @@
         <div class="total-content">
           <div>
             <div class="total-label">Total Trip Cost</div>
-            <div class="total-amount">{{ data.total | currency: trip.currency }}</div>
-            @if (showConverted() && rateResult() && homeCurrency() !== trip.currency) {
-              <div class="total-converted">
-                ≈ {{ convertWithFee(data.total) | currency: homeCurrency()! }} {{ homeCurrency() }}
-                <span class="fee-included">(incl. ~2.5% fee)</span>
-              </div>
-            }
+            <div class="total-amount">
+              <app-money [amount]="data.total" [currency]="trip.currency" />
+            </div>
           </div>
           <mat-icon class="total-icon">account_balance_wallet</mat-icon>
         </div>
@@ -97,19 +93,19 @@
                       }
                     </div>
                     <div class="person-share-detail">
-                      Total share: <strong>{{ ps.totalShare | currency: trip.currency }}</strong>
+                      Total share: <strong><app-money [amount]="ps.totalShare" [currency]="trip.currency" /></strong>
                       @if (ps.paidSelf > 0) {
-                        · Paid themselves: <strong>{{ ps.paidSelf | currency: trip.currency }}</strong>
+                        · Paid themselves: <strong><app-money [amount]="ps.paidSelf" [currency]="trip.currency" /></strong>
                       }
                     </div>
                   </div>
                   @if (ps.owesOrganizer > 0 && !ps.participant.isOrganizer) {
                     <div class="owes-badge">
-                      Owes {{ ps.owesOrganizer | currency: trip.currency }}
+                      Owes <app-money [amount]="ps.owesOrganizer" [currency]="trip.currency" />
                     </div>
                   } @else if (ps.participant.isOrganizer) {
                     <div class="organizer-outlay">
-                      Paid {{ ps.totalShare | currency: trip.currency }}
+                      Paid <app-money [amount]="ps.totalShare" [currency]="trip.currency" />
                     </div>
                   }
                 </div>

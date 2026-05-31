@@ -29,7 +29,7 @@
 .day-strip-wrap {
   overflow-x: auto;
   margin-bottom: 16px;
-  padding-bottom: 4px;
+  padding-bottom: 6px;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -51,8 +51,11 @@
   border: 1.5px solid #e0e0e0;
   border-radius: 14px;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  transition: background 0.15s, border-color 0.15s;
   position: relative;
+  outline: none;   /* suppress focus ring that overflows the scroll container */
+
+  &:focus-visible { box-shadow: 0 0 0 2px #7986cb; }
 
   &:hover    { background: #f5f7ff; border-color: #9fa8da; }
 
@@ -61,7 +64,7 @@
     border-color: #1a237e;
 
     .chip-day-num, .chip-date { color: white; }
-    .chip-count { background: rgba(255,255,255,0.25); color: white; }
+    .chip-count { background: rgba(255,255,255,0.9); color: #1a237e; }
   }
 
   &.has-items:not(.active) { border-color: #7986cb; }
@@ -81,19 +84,19 @@
   }
 
   .chip-count {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: #5c6bc0;
-    color: white;
-    font-size: 0.65rem;
-    font-weight: 700;
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 3px;
+    font-size: 0.62rem;
+    font-weight: 700;
+    background: #5c6bc0;
+    color: white;
+    border-radius: 10px;
+    padding: 2px 7px;
+    margin-top: 3px;
+    line-height: 1.4;
+
+    mat-icon { font-size: 10px; width: 10px; height: 10px; }
   }
 }
 

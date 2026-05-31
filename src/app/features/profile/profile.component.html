@@ -1,0 +1,88 @@
+<div class="profile-page">
+  <h1>Profile</h1>
+
+  @if (loading()) {
+    <div class="loading"><mat-spinner diameter="40"></mat-spinner></div>
+  } @else {
+    <!-- Avatar -->
+    <div class="avatar-row">
+      <div class="avatar">{{ initial }}</div>
+      <div class="avatar-info">
+        <div class="avatar-name">{{ user?.displayName || 'Traveler' }}</div>
+        <div class="avatar-email">{{ user?.email }}</div>
+      </div>
+    </div>
+
+    <!-- Profile form -->
+    <mat-card class="profile-card">
+      <mat-card-header>
+        <mat-card-title><mat-icon>person</mat-icon> Personal Info</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="form" (ngSubmit)="save()" class="profile-form">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Display Name</mat-label>
+            <input matInput formControlName="displayName" placeholder="Your name">
+            <mat-icon matSuffix>badge</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Home City</mat-label>
+            <input matInput formControlName="homeCity" placeholder="e.g. Chicago, IL"
+                   #homeCityInput autocomplete="off">
+            <mat-icon matSuffix>home</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Home Currency</mat-label>
+            <mat-select formControlName="homeCurrency">
+              @for (c of currencies; track c.code) {
+                <mat-option [value]="c.code">{{ c.label }}</mat-option>
+              }
+            </mat-select>
+            <mat-icon matSuffix>payments</mat-icon>
+          </mat-form-field>
+
+          <button mat-flat-button color="primary" type="submit"
+                  [disabled]="form.invalid || saving()">
+            @if (saving()) { <mat-spinner diameter="18"></mat-spinner> }
+            @else           { <mat-icon>save</mat-icon> }
+            Save Changes
+          </button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Notifications -->
+    <mat-card class="profile-card">
+      <mat-card-header>
+        <mat-card-title><mat-icon>notifications</mat-icon> Push Notifications</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (!pushService.isSupported) {
+          <p class="notif-note">Push notifications are not supported in this browser.</p>
+        } @else if (notifPerm() === 'granted') {
+          <div class="notif-granted">
+            <mat-icon class="check-icon">check_circle</mat-icon>
+            <span>Notifications enabled — you'll receive departure reminders and bank alerts.</span>
+          </div>
+          <button mat-stroked-button class="test-btn" (click)="testNotification()">
+            <mat-icon>notification_add</mat-icon> Send Test Notification
+          </button>
+        } @else if (notifPerm() === 'denied') {
+          <p class="notif-note denied">
+            <mat-icon>block</mat-icon>
+            Notifications are blocked. Please enable them in your browser settings.
+          </p>
+        } @else {
+          <p class="notif-desc">
+            Enable push notifications to get reminders before your trips, bank card alerts, and day-of weather updates.
+          </p>
+          <button mat-flat-button color="primary" (click)="enableNotifications()">
+            <mat-icon>notifications_active</mat-icon> Enable Notifications
+          </button>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

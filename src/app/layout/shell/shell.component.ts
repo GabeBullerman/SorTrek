@@ -11,6 +11,7 @@ import { AsyncPipe } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { map } from 'rxjs/operators';
+import { CurrencyConverterComponent } from '../../shared/components/currency-converter/currency-converter.component';
 
 @Component({
   selector: 'app-shell',
@@ -19,7 +20,7 @@ import { map } from 'rxjs/operators';
     RouterOutlet, RouterLink, RouterLinkActive,
     MatSidenavModule, MatToolbarModule, MatButtonModule,
     MatIconModule, MatListModule, MatMenuModule, MatTooltipModule,
-    AsyncPipe,
+    AsyncPipe, CurrencyConverterComponent,
   ],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.scss',
@@ -37,6 +38,7 @@ export class ShellComponent {
   navItems = [
     { label: 'My Trips',   icon: 'flight_takeoff', route: '/trips' },
     { label: 'Past Trips', icon: 'history',         route: '/past-trips' },
+    { label: 'Profile',    icon: 'account_circle',  route: '/profile' },
   ];
 
   logout() {

@@ -9,6 +9,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Observable, combineLatest, map, catchError, of, from } from 'rxjs';
+import { MoneyComponent } from '../../../shared/components/money/money.component';
 import { BookingService } from '../../../core/services/booking.service';
 import { ItineraryService } from '../../../core/services/itinerary.service';
 import { ExpenseService } from '../../../core/services/expense.service';
@@ -60,6 +61,7 @@ export const FOREIGN_TX_FEE = 0.025;
     AsyncPipe, CurrencyPipe, DecimalPipe, DatePipe,
     MatCardModule, MatIconModule, MatButtonModule,
     MatProgressSpinnerModule, MatDividerModule, MatTooltipModule,
+    MoneyComponent,
   ],
   templateUrl: './costs.component.html',
   styleUrl: './costs.component.scss',

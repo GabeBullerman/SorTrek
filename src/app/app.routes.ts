@@ -26,6 +26,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/past-trips/past-trips.component').then(m => m.PastTripsComponent),
       },
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./features/profile/profile.component').then(m => m.ProfileComponent),
+      },
     ],
   },
   { path: '**', redirectTo: 'trips' },

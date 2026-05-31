@@ -2,7 +2,7 @@
 // from Vercel environment variables. Set these in your Vercel project settings:
 //   FIREBASE_API_KEY, FIREBASE_AUTH_DOMAIN, FIREBASE_PROJECT_ID,
 //   FIREBASE_STORAGE_BUCKET, FIREBASE_MESSAGING_SENDER_ID, FIREBASE_APP_ID,
-//   GOOGLE_MAPS_API_KEY
+//   GOOGLE_MAPS_API_KEY, FIREBASE_VAPID_KEY (optional, for push notifications)
 const fs = require('fs');
 const path = require('path');
 
@@ -32,6 +32,7 @@ const content = `export const environment = {
     appId: '${process.env.FIREBASE_APP_ID}',
   },
   googleMapsApiKey: '${process.env.GOOGLE_MAPS_API_KEY || ''}',
+  vapidKey: '${process.env.FIREBASE_VAPID_KEY || ''}',
 };
 `;
 
