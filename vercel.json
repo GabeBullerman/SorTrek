@@ -2,11 +2,6 @@
   "buildCommand": "npm run build:ci",
   "outputDirectory": "dist/wayfarer/browser",
   "framework": null,
-  "functions": {
-    "api/*.js": {
-      "runtime": "nodejs20.x"
-    }
-  },
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
