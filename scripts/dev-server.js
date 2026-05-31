@@ -20,7 +20,13 @@ try {
   console.warn('Could not load .env.local:', e.message);
 }
 
-const aiAdvisor = require('../api/ai-advisor');
+const aiAdvisor    = require('../api/ai-advisor');
+const emailScraper = require('../api/email-scraper');
+
+const routes = {
+  '/api/ai-advisor':    aiAdvisor,
+  '/api/email-scraper': emailScraper,
+};
 
 // Wrap Node's ServerResponse with Vercel-compatible helpers
 function wrapRes(res) {
@@ -38,12 +44,13 @@ function wrapRes(res) {
 }
 
 http.createServer((req, res) => {
-  if (req.url === '/api/ai-advisor' && req.method === 'POST') {
+  const handler = routes[req.url];
+  if (handler && req.method === 'POST') {
     let body = '';
     req.on('data', chunk => (body += chunk));
     req.on('end', async () => {
       try { req.body = JSON.parse(body); } catch (_) { req.body = {}; }
-      await aiAdvisor(req, wrapRes(res));
+      await handler(req, wrapRes(res));
     });
   } else {
     res.writeHead(404).end('Not found');

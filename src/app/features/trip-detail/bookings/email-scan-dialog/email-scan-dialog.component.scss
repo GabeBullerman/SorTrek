@@ -1,0 +1,206 @@
+h2[mat-dialog-title] {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.15rem;
+  color: #1a237e;
+
+  mat-icon { color: #1a237e; }
+}
+
+mat-dialog-content {
+  min-height: 260px;
+  padding: 0 24px !important;
+}
+
+/* ── State panels ── */
+.state-panel {
+  padding: 16px 0 8px;
+
+  h3 { margin: 0 0 10px; font-size: 1.05rem; color: #1a237e; }
+  p  { margin: 0 0 14px; color: #616161; font-size: 0.9rem; line-height: 1.55; }
+  small { color: #9e9e9e; font-size: 0.8rem; }
+
+  &.centered {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    text-align: center;
+    padding: 32px 0;
+  }
+}
+
+.big-icon {
+  font-size: 56px;
+  width: 56px;
+  height: 56px;
+  color: #1a237e;
+  opacity: 0.5;
+
+  &.muted { color: #9e9e9e; }
+  &.error-icon { color: #c62828; opacity: 1; }
+}
+
+.source-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.875rem;
+    color: #424242;
+
+    mat-icon { font-size: 18px; width: 18px; height: 18px; color: #5c6bc0; }
+  }
+}
+
+.note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #e8f5e9;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.8rem !important;
+  color: #2e7d32 !important;
+  margin-bottom: 0 !important;
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; color: #2e7d32; flex-shrink: 0; }
+}
+
+/* ── Results ── */
+.results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0 8px;
+  font-size: 0.85rem;
+  color: #757575;
+
+  .select-actions {
+    display: flex;
+    gap: 4px;
+  }
+}
+
+.booking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.booking-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover    { background: #f5f7ff; }
+  &.selected { background: #e8eaf6; border-color: #7986cb; }
+}
+
+.booking-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #e8eaf6;
+
+  mat-icon { font-size: 20px; width: 20px; height: 20px; color: #3949ab; }
+
+  &.type-flight      { background: #e3f2fd; mat-icon { color: #1565c0; } }
+  &.type-hotel       { background: #fce4ec; mat-icon { color: #c2185b; } }
+  &.type-airbnb      { background: #fce4ec; mat-icon { color: #e91e63; } }
+  &.type-car-rental  { background: #e8f5e9; mat-icon { color: #2e7d32; } }
+  &.type-restaurant  { background: #fff3e0; mat-icon { color: #e65100; } }
+}
+
+.booking-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.booking-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #212121;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 5px;
+}
+
+.booking-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.72rem;
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 2px 8px;
+  color: #616161;
+
+  &.conf { background: #e8eaf6; color: #1a237e; font-weight: 600; }
+
+  mat-icon { font-size: 12px; width: 12px; height: 12px; }
+}
+
+.booking-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.booking-cost {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1a237e;
+}
+
+.type-label {
+  font-size: 0.7rem;
+  color: #9e9e9e;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.cost-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: #9e9e9e;
+  margin: 12px 0 0;
+
+  mat-icon { font-size: 14px; width: 14px; height: 14px; }
+}
+
+mat-dialog-actions {
+  padding: 12px 24px 16px !important;
+  gap: 8px;
+}

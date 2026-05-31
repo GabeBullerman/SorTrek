@@ -1,9 +1,14 @@
 <div class="bookings-container">
   <div class="bookings-header">
     <h2>Bookings & Confirmations</h2>
-    <button mat-flat-button color="primary" (click)="openAddBooking()">
-      <mat-icon>add</mat-icon> Add Booking
-    </button>
+    <div class="header-actions">
+      <button mat-stroked-button (click)="openEmailScan()">
+        <mat-icon>mark_email_read</mat-icon> Scan Emails
+      </button>
+      <button mat-flat-button color="primary" (click)="openAddBooking()">
+        <mat-icon>add</mat-icon> Add Booking
+      </button>
+    </div>
   </div>
 
   @if (data$ | async; as data) {

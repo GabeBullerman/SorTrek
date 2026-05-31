@@ -15,6 +15,7 @@ import { Booking, BookingType } from '../../../core/models/booking.model';
 import { TripParticipant } from '../../../core/models/trip-participant.model';
 import { BookingDialogComponent } from './booking-dialog/booking-dialog.component';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { EmailScanDialogComponent } from './email-scan-dialog/email-scan-dialog.component';
 import { map, catchError } from 'rxjs/operators';
 import { Observable, of, from, combineLatest } from 'rxjs';
 import { Trip } from '../../../core/models/trip.model';
@@ -133,6 +134,14 @@ export class BookingsComponent implements OnInit {
     this.dialog.open(BookingDialogComponent, {
       data: { tripId: this.tripId },
       width: '640px',
+      maxHeight: '90vh',
+    });
+  }
+
+  openEmailScan() {
+    this.dialog.open(EmailScanDialogComponent, {
+      data: { trip: this.trip, tripId: this.tripId },
+      width: '680px',
       maxHeight: '90vh',
     });
   }

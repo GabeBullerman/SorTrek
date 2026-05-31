@@ -1,0 +1,148 @@
+<h2 mat-dialog-title>
+  <mat-icon>mark_email_read</mat-icon>
+  Scan Emails for Bookings
+</h2>
+
+<mat-dialog-content>
+
+  <!-- Idle — initial prompt -->
+  @if (state() === 'idle') {
+    <div class="state-panel">
+      <div class="scan-icon-wrap">
+        <mat-icon class="big-icon">email</mat-icon>
+      </div>
+      <h3>Find bookings in your Gmail</h3>
+      <p>Wayfarer will search your inbox for confirmation emails from airlines, hotels, Airbnb, car rental companies, and more — then import them directly into your trip.</p>
+      <ul class="source-list">
+        <li><mat-icon>flight</mat-icon> Airlines (United, Delta, AA, Southwest…)</li>
+        <li><mat-icon>hotel</mat-icon> Hotels (Marriott, Hilton, Booking.com…)</li>
+        <li><mat-icon>home</mat-icon> Airbnb, VRBO &amp; vacation rentals</li>
+        <li><mat-icon>directions_car</mat-icon> Car rentals (Hertz, Avis, Enterprise…)</li>
+        <li><mat-icon>restaurant</mat-icon> Restaurant reservations (OpenTable, Resy…)</li>
+      </ul>
+      <p class="note">
+        <mat-icon>lock</mat-icon>
+        A read-only Gmail permission is requested. No emails are stored — they're only scanned in the moment.
+      </p>
+    </div>
+  }
+
+  <!-- Connecting -->
+  @if (state() === 'connecting') {
+    <div class="state-panel centered">
+      <mat-spinner diameter="48"></mat-spinner>
+      <p>Opening Gmail sign-in…</p>
+    </div>
+  }
+
+  <!-- Scanning -->
+  @if (state() === 'scanning') {
+    <div class="state-panel centered">
+      <mat-spinner diameter="48"></mat-spinner>
+      <p>Scanning your inbox for booking confirmations…</p>
+      <small>This usually takes 10–20 seconds</small>
+    </div>
+  }
+
+  <!-- Empty -->
+  @if (state() === 'empty') {
+    <div class="state-panel centered">
+      <mat-icon class="big-icon muted">search_off</mat-icon>
+      <h3>No booking emails found</h3>
+      <p>We searched for confirmation emails from major travel providers but didn't find any matches. Try adding bookings manually.</p>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (state() === 'error') {
+    <div class="state-panel centered">
+      <mat-icon class="big-icon error-icon">error_outline</mat-icon>
+      <h3>Something went wrong</h3>
+      <p>{{ errorMsg() }}</p>
+    </div>
+  }
+
+  <!-- Results -->
+  @if (state() === 'results') {
+    <div class="results-header">
+      <span>{{ bookings().length }} booking{{ bookings().length !== 1 ? 's' : '' }} found</span>
+      <div class="select-actions">
+        <button mat-button (click)="selectAll()">Select all</button>
+        <button mat-button (click)="deselectAll()">Deselect all</button>
+      </div>
+    </div>
+
+    <div class="booking-list">
+      @for (booking of bookings(); track $index) {
+        <div class="booking-card" [class.selected]="booking.selected" (click)="toggle($index)">
+          <mat-checkbox [checked]="booking.selected" (change)="toggle($index)"
+                        (click)="$event.stopPropagation()" color="primary" />
+
+          <div class="booking-icon" [class]="'type-' + booking.type">
+            <mat-icon>{{ typeIcons[booking.type] ?? 'bookmark' }}</mat-icon>
+          </div>
+
+          <div class="booking-info">
+            <div class="booking-title">{{ booking.title }}</div>
+
+            <div class="booking-meta">
+              @if (booking.provider) {
+                <span class="meta-chip">{{ booking.provider }}</span>
+              }
+              @if (booking.confirmationNumber) {
+                <span class="meta-chip conf">
+                  <mat-icon>tag</mat-icon>{{ booking.confirmationNumber }}
+                </span>
+              }
+              @if (booking.checkIn) {
+                <span class="meta-chip">
+                  <mat-icon>event</mat-icon>{{ formatDate(booking.checkIn) }}
+                  @if (booking.checkOut) { → {{ formatDate(booking.checkOut) }} }
+                </span>
+              }
+            </div>
+          </div>
+
+          <div class="booking-right">
+            @if (booking.cost) {
+              <span class="booking-cost">
+                {{ booking.cost | currency: (booking.currency ?? 'USD') }}
+              </span>
+            }
+            <span class="type-label">{{ typeLabels[booking.type] ?? 'Other' }}</span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <p class="cost-note">
+      <mat-icon>info</mat-icon>
+      Bookings with a cost will also be added to your trip's expense tracker.
+    </p>
+  }
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cancel</button>
+
+  @if (state() === 'idle' || state() === 'error') {
+    <button mat-flat-button color="primary" (click)="startScan()">
+      <mat-icon>{{ state() === 'error' ? 'refresh' : 'search' }}</mat-icon>
+      {{ state() === 'error' ? 'Try Again' : 'Connect Gmail & Scan' }}
+    </button>
+  }
+
+  @if (state() === 'results') {
+    <button mat-flat-button color="primary"
+            [disabled]="selectedCount === 0 || saving()"
+            (click)="saveSelected()">
+      @if (saving()) {
+        <mat-spinner diameter="18"></mat-spinner>
+      } @else {
+        <mat-icon>playlist_add</mat-icon>
+      }
+      Add {{ selectedCount }} to Trip
+    </button>
+  }
+</mat-dialog-actions>
