@@ -10,6 +10,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Observable, combineLatest, map, catchError, of, from } from 'rxjs';
 import { MoneyComponent } from '../../../shared/components/money/money.component';
+import { PlaidService, PlaidTransaction } from '../../../core/services/plaid.service';
 import { BookingService } from '../../../core/services/booking.service';
 import { ItineraryService } from '../../../core/services/itinerary.service';
 import { ExpenseService } from '../../../core/services/expense.service';
@@ -76,6 +77,7 @@ export class CostsComponent implements OnInit {
   private participantService = inject(ParticipantService);
   private userService = inject(UserService);
   private currencyService = inject(CurrencyService);
+  private plaidService = inject(PlaidService);
   private auth = inject(AuthService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
@@ -86,6 +88,12 @@ export class CostsComponent implements OnInit {
   loadingRate = signal(false);
   showConverted = signal(false);
   readonly feeRate = FOREIGN_TX_FEE;
+
+  plaidConnected = signal(false);
+  plaidConnecting = signal(false);
+  plaidTransactions = signal<PlaidTransaction[]>([]);
+  loadingTransactions = signal(false);
+  showTransactions = signal(false);
 
   readonly categoryMeta: Record<string, { label: string; icon: string; color: string }> = {
     food:          { label: 'Food & Drink',   icon: 'restaurant',     color: '#e65100' },
@@ -112,11 +120,11 @@ export class CostsComponent implements OnInit {
     const uid = this.auth.currentUser?.uid;
     if (uid) {
       this.userService.getProfile(uid).subscribe(profile => {
-        if (profile?.homeCurrency) {
-          this.homeCurrency.set(profile.homeCurrency);
-        }
+        if (profile?.homeCurrency) this.homeCurrency.set(profile.homeCurrency);
       });
     }
+
+    this.plaidService.isConnected().subscribe(c => this.plaidConnected.set(c));
   }
 
   openAddExpense() {
@@ -343,6 +351,60 @@ export class CostsComponent implements OnInit {
         owesOrganizer: Math.max(0, s.share - s.paidSelf),
       };
     });
+  }
+
+  connectBank() {
+    this.plaidConnecting.set(true);
+    this.plaidService.openLink().subscribe(success => {
+      this.plaidConnecting.set(false);
+      if (success) {
+        this.plaidConnected.set(true);
+        this.snackBar.open('Bank connected! Loading transactions…', undefined, { duration: 3000 });
+        this.fetchTransactions();
+      }
+    });
+  }
+
+  fetchTransactions() {
+    this.loadingTransactions.set(true);
+    this.showTransactions.set(true);
+    const start = this.trip.startDate.toDate().toISOString().split('T')[0];
+    const end   = this.trip.endDate.toDate().toISOString().split('T')[0];
+    this.plaidService.getTransactions(start, end).subscribe(txs => {
+      this.plaidTransactions.set(txs);
+      this.loadingTransactions.set(false);
+    });
+  }
+
+  disconnectBank() {
+    this.plaidService.disconnect().subscribe(() => {
+      this.plaidConnected.set(false);
+      this.plaidTransactions.set([]);
+      this.showTransactions.set(false);
+      this.snackBar.open('Bank disconnected', undefined, { duration: 2500 });
+    });
+  }
+
+  addTransactionAsExpense(tx: PlaidTransaction) {
+    from(this.expenseService.createExpense({
+      tripId: this.tripId,
+      title: tx.merchant || tx.name,
+      amount: Math.abs(tx.amount),
+      currency: tx.currency,
+      category: this.mapPlaidCategory(tx.category),
+      notes: `Imported from bank — ${tx.date}`,
+    })).subscribe(() =>
+      this.snackBar.open(`"${tx.name}" added to expenses`, undefined, { duration: 2000 })
+    );
+  }
+
+  private mapPlaidCategory(category: string): import('../../../core/models/expense.model').ExpenseCategory {
+    const c = category.toLowerCase();
+    if (c.includes('food') || c.includes('restaurant') || c.includes('dining')) return 'food';
+    if (c.includes('travel') || c.includes('transport') || c.includes('taxi') || c.includes('airline')) return 'transport';
+    if (c.includes('hotel') || c.includes('lodging') || c.includes('accommodation')) return 'accommodation';
+    if (c.includes('shop') || c.includes('retail') || c.includes('store')) return 'shopping';
+    return 'other';
   }
 
   pct(amount: number, total: number): number {

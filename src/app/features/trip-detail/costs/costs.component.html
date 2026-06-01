@@ -1,10 +1,62 @@
 <div class="costs-container">
   <div class="costs-header">
     <h2>Cost Tracker</h2>
-    <button mat-flat-button color="primary" (click)="openAddExpense()">
-      <mat-icon>add</mat-icon> Add Expense
-    </button>
+    <div class="header-actions">
+      @if (plaidConnected()) {
+        <button mat-stroked-button (click)="fetchTransactions()" [disabled]="loadingTransactions()">
+          <mat-icon>account_balance</mat-icon> Sync Bank
+        </button>
+        <button mat-icon-button matTooltip="Disconnect bank" (click)="disconnectBank()">
+          <mat-icon>link_off</mat-icon>
+        </button>
+      } @else {
+        <button mat-stroked-button (click)="connectBank()" [disabled]="plaidConnecting()">
+          @if (plaidConnecting()) { <mat-spinner diameter="16"></mat-spinner> }
+          @else { <mat-icon>account_balance</mat-icon> }
+          Connect Bank
+        </button>
+      }
+      <button mat-flat-button color="primary" (click)="openAddExpense()">
+        <mat-icon>add</mat-icon> Add Expense
+      </button>
+    </div>
   </div>
+
+  <!-- Bank Transactions Panel -->
+  @if (showTransactions()) {
+    <mat-card class="transactions-card">
+      <mat-card-header>
+        <mat-card-title><mat-icon>receipt_long</mat-icon> Bank Transactions During Trip</mat-card-title>
+        <mat-card-subtitle>Click + to add as an expense</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        @if (loadingTransactions()) {
+          <div class="tx-loading"><mat-spinner diameter="32"></mat-spinner><span>Loading transactions…</span></div>
+        } @else if (plaidTransactions().length === 0) {
+          <p class="tx-empty">No transactions found for {{ trip.startDate.toDate() | date:'MMM d' }} – {{ trip.endDate.toDate() | date:'MMM d, y' }}.</p>
+        } @else {
+          <div class="tx-list">
+            @for (tx of plaidTransactions(); track tx.id) {
+              <div class="tx-row" [class.pending]="tx.pending">
+                <div class="tx-info">
+                  <span class="tx-name">{{ tx.merchant || tx.name }}</span>
+                  <span class="tx-date">{{ tx.date }}</span>
+                </div>
+                <span class="tx-amount" [class.credit]="tx.amount < 0">
+                  {{ (tx.amount < 0 ? '+' : '') }}{{ tx.amount | number:'1.2-2' }} {{ tx.currency }}
+                </span>
+                @if (tx.amount > 0) {
+                  <button mat-icon-button matTooltip="Add as expense" (click)="addTransactionAsExpense(tx)">
+                    <mat-icon>add_circle_outline</mat-icon>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
 
   @if (costs$ | async; as data) {
 
