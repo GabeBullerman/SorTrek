@@ -14,6 +14,7 @@ import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { map } from 'rxjs/operators';
 import { CurrencyConverterComponent } from '../../shared/components/currency-converter/currency-converter.component';
 import { GuideModalComponent } from '../../shared/components/guide-modal/guide-modal.component';
+import { PwaInstallPromptComponent } from '../../shared/components/pwa-install-prompt/pwa-install-prompt.component';
 
 @Component({
   selector: 'app-shell',
@@ -22,7 +23,7 @@ import { GuideModalComponent } from '../../shared/components/guide-modal/guide-m
     RouterOutlet, RouterLink, RouterLinkActive,
     MatSidenavModule, MatToolbarModule, MatButtonModule,
     MatIconModule, MatListModule, MatMenuModule, MatTooltipModule,
-    AsyncPipe, CurrencyConverterComponent,
+    AsyncPipe, CurrencyConverterComponent, PwaInstallPromptComponent,
   ],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.scss',

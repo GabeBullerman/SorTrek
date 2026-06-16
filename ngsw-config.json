@@ -41,6 +41,26 @@
         "timeout": "10s",
         "strategy": "freshness"
       }
+    },
+    {
+      "name": "transport-api",
+      "urls": ["https://v6.db.transport.rest/**"],
+      "cacheConfig": {
+        "maxSize": 20,
+        "maxAge": "1h",
+        "timeout": "10s",
+        "strategy": "freshness"
+      }
+    },
+    {
+      "name": "overpass-api",
+      "urls": ["https://overpass-api.de/**"],
+      "cacheConfig": {
+        "maxSize": 20,
+        "maxAge": "24h",
+        "timeout": "15s",
+        "strategy": "freshness"
+      }
     }
   ]
 }
