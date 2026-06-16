@@ -82,6 +82,61 @@ async function findAirport(token, cityName) {
   return data.data?.[0] ?? null;
 }
 
+async function findCityCode(token, cityName) {
+  const res = await fetch(
+    `${AMADEUS_BASE}/v1/reference-data/locations?keyword=${encodeURIComponent(cityName)}&subType=CITY&page%5Blimit%5D=1`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data.data?.[0] ?? null;
+}
+
+async function findHotelsByCity(token, cityCode) {
+  const res = await fetch(
+    `${AMADEUS_BASE}/v1/reference-data/locations/hotels/by-city?cityCode=${encodeURIComponent(cityCode)}&radius=5&radiusUnit=KM&hotelSource=ALL`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.data ?? [];
+}
+
+async function fetchHotelOffers(token, hotelIds, checkInDate, checkOutDate) {
+  const ids = hotelIds.join(',');
+  const url = `${AMADEUS_BASE}/v3/shopping/hotel-offers?hotelIds=${encodeURIComponent(ids)}&checkInDate=${checkInDate}&checkOutDate=${checkOutDate}&adults=1&currency=USD`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.data ?? [];
+}
+
+function parseHotelOffers(offersData, cityCode) {
+  const results = [];
+  for (const hotelData of offersData) {
+    const hotel = hotelData.hotel ?? {};
+    const offers = hotelData.offers ?? [];
+    if (!offers.length) continue;
+    const offer = offers[0];
+    const price = offer.price;
+    results.push({
+      hotelId:   hotel.hotelId ?? hotelData.hotelId ?? null,
+      hotelName: hotel.name ?? 'Unknown Hotel',
+      cityCode:  hotel.cityCode ?? cityCode,
+      checkIn:   offer.checkInDate ?? null,
+      checkOut:  offer.checkOutDate ?? null,
+      price: price ? {
+        amount:   parseFloat(price.total ?? price.base ?? '0'),
+        currency: price.currency ?? 'USD',
+      } : null,
+      rating:    hotel.rating ? parseInt(hotel.rating, 10) : null,
+      roomType:  offer.room?.typeEstimated?.bedType ?? offer.room?.description?.text ?? null,
+      boardType: offer.boardType ?? null,
+    });
+  }
+  return results;
+}
+
 async function searchAmadeusFlights(token, originCode, destinationCode, date, adults = 1) {
   const url = `${AMADEUS_BASE}/v2/shopping/flight-offers?originLocationCode=${originCode}&destinationLocationCode=${destinationCode}&departureDate=${date}&adults=${adults}&max=6&currencyCode=USD`;
   const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
@@ -296,6 +351,48 @@ module.exports = async (req, res) => {
       });
 
       return res.status(200).json({ plan: response.choices[0].message.content });
+    }
+
+    // ── Hotel search via Amadeus ──────────────────────────────────────────────
+    if (action === 'hotels') {
+      const clientId     = process.env.AMADEUS_CLIENT_ID;
+      const clientSecret = process.env.AMADEUS_CLIENT_SECRET;
+      if (!clientId || !clientSecret) {
+        return res.status(500).json({ error: 'AMADEUS_CLIENT_ID / AMADEUS_CLIENT_SECRET not configured' });
+      }
+
+      const { hotelDestination, hotelCheckIn, hotelCheckOut } = req.body;
+      if (!hotelDestination || !hotelCheckIn || !hotelCheckOut) {
+        return res.status(400).json({ error: 'Missing hotelDestination, hotelCheckIn, or hotelCheckOut' });
+      }
+
+      const token = await getAmadeusToken(clientId, clientSecret);
+
+      // Resolve city IATA code from destination string
+      const cityEntry = await findCityCode(token, hotelDestination);
+      if (!cityEntry) {
+        return res.status(200).json({ hotels: [], error: `Could not resolve city code for "${hotelDestination}"` });
+      }
+      const cityCode = cityEntry.iataCode ?? cityEntry.address?.cityCode;
+      if (!cityCode) {
+        return res.status(200).json({ hotels: [], error: `No IATA city code found for "${hotelDestination}"` });
+      }
+
+      // Find hotels in that city
+      const hotelList = await findHotelsByCity(token, cityCode);
+      if (!hotelList.length) {
+        return res.status(200).json({ hotels: [], cityCode, error: `No hotels found in ${cityCode}` });
+      }
+
+      // Take first 10 hotel IDs and fetch offers
+      const hotelIds = hotelList.slice(0, 10).map(h => h.hotelId).filter(Boolean);
+      const checkIn  = hotelCheckIn.slice(0, 10);   // ensure YYYY-MM-DD
+      const checkOut = hotelCheckOut.slice(0, 10);
+
+      const offersData = await fetchHotelOffers(token, hotelIds, checkIn, checkOut).catch(() => []);
+      const hotels = parseHotelOffers(offersData, cityCode);
+
+      return res.status(200).json({ hotels, cityCode });
     }
 
     return res.status(400).json({ error: `Unknown action: ${action}` });

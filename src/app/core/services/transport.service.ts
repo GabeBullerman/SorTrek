@@ -36,6 +36,18 @@ export interface FlightOffer {
   price: { amount: number; currency: string } | null;
 }
 
+export interface HotelOffer {
+  hotelId: string | null;
+  hotelName: string;
+  cityCode: string;
+  checkIn: string | null;
+  checkOut: string | null;
+  price: { amount: number; currency: string } | null;
+  rating: number | null;
+  roomType: string | null;
+  boardType: string | null;
+}
+
 export interface LocalOption {
   type: string;
   count: number;
@@ -90,5 +102,15 @@ export class TransportService {
       map(r => r.plan),
       catchError(() => of('Could not generate plan. Check that GROQ_API_KEY is configured.'))
     );
+  }
+
+  searchHotels(hotelDestination: string, hotelCheckIn: string, hotelCheckOut: string): Observable<{
+    hotels: HotelOffer[];
+    cityCode?: string;
+    error?: string;
+  }> {
+    return this.http.post<any>('/api/transport', {
+      action: 'hotels', hotelDestination, hotelCheckIn, hotelCheckOut,
+    }).pipe(catchError(() => of({ hotels: [], error: 'Could not reach hotels API' })));
   }
 }

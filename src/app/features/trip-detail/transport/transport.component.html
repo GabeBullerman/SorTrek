@@ -14,6 +14,9 @@
         <mat-button-toggle value="flights">
           <mat-icon>flight</mat-icon> Flights
         </mat-button-toggle>
+        <mat-button-toggle value="hotels">
+          <mat-icon>hotel</mat-icon> Hotels
+        </mat-button-toggle>
       </mat-button-toggle-group>
     </div>
 
@@ -201,6 +204,109 @@
         <p class="suggestion-note">
           <mat-icon>info</mat-icon>
           Saved flights appear in your <strong>Bookings</strong> tab as suggestions. Mark as Confirmed once you've actually booked.
+        </p>
+      }
+    }
+
+    <!-- Hotel search -->
+    @if (searchMode() === 'hotels') {
+      <div class="search-form">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Destination city</mat-label>
+          <mat-icon matPrefix>hotel</mat-icon>
+          <input matInput [ngModel]="hotelDestination()" (ngModelChange)="hotelDestination.set($event)" placeholder="e.g. Paris" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field form-field--date">
+          <mat-label>Check-in date</mat-label>
+          <mat-icon matPrefix>calendar_today</mat-icon>
+          <input matInput type="date" [ngModel]="hotelCheckIn()" (ngModelChange)="hotelCheckIn.set($event)" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field form-field--date">
+          <mat-label>Check-out date</mat-label>
+          <mat-icon matPrefix>calendar_month</mat-icon>
+          <input matInput type="date" [ngModel]="hotelCheckOut()" (ngModelChange)="hotelCheckOut.set($event)" />
+        </mat-form-field>
+
+        <button mat-flat-button color="primary" class="search-btn"
+                (click)="searchHotels()" [disabled]="searchingHotels()">
+          @if (searchingHotels()) {
+            <mat-spinner diameter="18"></mat-spinner>
+          } @else {
+            <mat-icon>search</mat-icon>
+          }
+          Search Hotels
+        </button>
+      </div>
+
+      <div class="amadeus-note">
+        <mat-icon>info</mat-icon>
+        Powered by Amadeus test API. Prices are indicative — verify availability and book directly on the hotel site.
+      </div>
+
+      @if (hotelError()) {
+        <div class="error-banner"><mat-icon>warning</mat-icon> {{ hotelError() }}</div>
+      }
+
+      @if (hotels().length > 0) {
+        <div class="results-header">
+          <span class="results-label">{{ hotels().length }} hotels · {{ hotelCityCode() || hotelDestination() }}</span>
+        </div>
+        <div class="hotel-list">
+          @for (h of hotels(); track h.hotelId) {
+            <div class="hotel-card">
+              <div class="hotel-header">
+                <div class="hotel-name-block">
+                  <span class="hotel-name">{{ h.hotelName }}</span>
+                  @if (h.rating) {
+                    <span class="hotel-stars">
+                      @for (star of [].constructor(h.rating); track $index) {
+                        <mat-icon class="star-icon">star</mat-icon>
+                      }
+                    </span>
+                  }
+                </div>
+                <span class="hotel-city">{{ h.cityCode }}</span>
+              </div>
+
+              <div class="hotel-dates">
+                <span class="hotel-date-label">
+                  <mat-icon>login</mat-icon> {{ h.checkIn ?? hotelCheckIn() }}
+                </span>
+                <span class="hotel-date-sep">→</span>
+                <span class="hotel-date-label">
+                  <mat-icon>logout</mat-icon> {{ h.checkOut ?? hotelCheckOut() }}
+                </span>
+              </div>
+
+              @if (h.roomType || h.boardType) {
+                <div class="hotel-meta">
+                  @if (h.roomType) {
+                    <span class="hotel-chip"><mat-icon>bed</mat-icon> {{ h.roomType }}</span>
+                  }
+                  @if (h.boardType) {
+                    <span class="hotel-chip"><mat-icon>restaurant</mat-icon> {{ h.boardType | titlecase }}</span>
+                  }
+                </div>
+              }
+
+              <div class="journey-footer">
+                @if (h.price) {
+                  <span class="journey-price">{{ h.price.currency }} {{ h.price.amount | number:'1.2-2' }}</span>
+                } @else {
+                  <span class="hotel-no-price">Price on request</span>
+                }
+                <button mat-stroked-button class="add-journey-btn" (click)="saveHotelAsBooking(h)">
+                  <mat-icon>bookmark_add</mat-icon> Save as Suggestion
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+        <p class="suggestion-note">
+          <mat-icon>info</mat-icon>
+          Saved hotels appear in your <strong>Bookings</strong> tab as suggestions. Mark as Confirmed once you've actually booked.
         </p>
       }
     }

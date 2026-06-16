@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DatePipe, DecimalPipe, TitleCasePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -13,7 +13,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { Timestamp } from '@angular/fire/firestore';
 import { from } from 'rxjs';
 import { Trip } from '../../../core/models/trip.model';
-import { TransportService, Journey, FlightOffer, LocalOption, NearbyStop } from '../../../core/services/transport.service';
+import { TransportService, Journey, FlightOffer, HotelOffer, LocalOption, NearbyStop } from '../../../core/services/transport.service';
 import { ItineraryService } from '../../../core/services/itinerary.service';
 import { BookingService } from '../../../core/services/booking.service';
 import { GoogleMapsLoaderService } from '../../../core/services/google-maps-loader.service';
@@ -22,7 +22,7 @@ import { GoogleMapsLoaderService } from '../../../core/services/google-maps-load
   selector: 'app-transport',
   standalone: true,
   imports: [
-    FormsModule, DatePipe, DecimalPipe,
+    FormsModule, DatePipe, DecimalPipe, TitleCasePipe,
     MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule,
     MatProgressSpinnerModule, MatChipsModule, MatTooltipModule, MatButtonToggleModule,
   ],
@@ -40,7 +40,7 @@ export class TransportComponent implements OnInit {
   private snackBar         = inject(MatSnackBar);
 
   // ── Mode toggle ───────────────────────────────────────────
-  searchMode = signal<'trains' | 'flights'>('trains');
+  searchMode = signal<'trains' | 'flights' | 'hotels'>('trains');
 
   // ── Train search ──────────────────────────────────────────
   origin       = signal('');
@@ -62,6 +62,15 @@ export class TransportComponent implements OnInit {
   fromAirport       = signal('');
   toAirport         = signal('');
 
+  // ── Hotel search ──────────────────────────────────────────
+  hotelDestination = signal('');
+  hotelCheckIn     = signal('');
+  hotelCheckOut    = signal('');
+  searchingHotels  = signal(false);
+  hotels           = signal<HotelOffer[]>([]);
+  hotelError       = signal('');
+  hotelCityCode    = signal('');
+
   // ── Local transport ───────────────────────────────────────
   loadingLocal = signal(false);
   localSummary = signal<LocalOption[]>([]);
@@ -80,10 +89,14 @@ export class TransportComponent implements OnInit {
   ngOnInit() {
     this.destination.set(this.trip.destination);
     this.flightDestination.set(this.trip.destination);
-    const d = this.trip.startDate.toDate();
+    this.hotelDestination.set(this.trip.destination);
+    const d    = this.trip.startDate.toDate();
+    const end  = this.trip.endDate.toDate();
     const dateStr = d.toISOString().slice(0, 16);
     this.departure.set(dateStr);
     this.flightDate.set(d.toISOString().slice(0, 10));
+    this.hotelCheckIn.set(d.toISOString().slice(0, 10));
+    this.hotelCheckOut.set(end.toISOString().slice(0, 10));
     this.geocodeAndLoadLocal(this.trip.destination);
   }
 
@@ -147,6 +160,45 @@ export class TransportComponent implements OnInit {
       if (result.toAirport)   this.toAirport.set(`${result.toAirport.name} (${result.toAirport.code})`);
       if (!result.flights?.length) this.flightError.set('No flights found for this route and date.');
     });
+  }
+
+  searchHotels() {
+    const dest     = this.hotelDestination().trim();
+    const checkIn  = this.hotelCheckIn();
+    const checkOut = this.hotelCheckOut();
+    if (!dest || !checkIn || !checkOut) return;
+
+    this.searchingHotels.set(true);
+    this.hotels.set([]);
+    this.hotelError.set('');
+
+    this.transportService.searchHotels(dest, checkIn, checkOut).subscribe(result => {
+      this.searchingHotels.set(false);
+      if (result.error) { this.hotelError.set(result.error); return; }
+      this.hotels.set(result.hotels ?? []);
+      if (result.cityCode) this.hotelCityCode.set(result.cityCode);
+      if (!result.hotels?.length) this.hotelError.set('No hotel offers found for this destination and dates.');
+    });
+  }
+
+  saveHotelAsBooking(h: HotelOffer) {
+    const checkInDate  = h.checkIn  ? Timestamp.fromDate(new Date(h.checkIn))  : undefined;
+    const checkOutDate = h.checkOut ? Timestamp.fromDate(new Date(h.checkOut)) : undefined;
+    const priceStr = h.price ? `${h.price.currency} ${h.price.amount.toFixed(2)}` : '';
+    const starStr  = h.rating ? ` (${h.rating}-star)` : '';
+
+    from(this.bookingService.createBooking({
+      tripId: this.tripId,
+      type: 'hotel',
+      title: `${h.hotelName}${starStr}`,
+      status: 'suggested',
+      ...(checkInDate  ? { checkIn:  checkInDate }  : {}),
+      ...(checkOutDate ? { checkOut: checkOutDate } : {}),
+      ...(h.price ? { cost: h.price.amount, currency: h.price.currency } : {}),
+      notes: `SUGGESTION — not yet booked. ${priceStr ? 'Shown price: ' + priceStr + '. ' : ''}${h.roomType ? 'Room: ' + h.roomType + '. ' : ''}${h.boardType ? 'Board: ' + h.boardType + '. ' : ''}Verify availability and book directly on hotel site. Powered by Amadeus test API.`,
+    })).subscribe(() =>
+      this.snackBar.open('Hotel saved as suggestion in Bookings', undefined, { duration: 2500 })
+    );
   }
 
   getAIPlan() {
