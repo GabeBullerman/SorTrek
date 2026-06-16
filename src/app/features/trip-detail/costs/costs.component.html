@@ -58,6 +58,153 @@
     </mat-card>
   }
 
+  <!-- ══════════════ Currency Tools Panel ══════════════ -->
+  <div class="currency-tools-wrap">
+    <button class="currency-tools-toggle" mat-stroked-button (click)="toggleConverterPanel()">
+      <mat-icon>currency_exchange</mat-icon>
+      Currency Tools
+      <mat-icon class="chevron" [class.open]="showConverterPanel()">expand_more</mat-icon>
+    </button>
+
+    @if (showConverterPanel()) {
+      <div class="currency-tools-panel">
+
+        <!-- ── Quick Converter ── -->
+        <div class="ct-section">
+          <div class="ct-section-label">Quick Converter</div>
+          <div class="converter-controls">
+            <mat-form-field appearance="outline" class="amount-field">
+              <mat-label>Amount</mat-label>
+              <input matInput type="number" min="0"
+                     [ngModel]="converterAmount()"
+                     (ngModelChange)="converterAmount.set($event)" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="ccy-field">
+              <mat-label>From</mat-label>
+              <mat-select [ngModel]="converterFrom()"
+                          (ngModelChange)="converterFrom.set($event)">
+                @for (c of currencies; track c.code) {
+                  <mat-option [value]="c.code">{{ c.code }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <button mat-icon-button class="swap-btn" (click)="swapConverter()"
+                    matTooltip="Swap currencies">
+              <mat-icon>swap_horiz</mat-icon>
+            </button>
+
+            <mat-form-field appearance="outline" class="ccy-field">
+              <mat-label>To</mat-label>
+              <mat-select [ngModel]="converterTo()"
+                          (ngModelChange)="converterTo.set($event)">
+                @for (c of currencies; track c.code) {
+                  <mat-option [value]="c.code">{{ c.code }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <button mat-flat-button color="primary" class="go-btn"
+                    (click)="runQuickConvert()" [disabled]="converterLoading()">
+              @if (converterLoading()) {
+                <mat-spinner diameter="18"></mat-spinner>
+              } @else {
+                <mat-icon>calculate</mat-icon>
+              }
+              Convert
+            </button>
+          </div>
+
+          @if (converterResultAmount() !== null) {
+            <div class="converter-result">
+              <div class="cr-amount">
+                {{ converterResultAmount()! | number:'1.2-2' }}
+                <span class="cr-code">{{ converterTo() }}</span>
+              </div>
+              <div class="cr-rate">
+                1 {{ converterFrom() }} = {{ formatRate(converterResult()!.rate) }} {{ converterTo() }}
+                · Updated {{ converterResult()!.fetchedAt | date:'shortTime' }}
+              </div>
+              <div class="cr-source">ECB rates via frankfurter.app</div>
+            </div>
+          }
+        </div>
+
+        <!-- ── Common Amounts Grid ── -->
+        @if (converterResultAmount() !== null) {
+          <div class="ct-section">
+            <div class="ct-section-label">Common Amounts</div>
+            <div class="common-amounts-grid">
+              @for (amt of commonAmounts; track amt) {
+                <div class="ca-cell">
+                  <span class="ca-from">{{ converterFrom() }} {{ amt | number:'1.0-0' }}</span>
+                  <mat-icon class="ca-arrow">arrow_forward</mat-icon>
+                  <span class="ca-to">
+                    {{ converterTo() }} {{ quickAmountConverted(amt)! | number:'1.2-2' }}
+                  </span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- ── FX Fee Estimator ── -->
+        @if (converterResultAmount() !== null) {
+          <div class="ct-section fx-fee-section">
+            <div class="ct-section-label">
+              <mat-icon>info_outline</mat-icon>
+              Foreign Transaction Fee Estimator
+            </div>
+            <div class="fx-fee-row">
+              <span class="fx-label">With typical 2.5% FX fee:</span>
+              <span class="fx-value">
+                {{ converterAmount() }} {{ converterFrom() }}
+                → {{ (converterResultAmount()! * (1 + feeRate)) | number:'1.2-2' }} {{ converterTo() }}
+              </span>
+            </div>
+            <div class="fx-fee-row fx-save-row">
+              <mat-icon>savings</mat-icon>
+              <span>
+                Use a no-FX-fee card to save
+                <strong>{{ (converterResultAmount()! * feeRate) | number:'1.2-2' }} {{ converterTo() }}</strong>
+                on a {{ converterAmount() }} {{ converterFrom() }} purchase.
+              </span>
+            </div>
+          </div>
+        }
+
+        <!-- ── Rates at a Glance ── -->
+        <div class="ct-section">
+          <div class="ct-section-label">Rates at a Glance (1 {{ trip.currency }} = ?)</div>
+          @if (glanceLoading()) {
+            <div class="glance-loading">
+              <mat-spinner diameter="20"></mat-spinner>
+              <span>Fetching rates…</span>
+            </div>
+          } @else {
+            <div class="glance-row">
+              @for (gr of glanceRates(); track gr.code) {
+                <div class="glance-card">
+                  <span class="glance-flag">{{ gr.flag }}</span>
+                  <span class="glance-code">{{ gr.code }}</span>
+                  @if (gr.rate !== null) {
+                    <span class="glance-rate">{{ formatRate(gr.rate) }}</span>
+                  } @else {
+                    <span class="glance-rate glance-na">—</span>
+                  }
+                </div>
+              }
+            </div>
+          }
+          <div class="glance-note">ECB rates via frankfurter.app · updated on panel open</div>
+        </div>
+
+      </div>
+    }
+  </div>
+  <!-- ══════════════ End Currency Tools ══════════════ -->
+
   @if (costs$ | async; as data) {
 
     @if (data.total === 0 && data.expenses.length === 0) {

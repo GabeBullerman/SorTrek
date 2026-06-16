@@ -1,14 +1,19 @@
 import { Component, Input, OnInit, inject, signal } from '@angular/core';
 import { AsyncPipe, CurrencyPipe, DecimalPipe, DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Observable, combineLatest, map, catchError, of, from } from 'rxjs';
+import { Observable, combineLatest, map, catchError, of, from, forkJoin } from 'rxjs';
+import { CURRENCIES } from '../../profile/profile.component';
 import { MoneyComponent } from '../../../shared/components/money/money.component';
 import { PlaidService, PlaidTransaction } from '../../../core/services/plaid.service';
 import { BookingService } from '../../../core/services/booking.service';
@@ -44,6 +49,13 @@ interface PersonShare {
   owesOrganizer: number;
 }
 
+interface GlanceRate {
+  code: string;
+  flag: string;
+  rate: number | null;
+  loading: boolean;
+}
+
 interface CostsData {
   total: number;
   breakdown: CostBreakdown[];
@@ -60,8 +72,10 @@ export const FOREIGN_TX_FEE = 0.025;
   standalone: true,
   imports: [
     AsyncPipe, CurrencyPipe, DecimalPipe, DatePipe,
+    FormsModule,
     MatCardModule, MatIconModule, MatButtonModule,
     MatProgressSpinnerModule, MatDividerModule, MatTooltipModule,
+    MatFormFieldModule, MatInputModule, MatSelectModule,
     MoneyComponent,
   ],
   templateUrl: './costs.component.html',
@@ -88,6 +102,26 @@ export class CostsComponent implements OnInit {
   loadingRate = signal(false);
   showConverted = signal(false);
   readonly feeRate = FOREIGN_TX_FEE;
+
+  // Currency Tools panel
+  readonly currencies = CURRENCIES;
+  showConverterPanel = signal(false);
+  converterAmount = signal<number>(100);
+  converterFrom = signal<string>('USD');
+  converterTo = signal<string>('USD');
+  converterResult = signal<RateResult | null>(null);
+  converterLoading = signal(false);
+  glanceRates = signal<GlanceRate[]>([]);
+  glanceLoading = signal(false);
+
+  readonly commonAmounts = [10, 20, 50, 100, 200, 500];
+  readonly glanceCurrencies: { code: string; flag: string }[] = [
+    { code: 'USD', flag: '🇺🇸' },
+    { code: 'EUR', flag: '🇪🇺' },
+    { code: 'GBP', flag: '🇬🇧' },
+    { code: 'JPY', flag: '🇯🇵' },
+    { code: 'CAD', flag: '🇨🇦' },
+  ];
 
   plaidConnected = signal(false);
   plaidConnecting = signal(false);
@@ -117,10 +151,16 @@ export class CostsComponent implements OnInit {
       catchError(() => of(this.buildData([], [], [], [])))
     );
 
+    // Pre-fill converter with trip currency → home currency
+    this.converterFrom.set(this.trip.currency ?? 'USD');
+
     const uid = this.auth.currentUser?.uid;
     if (uid) {
       this.userService.getProfile(uid).subscribe(profile => {
-        if (profile?.homeCurrency) this.homeCurrency.set(profile.homeCurrency);
+        if (profile?.homeCurrency) {
+          this.homeCurrency.set(profile.homeCurrency);
+          this.converterTo.set(profile.homeCurrency);
+        }
       });
     }
 
@@ -165,6 +205,77 @@ export class CostsComponent implements OnInit {
   participantName(id: string | null | undefined, participants: TripParticipant[]): string {
     if (!id) return 'Unknown';
     return participants.find(p => p.id === id)?.name ?? 'Unknown';
+  }
+
+  toggleConverterPanel() {
+    const opening = !this.showConverterPanel();
+    this.showConverterPanel.set(opening);
+    if (opening) {
+      this.runQuickConvert();
+      this.loadGlanceRates();
+    }
+  }
+
+  runQuickConvert() {
+    const from = this.converterFrom();
+    const to = this.converterTo();
+    if (!from || !to) return;
+    this.converterLoading.set(true);
+    this.converterResult.set(null);
+    this.currencyService.getRate(from, to).subscribe(r => {
+      this.converterResult.set(r);
+      this.converterLoading.set(false);
+    });
+  }
+
+  swapConverter() {
+    const tmp = this.converterFrom();
+    this.converterFrom.set(this.converterTo());
+    this.converterTo.set(tmp);
+    this.converterResult.set(null);
+    this.runQuickConvert();
+  }
+
+  converterResultAmount(): number | null {
+    const r = this.converterResult();
+    if (!r) return null;
+    return this.converterAmount() * r.rate;
+  }
+
+  quickAmountConverted(amount: number): number | null {
+    const r = this.converterResult();
+    if (!r) return null;
+    return amount * r.rate;
+  }
+
+  formatRate(n: number): string {
+    // JPY and similar high-value pairs look better with fewer decimals
+    if (n >= 100) return n.toFixed(2);
+    if (n >= 10)  return n.toFixed(3);
+    return n.toFixed(4);
+  }
+
+  loadGlanceRates() {
+    const tripCcy = this.trip.currency;
+    const home    = this.homeCurrency();
+    const targets = this.glanceCurrencies.filter(
+      c => c.code !== tripCcy && c.code !== home
+    ).slice(0, 5);
+
+    this.glanceLoading.set(true);
+    const init: GlanceRate[] = targets.map(c => ({ ...c, rate: null, loading: true }));
+    this.glanceRates.set(init);
+
+    const reqs = targets.map(c => this.currencyService.getRate(tripCcy, c.code));
+    forkJoin(reqs).subscribe(results => {
+      const updated: GlanceRate[] = targets.map((c, i) => ({
+        ...c,
+        rate: results[i]?.rate ?? null,
+        loading: false,
+      }));
+      this.glanceRates.set(updated);
+      this.glanceLoading.set(false);
+    });
   }
 
   toggleConversion() {

@@ -520,3 +520,229 @@
   justify-content: center;
   padding: 40px;
 }
+
+// ── Currency Tools Panel ────────────────────────────────────────────
+.currency-tools-wrap {
+  margin-bottom: 20px;
+}
+
+.currency-tools-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  border-radius: 10px !important;
+
+  mat-icon:first-child { color: #1565c0; }
+
+  .chevron {
+    margin-left: auto;
+    transition: transform 0.25s ease;
+    color: #9e9e9e;
+
+    &.open { transform: rotate(180deg); }
+  }
+}
+
+.currency-tools-panel {
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e8eaf6;
+  margin-top: 10px;
+  overflow: hidden;
+  animation: panelSlide 0.2s ease;
+
+  @keyframes panelSlide {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+}
+
+.ct-section {
+  padding: 18px 20px;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid #f0f0f0;
+  }
+}
+
+.ct-section-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #9e9e9e;
+  margin-bottom: 14px;
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; color: #bdbdbd; }
+}
+
+// Quick Converter controls
+.converter-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  .amount-field { flex: 1; min-width: 100px; max-width: 160px; }
+  .ccy-field    { width: 110px; flex-shrink: 0; }
+
+  .swap-btn { flex-shrink: 0; color: #5c6bc0; }
+
+  .go-btn {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 8px !important;
+  }
+
+  // tighten Material form fields inside
+  ::ng-deep .mat-mdc-form-field-subscript-wrapper { display: none; }
+}
+
+// Result display
+.converter-result {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #e8eaf6 0%, #e3f2fd 100%);
+  border-radius: 10px;
+
+  .cr-amount {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a237e;
+    line-height: 1.1;
+
+    .cr-code {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #5c6bc0;
+      margin-left: 6px;
+    }
+  }
+
+  .cr-rate {
+    font-size: 0.82rem;
+    color: #455a64;
+    margin-top: 6px;
+  }
+
+  .cr-source {
+    font-size: 0.72rem;
+    color: #9e9e9e;
+    margin-top: 2px;
+  }
+}
+
+// Common Amounts grid
+.common-amounts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+
+  @media (max-width: 600px) { grid-template-columns: repeat(2, 1fr); }
+}
+
+.ca-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background: #f5f6ff;
+  border-radius: 8px;
+  font-size: 0.82rem;
+
+  .ca-from { font-weight: 600; color: #1a237e; white-space: nowrap; }
+  .ca-to   { font-weight: 600; color: #2e7d32; white-space: nowrap; }
+
+  .ca-arrow {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    color: #bdbdbd;
+    flex-shrink: 0;
+  }
+}
+
+// FX Fee Estimator
+.fx-fee-section {
+  background: #fffde7;
+
+  .ct-section-label mat-icon { color: #f57c00; }
+}
+
+.fx-fee-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.875rem;
+  color: #5d4037;
+  margin-bottom: 8px;
+
+  &:last-child { margin-bottom: 0; }
+
+  .fx-label { font-weight: 600; white-space: nowrap; }
+  .fx-value { color: #1a237e; font-weight: 500; }
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; color: #43a047; flex-shrink: 0; }
+}
+
+.fx-save-row {
+  padding: 8px 10px;
+  background: #f1f8e9;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  color: #33691e;
+
+  strong { color: #2e7d32; }
+}
+
+// Rates at a Glance
+.glance-loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #9e9e9e;
+  font-size: 0.82rem;
+}
+
+.glance-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.glance-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 14px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border: 1px solid #eeeeee;
+  min-width: 68px;
+  flex: 1;
+
+  .glance-flag { font-size: 1.4rem; line-height: 1; }
+  .glance-code { font-size: 0.72rem; font-weight: 700; color: #424242; letter-spacing: 0.4px; }
+
+  .glance-rate {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #1565c0;
+
+    &.glance-na { color: #bdbdbd; }
+  }
+}
+
+.glance-note {
+  font-size: 0.7rem;
+  color: #bdbdbd;
+  margin-top: 10px;
+}
