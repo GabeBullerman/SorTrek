@@ -12,9 +12,11 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { from } from 'rxjs';
+import { from, forkJoin } from 'rxjs';
+import { take } from 'rxjs/operators';
 import { PackingService } from '../../../core/services/packing.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { UserService } from '../../../core/services/user.service';
 import { ParticipantService } from '../../../core/services/participant.service';
 import { AiAdvisorService, PackingSuggestion } from '../../../core/services/ai-advisor.service';
 import { PackingItem, PackingCategory } from '../../../core/models/packing-item.model';
@@ -52,6 +54,7 @@ export class PackingComponent implements OnInit {
 
   private packingService = inject(PackingService);
   private auth = inject(AuthService);
+  private userService = inject(UserService);
   private participantService = inject(ParticipantService);
 
   readonly currentUserId = this.auth.currentUser?.uid ?? '';
@@ -61,6 +64,7 @@ export class PackingComponent implements OnInit {
 
   items = signal<PackingItem[]>([]);
   participants = signal<TripParticipant[]>([]);
+  memberNames = signal<Record<string, string>>({});
   showAddForm = signal(false);
   saving = signal(false);
   filterPersonId = signal<string>('');
@@ -84,20 +88,26 @@ export class PackingComponent implements OnInit {
     category:   ['other' as PackingCategory, [Validators.required]],
     quantity:   [1, [Validators.required, Validators.min(1)]],
     assignedTo: [null as string | null],
+    personal:   [false],
   });
 
   readonly filteredItems = computed(() => {
     const id = this.filterPersonId();
-    if (!id) return this.items();
-    return this.items().filter(i => !i.assignedTo || i.assignedTo === id);
+    const uid = this.currentUserId;
+    return this.items()
+      .filter(i => i.visibility !== 'personal' || (i.createdBy ?? '') === uid)
+      .filter(i => !id || !i.assignedTo || i.assignedTo === id);
   });
 
   packedByMe(item: PackingItem): boolean {
     return (item.packedBy ?? []).includes(this.currentUserId);
   }
 
-  packedCount(item: PackingItem): number {
-    return (item.packedBy ?? []).length;
+  packedByNames(item: PackingItem): string[] {
+    const names = this.memberNames();
+    return (item.packedBy ?? []).map(uid =>
+      uid === this.currentUserId ? 'You' : (names[uid] ?? 'Member')
+    );
   }
 
   readonly groups = computed((): CategoryGroup[] => {
@@ -127,6 +137,20 @@ export class PackingComponent implements OnInit {
     this.participantService.getParticipants(this.tripId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(p => this.participants.set(p));
+
+    // Load display names for all trip members so packedBy UIDs can be shown as names
+    const allUids = [...new Set([this.trip.userId, ...(this.trip.collaboratorIds ?? [])])];
+    if (allUids.length) {
+      forkJoin(allUids.map(uid => this.userService.getProfile(uid).pipe(take(1))))
+        .subscribe(profiles => {
+          const map: Record<string, string> = {};
+          allUids.forEach((uid, i) => {
+            map[uid] = profiles[i]?.displayName
+              || (uid === this.currentUserId ? (this.auth.currentUser?.displayName ?? 'You') : 'Member');
+          });
+          this.memberNames.set(map);
+        });
+    }
   }
 
   togglePacked(item: PackingItem) {
@@ -159,15 +183,17 @@ export class PackingComponent implements OnInit {
       quantity: v.quantity!,
       assignedTo: v.assignedTo ?? null,
       packedBy: [],
+      visibility: v.personal ? 'personal' : 'everyone',
+      createdBy: this.currentUserId,
     })).subscribe(() => {
       this.saving.set(false);
-      this.addForm.reset({ name: '', category: 'other', quantity: 1, assignedTo: null });
+      this.addForm.reset({ name: '', category: 'other', quantity: 1, assignedTo: null, personal: false });
       this.showAddForm.set(false);
     });
   }
 
   cancelAdd() {
-    this.addForm.reset({ name: '', category: 'other', quantity: 1, assignedTo: null });
+    this.addForm.reset({ name: '', category: 'other', quantity: 1, assignedTo: null, personal: false });
     this.showAddForm.set(false);
   }
 
@@ -204,6 +230,8 @@ export class PackingComponent implements OnInit {
       quantity: s.quantity,
       assignedTo: null,
       packedBy: [],
+      visibility: 'everyone' as const,
+      createdBy: this.currentUserId,
       createdAt: Timestamp.now(),
     }));
     this.items.update(list => [...list, ...optimistic]);
@@ -217,6 +245,8 @@ export class PackingComponent implements OnInit {
         quantity: s.quantity,
         assignedTo: null,
         packedBy: [],
+        visibility: 'everyone',
+        createdBy: this.currentUserId,
       })).subscribe()
     );
 

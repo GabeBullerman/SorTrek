@@ -11,6 +11,8 @@ export interface PackingItem {
   category: PackingCategory;
   quantity: number;
   assignedTo?: string | null;
-  packedBy: string[]; // UIDs of members who have packed this item
+  packedBy: string[];    // UIDs of members who have packed this item
+  visibility: 'everyone' | 'personal'; // personal = only visible to createdBy
+  createdBy: string;     // UID of the member who added the item
   createdAt: Timestamp;
 }

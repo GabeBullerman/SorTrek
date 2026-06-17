@@ -128,6 +128,11 @@
           }
 
           <div class="add-actions">
+            <label class="personal-toggle" matTooltip="Only you will see this item">
+              <input type="checkbox" formControlName="personal" />
+              <mat-icon>lock</mat-icon>
+              Just me
+            </label>
             <button mat-icon-button type="button" (click)="cancelAdd()" matTooltip="Cancel">
               <mat-icon>close</mat-icon>
             </button>
@@ -176,18 +181,24 @@
                           color="primary">
             </mat-checkbox>
             <div class="item-info">
-              <span class="item-name">{{ item.name }}</span>
-              @if (item.quantity > 1) {
-                <span class="item-qty">× {{ item.quantity }}</span>
-              }
-              @if (item.assignedTo) {
-                <span class="item-assignee">{{ participantName(item.assignedTo) }}</span>
-              }
-              @if (packedCount(item) > 0) {
-                <span class="packed-by-count"
-                      [matTooltip]="packedCount(item) + ' member' + (packedCount(item) !== 1 ? 's' : '') + ' packed this'">
-                  <mat-icon>check_circle</mat-icon>{{ packedCount(item) }}
-                </span>
+              <div class="item-main">
+                <span class="item-name">{{ item.name }}</span>
+                @if (item.quantity > 1) {
+                  <span class="item-qty">× {{ item.quantity }}</span>
+                }
+                @if (item.assignedTo) {
+                  <span class="item-assignee">{{ participantName(item.assignedTo) }}</span>
+                }
+                @if (item.visibility === 'personal') {
+                  <mat-icon class="personal-icon" matTooltip="Only visible to you">lock</mat-icon>
+                }
+              </div>
+              @if (packedByNames(item).length > 0) {
+                <div class="packed-by-row">
+                  @for (name of packedByNames(item); track name) {
+                    <span class="packed-by-chip">{{ name }}</span>
+                  }
+                </div>
               }
             </div>
             <button mat-icon-button class="delete-btn" (click)="deleteItem(item)"
