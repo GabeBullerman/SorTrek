@@ -33,5 +33,9 @@ export const routes: Routes = [
       },
     ],
   },
+  {
+    path: 'invite/:token',
+    loadComponent: () => import('./features/invite/invite.component').then(m => m.InviteComponent),
+  },
   { path: '**', redirectTo: 'trips' },
 ];

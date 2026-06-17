@@ -14,4 +14,5 @@ export interface Trip {
   createdAt: Timestamp;
   updatedAt: Timestamp;
   collaboratorIds?: string[];
+  inviteToken?: string;
 }

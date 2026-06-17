@@ -135,4 +135,41 @@ export class TripService {
       updatedAt: serverTimestamp(),
     });
   }
+
+  /** Generate (or return existing) an invite token for a trip. */
+  async generateInviteToken(tripId: string): Promise<string> {
+    const token = Array.from(crypto.getRandomValues(new Uint8Array(18)))
+      .map(b => b.toString(36).padStart(2, '0')).join('');
+    await this.run(() =>
+      updateDoc(doc(this.firestore, 'trips', tripId), {
+        inviteToken: token,
+        updatedAt: serverTimestamp(),
+      })
+    );
+    return token;
+  }
+
+  /** Accept an invite: look up trip by token, add current user as collaborator. */
+  async acceptInvite(token: string): Promise<{ tripId: string; tripName: string; alreadyMember: boolean } | null> {
+    const uid = this.auth.currentUser?.uid;
+    if (!uid) return null;
+    const q = query(
+      collection(this.firestore, 'trips'),
+      where('inviteToken', '==', token)
+    );
+    const snap = await this.run(() => getDocs(q));
+    if (snap.empty) return null;
+    const tripDoc = snap.docs[0];
+    const trip = tripDoc.data() as Trip;
+    const alreadyMember = trip.userId === uid || (trip.collaboratorIds ?? []).includes(uid);
+    if (!alreadyMember) {
+      await this.run(() =>
+        updateDoc(tripDoc.ref, {
+          collaboratorIds: arrayUnion(uid),
+          updatedAt: serverTimestamp(),
+        })
+      );
+    }
+    return { tripId: tripDoc.id, tripName: trip.name, alreadyMember };
+  }
 }

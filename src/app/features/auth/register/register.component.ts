@@ -69,8 +69,8 @@ export class RegisterComponent {
           homeCurrency: selectedCountry.currency,
           createdAt: Timestamp.now(),
         })).subscribe({
-          next: () => this.router.navigate(['/trips']),
-          error: () => this.router.navigate(['/trips']),
+          next: () => this.afterLogin(),
+          error: () => this.afterLogin(),
         });
       },
       error: err => {
@@ -83,12 +83,22 @@ export class RegisterComponent {
     });
   }
 
+  private afterLogin() {
+    const token = localStorage.getItem('pendingInviteToken');
+    if (token) {
+      localStorage.removeItem('pendingInviteToken');
+      this.router.navigate(['/invite', token]);
+    } else {
+      this.router.navigate(['/trips']);
+    }
+  }
+
   googleLoading = signal(false);
 
   loginWithGoogle() {
     this.googleLoading.set(true);
     this.auth.loginWithGoogle().subscribe({
-      next: () => this.router.navigate(['/trips']),
+      next: () => this.afterLogin(),
       error: err => {
         this.googleLoading.set(false);
         if (err.code !== 'auth/popup-closed-by-user') {

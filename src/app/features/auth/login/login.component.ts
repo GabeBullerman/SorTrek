@@ -36,12 +36,22 @@ export class LoginComponent {
     password: ['', [Validators.required, Validators.minLength(6)]],
   });
 
+  private afterLogin() {
+    const token = localStorage.getItem('pendingInviteToken');
+    if (token) {
+      localStorage.removeItem('pendingInviteToken');
+      this.router.navigate(['/invite', token]);
+    } else {
+      this.router.navigate(['/trips']);
+    }
+  }
+
   submit() {
     if (this.form.invalid) return;
     this.loading.set(true);
     const { email, password } = this.form.value;
     this.auth.login(email!, password!).subscribe({
-      next: () => this.router.navigate(['/trips']),
+      next: () => this.afterLogin(),
       error: err => {
         this.loading.set(false);
         this.snackBar.open(this.friendlyError(err.code), 'Dismiss', { duration: 4000 });
@@ -54,7 +64,7 @@ export class LoginComponent {
   loginWithGoogle() {
     this.googleLoading.set(true);
     this.auth.loginWithGoogle().subscribe({
-      next: () => this.router.navigate(['/trips']),
+      next: () => this.afterLogin(),
       error: err => {
         this.googleLoading.set(false);
         if (err.code !== 'auth/popup-closed-by-user') {

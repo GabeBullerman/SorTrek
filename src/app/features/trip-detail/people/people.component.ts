@@ -59,6 +59,10 @@ export class PeopleComponent implements OnInit, OnChanges {
   inviteEmail = signal('');
   inviteLoading = signal(false);
 
+  // Invite link
+  generatingLink = signal(false);
+  linkCopied = signal(false);
+
   addForm = this.fb.group({
     name: ['', Validators.required],
     email: ['', Validators.email],
@@ -100,6 +104,22 @@ export class PeopleComponent implements OnInit, OnChanges {
         );
       })
     );
+  }
+
+  /** Generate invite link and copy to clipboard */
+  async copyInviteLink() {
+    this.generatingLink.set(true);
+    try {
+      const token = await this.tripService.generateInviteToken(this.tripId);
+      const url = `${window.location.origin}/invite/${token}`;
+      await navigator.clipboard.writeText(url);
+      this.linkCopied.set(true);
+      setTimeout(() => this.linkCopied.set(false), 3000);
+    } catch {
+      this.snackBar.open('Could not copy link. Please try again.', undefined, { duration: 3000 });
+    } finally {
+      this.generatingLink.set(false);
+    }
   }
 
   /** Send a collaborator invite */

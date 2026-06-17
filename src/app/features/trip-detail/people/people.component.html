@@ -11,6 +11,23 @@
         Invite a registered Wayfarer user by email. They'll see this trip in their trips list and can view and edit all tabs.
       </p>
 
+      <!-- Invite link -->
+      <div class="invite-link-row">
+        <mat-icon class="invite-link-icon">link</mat-icon>
+        <span class="invite-link-label">Share a link — anyone who opens it gets added to this trip.</span>
+        <button mat-stroked-button class="copy-link-btn"
+                [disabled]="generatingLink()"
+                (click)="copyInviteLink()">
+          @if (generatingLink()) {
+            <mat-spinner diameter="16"></mat-spinner>
+          } @else if (linkCopied()) {
+            <mat-icon>check</mat-icon> Copied!
+          } @else {
+            <mat-icon>content_copy</mat-icon> Copy invite link
+          }
+        </button>
+      </div>
+
       <!-- Invite form -->
       <div class="invite-row">
         <mat-form-field appearance="outline" class="invite-email-field">
