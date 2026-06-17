@@ -1,4 +1,4 @@
-const Groq = require('groq-sdk');
+const { groqChat } = require('./_groq');
 
 /**
  * Searches Tavily for live web results about activities/events in a destination.
@@ -72,12 +72,7 @@ ${formatResults(restaurantResults)}
 `.trim();
 
     // Use Groq to extract structured suggestions from live search data
-    const groq = new Groq({ apiKey: groqKey });
-
-    const response = await groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
-      max_tokens: 1500,
-      messages: [
+    const content = await groqChat(groqKey, [
         {
           role: 'system',
           content: `You extract travel activity suggestions from live web search results. Return ONLY a valid JSON array — no markdown, no explanation.
@@ -102,10 +97,9 @@ ${searchContext}
 
 Extract 7 varied, specific suggestions from these results. Prioritise things that are currently open or happening around ${monthYear}. Include a mix of sightseeing, food, and local experiences.`,
         },
-      ],
-    });
+      ], { maxTokens: 1500 });
 
-    let text = response.choices[0].message.content.trim();
+    let text = content.trim();
     text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
 
     let suggestions = [];

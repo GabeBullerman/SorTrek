@@ -1,4 +1,4 @@
-const Groq = require('groq-sdk');
+const { groqChat } = require('./_groq');
 
 const BOOKING_SENDERS = [
   'airbnb.com', 'booking.com', 'hotels.com', 'marriott.com', 'hilton.com',
@@ -69,11 +69,8 @@ async function fetchEmailText(messageId, accessToken) {
   }
 }
 
-async function parseEmailWithGroq(groq, emailText, destination) {
-  const response = await groq.chat.completions.create({
-    model: 'llama-3.3-70b-versatile',
-    max_tokens: 512,
-    messages: [
+async function parseEmailWithGroq(apiKey, emailText, destination) {
+  const content = await groqChat(apiKey, [
       {
         role: 'system',
         content: `You extract travel booking details from emails. Return ONLY a single valid JSON object — no markdown, no explanation.
@@ -92,10 +89,9 @@ Fields:
         role: 'user',
         content: `Trip destination: ${destination}\n\nEmail:\n${emailText}`,
       },
-    ],
-  });
+    ], { maxTokens: 512 });
 
-  let text = response.choices[0].message.content.trim();
+  let text = content.trim();
   text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
   try {
     return JSON.parse(text);
@@ -114,8 +110,6 @@ module.exports = async (req, res) => {
 
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'GROQ_API_KEY not configured' });
-
-  const groq = new Groq({ apiKey });
 
   try {
     // Search Gmail for booking-related emails
@@ -142,7 +136,7 @@ module.exports = async (req, res) => {
 
     // Parse each with Groq
     const parsed = await Promise.allSettled(
-      emailTexts.filter(Boolean).map(t => parseEmailWithGroq(groq, t, tripDestination))
+      emailTexts.filter(Boolean).map(t => parseEmailWithGroq(apiKey, t, tripDestination))
     );
 
     const bookings = parsed

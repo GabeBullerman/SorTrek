@@ -1,4 +1,4 @@
-const Groq = require('groq-sdk');
+const { groqChat } = require('./_groq');
 
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
@@ -21,40 +21,20 @@ module.exports = async (req, res) => {
   const endDate   = new Date(trip.endDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   const durationDays = Math.ceil((new Date(trip.endDate) - new Date(trip.startDate)) / (1000 * 60 * 60 * 24)) + 1;
 
-  const groq = new Groq({ apiKey });
-
   try {
-    if (type === 'diag') {
-      const out = { keyLen: apiKey.length, keyPrefix: apiKey.slice(0, 4) };
-      try {
-        const raw = await fetch('https://api.groq.com/openai/v1/models', {
-          headers: { Authorization: `Bearer ${apiKey}` },
-        });
-        out.rawStatus = raw.status;
-        out.rawBody = (await raw.text()).slice(0, 300);
-      } catch (e) {
-        out.rawFetchError = e?.message ?? String(e);
-      }
-      return res.status(200).json(out);
-    }
-
     if (type === 'packing') {
-      const response = await groq.chat.completions.create({
-        model: 'llama-3.3-70b-versatile',
-        max_tokens: 1024,
-        messages: [
-          {
-            role: 'system',
-            content: `You are a travel packing assistant. Return ONLY a valid JSON array of packing items — no markdown fences, no explanation. Each item must be an object with exactly these keys: "name" (string), "category" (one of: "documents", "clothing", "electronics", "toiletries", "medicine", "gear", "food", "other"), "quantity" (number).`,
-          },
-          {
-            role: 'user',
-            content: `Trip: ${trip.name} to ${trip.destination}\nDuration: ${durationDays} days (${startDate} – ${endDate})\nAlready packing: ${existingItems?.length ? existingItems.join(', ') : 'nothing yet'}\n\nSuggest 20 essential items I haven't already listed. Focus on practical must-haves for this destination and trip length.`,
-          },
-        ],
-      });
+      const content = await groqChat(apiKey, [
+        {
+          role: 'system',
+          content: `You are a travel packing assistant. Return ONLY a valid JSON array of packing items — no markdown fences, no explanation. Each item must be an object with exactly these keys: "name" (string), "category" (one of: "documents", "clothing", "electronics", "toiletries", "medicine", "gear", "food", "other"), "quantity" (number).`,
+        },
+        {
+          role: 'user',
+          content: `Trip: ${trip.name} to ${trip.destination}\nDuration: ${durationDays} days (${startDate} – ${endDate})\nAlready packing: ${existingItems?.length ? existingItems.join(', ') : 'nothing yet'}\n\nSuggest 20 essential items I haven't already listed. Focus on practical must-haves for this destination and trip length.`,
+        },
+      ], { maxTokens: 1024 });
 
-      let text = response.choices[0].message.content.trim();
+      let text = content.trim();
       text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
 
       let suggestions = [];
@@ -75,21 +55,17 @@ The user is planning "${trip.name}" — a trip to ${trip.destination} from ${sta
 
 Important: your knowledge has a training cutoff and you do not have access to live data. Always remind users to verify current prices, opening hours, visa requirements, and availability directly with official sources before relying on any specific figures you provide. Give concise, practical advice. Use short paragraphs or bullet points. Avoid generic filler.`;
 
-      const response = await groq.chat.completions.create({
-        model: 'llama-3.3-70b-versatile',
-        max_tokens: 1024,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...(messages ?? []).map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content })),
-        ],
-      });
+      const reply = await groqChat(apiKey, [
+        { role: 'system', content: systemPrompt },
+        ...(messages ?? []).map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content })),
+      ], { maxTokens: 1024 });
 
-      return res.status(200).json({ reply: response.choices[0].message.content });
+      return res.status(200).json({ reply });
     }
 
     return res.status(400).json({ error: `Unknown type: ${type}` });
   } catch (err) {
-    const detail = err?.error?.message ?? err?.message ?? String(err);
+    const detail = err?.message ?? String(err);
     console.error('[ai-advisor]', detail);
     return res.status(500).json({ error: 'AI request failed.', detail });
   }

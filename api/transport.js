@@ -1,4 +1,4 @@
-const Groq = require('groq-sdk');
+const { groqChat } = require('./_groq');
 
 const DB_API   = 'https://v6.db.transport.rest';
 const OVERPASS = 'https://overpass-api.de/api/interpreter';
@@ -173,7 +173,6 @@ module.exports = async (req, res) => {
       if (!groqKey) return res.status(500).json({ error: 'GROQ_API_KEY not configured' });
 
       const { tripName, journeys, localSummary, destination: dest } = req.body;
-      const groq = new Groq({ apiKey: groqKey });
 
       const context = [
         journeys?.length
@@ -186,16 +185,12 @@ module.exports = async (req, res) => {
           : 'No local transport data available.',
       ].join('\n');
 
-      const response = await groq.chat.completions.create({
-        model:      'llama-3.3-70b-versatile',
-        max_tokens: 512,
-        messages: [
-          { role: 'system', content: 'You are a concise European travel transport advisor. Give practical, specific advice in 3–5 bullet points. No fluff.' },
-          { role: 'user',   content: `Trip: ${tripName ?? 'Unknown'} to ${dest ?? 'Unknown'}\n${context}\n\nGive a short transport plan: which train to take, and how to get around locally.` },
-        ],
-      });
+      const plan = await groqChat(groqKey, [
+        { role: 'system', content: 'You are a concise European travel transport advisor. Give practical, specific advice in 3–5 bullet points. No fluff.' },
+        { role: 'user',   content: `Trip: ${tripName ?? 'Unknown'} to ${dest ?? 'Unknown'}\n${context}\n\nGive a short transport plan: which train to take, and how to get around locally.` },
+      ], { maxTokens: 512 });
 
-      return res.status(200).json({ plan: response.choices[0].message.content });
+      return res.status(200).json({ plan });
     }
 
     return res.status(400).json({ error: `Unknown action: ${action}` });
