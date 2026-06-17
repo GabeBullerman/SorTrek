@@ -49,7 +49,7 @@ export class PeopleComponent implements OnInit, OnChanges {
 
   participants$!: Observable<TripParticipant[]>;
   /** Observable of resolved member profiles (owner first, then collaborators) */
-  collaborators$!: Observable<(UserProfile & { uid: string; isOwner: boolean })[]>;
+  collaborators$!: Observable<(UserProfile & { uid: string; isOwner: boolean; photoURL?: string })[]>;
 
   showAddForm = signal(false);
   saving = signal(false);
@@ -91,11 +91,15 @@ export class PeopleComponent implements OnInit, OnChanges {
 
     const authUser = this.auth.currentUser;
 
-    // Best-effort display name: Firestore profile → Firebase Auth (own card only) → 'Member'
-    const resolveName = (uid: string, profile: UserProfile | undefined): string =>
-      profile?.displayName ||
-      (uid === authUser?.uid ? (authUser.displayName ?? '') : '') ||
-      'Member';
+    // Best-effort field resolution: Firestore profile → Firebase Auth (own card only) → fallback
+    const resolve = (uid: string, profile: UserProfile | undefined) => {
+      const isMe = uid === authUser?.uid;
+      return {
+        displayName: profile?.displayName || (isMe ? (authUser!.displayName ?? '') : '') || 'Member',
+        email:       profile?.email       || (isMe ? (authUser!.email ?? '')        : ''),
+        photoURL:    profile?.photoURL    || (isMe ? (authUser!.photoURL ?? '')     : '') || undefined,
+      };
+    };
 
     this.collaborators$ = this.tripService.getTrip(this.tripId).pipe(
       switchMap((trip: Trip) => {
@@ -107,8 +111,7 @@ export class PeopleComponent implements OnInit, OnChanges {
         const owner$ = this.userService.getProfile(ownerUid).pipe(
           map(profile => ({
             uid: ownerUid,
-            displayName: resolveName(ownerUid, profile),
-            email: profile?.email ?? '',
+            ...resolve(ownerUid, profile),
             homeCurrency: profile?.homeCurrency ?? '',
             createdAt: profile?.createdAt ?? null as any,
             isOwner: true,
@@ -124,8 +127,7 @@ export class PeopleComponent implements OnInit, OnChanges {
             this.userService.getProfile(uid).pipe(
               map(profile => ({
                 uid,
-                displayName: resolveName(uid, profile),
-                email: profile?.email ?? '',
+                ...resolve(uid, profile),
                 homeCurrency: profile?.homeCurrency ?? '',
                 createdAt: profile?.createdAt ?? null as any,
                 isOwner: false,
@@ -173,6 +175,25 @@ export class PeopleComponent implements OnInit, OnChanges {
     } finally {
       this.inviteLoading.set(false);
     }
+  }
+
+  /** Leave this trip as a collaborator (non-owner only) */
+  leaveTripAsMember() {
+    this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Leave Trip',
+        message: 'Leave this trip? It will be removed from your trips list and you\'ll lose access.',
+      },
+    }).afterClosed().subscribe(confirmed => {
+      if (!confirmed) return;
+      from(this.tripService.leaveTrip(this.tripId)).subscribe({
+        next: () => {
+          this.snackBar.open('You\'ve left the trip', undefined, { duration: 2500 });
+          this.router.navigate(['/trips']);
+        },
+        error: () => this.snackBar.open('Could not leave trip. Try again.', undefined, { duration: 3000 }),
+      });
+    });
   }
 
   /** Transfer ownership to a collaborator */

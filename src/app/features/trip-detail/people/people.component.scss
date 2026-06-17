@@ -116,6 +116,10 @@
   background: linear-gradient(135deg, #283593, #5c6bc0) !important;
 }
 
+.collab-photo {
+  object-fit: cover;
+}
+
 .no-collabs-hint {
   font-size: 0.82rem;
   color: #9e9e9e;

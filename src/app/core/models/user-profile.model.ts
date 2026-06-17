@@ -7,6 +7,7 @@ export interface UserProfile {
   country?: string;
   homeCity?: string;
   homeCurrency: string;
+  photoURL?: string;
   notificationsEnabled?: boolean;
   fcmToken?: string;
   createdAt: Timestamp;

@@ -149,6 +149,18 @@ export class TripService {
     return `${tripId}.${random}`;
   }
 
+  /** Remove yourself from a trip's collaboratorIds (for non-owners). */
+  async leaveTrip(tripId: string): Promise<void> {
+    const uid = this.auth.currentUser?.uid;
+    if (!uid) return;
+    await this.run(() =>
+      updateDoc(doc(this.firestore, 'trips', tripId), {
+        collaboratorIds: arrayRemove(uid),
+        updatedAt: serverTimestamp(),
+      })
+    );
+  }
+
   /** Transfer trip ownership to another collaborator. Old owner becomes a collaborator. */
   async transferOwnership(tripId: string, newOwnerUid: string): Promise<void> {
     const currentUid = this.auth.currentUser!.uid;

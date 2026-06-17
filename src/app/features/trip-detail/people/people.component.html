@@ -61,7 +61,11 @@
       <div class="collaborators-list">
         @for (c of collaborators; track c.uid) {
           <div class="collaborator-card">
-            <div class="participant-avatar collab-avatar">{{ initial(c.displayName) }}</div>
+            @if (c.photoURL) {
+              <img class="participant-avatar collab-photo" [src]="c.photoURL" [alt]="c.displayName" referrerpolicy="no-referrer" />
+            } @else {
+              <div class="participant-avatar collab-avatar">{{ initial(c.displayName) }}</div>
+            }
             <div class="participant-info">
               <div class="participant-name">
                 {{ c.displayName }}
@@ -93,6 +97,12 @@
                         matTooltip="Remove collaborator"
                         (click)="removeCollaborator(c.uid, c.displayName)">
                   <mat-icon>person_remove</mat-icon>
+                </button>
+              }
+              @if (!isOwner && c.uid === currentUserId) {
+                <button mat-stroked-button class="leave-btn" (click)="leaveTripAsMember()"
+                        matTooltip="Leave this trip">
+                  <mat-icon>exit_to_app</mat-icon> Leave
                 </button>
               }
             </div>

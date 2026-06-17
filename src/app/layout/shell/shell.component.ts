@@ -1,4 +1,4 @@
-import { Component, inject, signal, ViewChild } from '@angular/core';
+import { Component, inject, OnInit, ViewChild } from '@angular/core';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -10,8 +10,10 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 import { AsyncPipe } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
+import { UserService } from '../../core/services/user.service';
+import { Timestamp } from '@angular/fire/firestore';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { map } from 'rxjs/operators';
+import { filter, map, switchMap, take } from 'rxjs/operators';
 import { CurrencyConverterComponent } from '../../shared/components/currency-converter/currency-converter.component';
 import { GuideModalComponent } from '../../shared/components/guide-modal/guide-modal.component';
 import { PwaInstallPromptComponent } from '../../shared/components/pwa-install-prompt/pwa-install-prompt.component';
@@ -28,8 +30,9 @@ import { PwaInstallPromptComponent } from '../../shared/components/pwa-install-p
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.scss',
 })
-export class ShellComponent {
+export class ShellComponent implements OnInit {
   private auth = inject(AuthService);
+  private userService = inject(UserService);
   private router = inject(Router);
   private breakpointObserver = inject(BreakpointObserver);
   private dialog = inject(MatDialog);
@@ -37,6 +40,32 @@ export class ShellComponent {
   @ViewChild('sidenav') sidenav!: MatSidenav;
 
   currentUser$ = this.auth.currentUser$;
+
+  ngOnInit() {
+    // Ensure every logged-in user has a Firestore profile.
+    // Covers accounts created before profile-creation was added and Google sign-ins that failed to write.
+    this.auth.currentUser$.pipe(
+      filter(u => !!u),
+      take(1),
+      switchMap(user =>
+        this.userService.getProfile(user!.uid).pipe(
+          take(1),
+          filter(profile => !profile),
+          map(() => user!)
+        )
+      )
+    ).subscribe(user => {
+      this.userService.createProfile({
+        uid: user.uid,
+        displayName: user.displayName || user.email?.split('@')[0] || 'Traveller',
+        email: user.email || '',
+        photoURL: user.photoURL || undefined,
+        homeCurrency: 'USD',
+        country: 'United States',
+        createdAt: Timestamp.now(),
+      });
+    });
+  }
   isMobile$ = this.breakpointObserver.observe([Breakpoints.Handset]).pipe(map(r => r.matches));
 
   navItems = [
