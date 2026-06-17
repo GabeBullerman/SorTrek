@@ -22,6 +22,9 @@ const PENDING_INVITE_KEY = 'pendingInviteToken';
         <mat-icon class="invite-icon success">check_circle</mat-icon>
         <h2>You're in!</h2>
         <p>You've been added to <strong>{{ tripName }}</strong>. Taking you there...</p>
+      } @else if (state === 'redirecting') {
+        <mat-spinner diameter="48"></mat-spinner>
+        <p>Taking you to the trip…</p>
       } @else if (state === 'invalid') {
         <mat-icon class="invite-icon error">link_off</mat-icon>
         <h2>Invalid invite link</h2>
@@ -62,7 +65,7 @@ export class InviteComponent implements OnInit {
   private firebaseAuth = inject(Auth);
   private snackBar = inject(MatSnackBar);
 
-  state: 'loading' | 'success' | 'invalid' = 'loading';
+  state: 'loading' | 'success' | 'redirecting' | 'invalid' = 'loading';
   tripName = '';
   tripId = '';
 
@@ -94,9 +97,10 @@ export class InviteComponent implements OnInit {
       this.tripName = result.tripName;
 
       if (result.alreadyMember) {
-        // Skip the loading screen -- go straight to the trip with a toast
-        this.router.navigate(['/trips', this.tripId]);
+        // Show a brief redirect screen so the user is never stuck on 'loading'
+        this.state = 'redirecting';
         this.snackBar.open(`You're already a member of ${this.tripName}`, undefined, { duration: 4000 });
+        this.router.navigate(['/trips', this.tripId]);
       } else {
         // Briefly show "You're in!" then navigate
         this.state = 'success';
@@ -112,3 +116,4 @@ export class InviteComponent implements OnInit {
 }
 
 export const PENDING_INVITE_KEY_EXPORT = PENDING_INVITE_KEY;
+
