@@ -88,16 +88,31 @@ export class PeopleComponent implements OnInit, OnChanges {
 
   private loadCollaborators() {
     type Member = UserProfile & { uid: string; isOwner: boolean };
+
+    const authUser = this.auth.currentUser;
+
+    // Best-effort display name: Firestore profile → Firebase Auth (own card only) → 'Member'
+    const resolveName = (uid: string, profile: UserProfile | undefined): string =>
+      profile?.displayName ||
+      (uid === authUser?.uid ? (authUser.displayName ?? '') : '') ||
+      'Member';
+
     this.collaborators$ = this.tripService.getTrip(this.tripId).pipe(
       switchMap((trip: Trip) => {
         const ownerUid = trip?.userId;
+        if (!ownerUid) return of([] as Member[]);
+
         const collabIds = (trip?.collaboratorIds ?? []).filter(id => id !== ownerUid);
 
         const owner$ = this.userService.getProfile(ownerUid).pipe(
-          map(profile => (profile
-            ? { ...profile, uid: ownerUid, isOwner: true }
-            : { uid: ownerUid, displayName: 'Trip Owner', email: '', homeCurrency: '', createdAt: null as any, isOwner: true }
-          ) as Member)
+          map(profile => ({
+            uid: ownerUid,
+            displayName: resolveName(ownerUid, profile),
+            email: profile?.email ?? '',
+            homeCurrency: profile?.homeCurrency ?? '',
+            createdAt: profile?.createdAt ?? null as any,
+            isOwner: true,
+          } as Member))
         );
 
         if (collabIds.length === 0) {
@@ -107,10 +122,17 @@ export class PeopleComponent implements OnInit, OnChanges {
         const collabs$ = combineLatest(
           collabIds.map(uid =>
             this.userService.getProfile(uid).pipe(
-              map(profile => profile ? { ...profile, uid, isOwner: false } as Member : null)
+              map(profile => ({
+                uid,
+                displayName: resolveName(uid, profile),
+                email: profile?.email ?? '',
+                homeCurrency: profile?.homeCurrency ?? '',
+                createdAt: profile?.createdAt ?? null as any,
+                isOwner: false,
+              } as Member))
             )
           )
-        ).pipe(map(list => list.filter((p): p is Member => p !== null)));
+        );
 
         return combineLatest([owner$, collabs$]).pipe(
           map(([owner, collabs]) => [owner, ...collabs])

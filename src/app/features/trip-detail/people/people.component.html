@@ -164,8 +164,13 @@
     @if (participants.length === 0 && !showAddForm()) {
       <div class="empty-state">
         <mat-icon>group</mat-icon>
-        <h3>No travel companions yet</h3>
-        <p>Add everyone going on this trip to track shared costs and assign bookings.</p>
+        @if (isOwner) {
+          <h3>No travel companions yet</h3>
+          <p>Add everyone going on this trip to track shared costs and assign bookings.</p>
+        } @else {
+          <h3>No companions added yet</h3>
+          <p>Only the trip owner can add travel companions. Ask them to add people from this tab.</p>
+        }
       </div>
     } @else {
       <div class="participants-list">
