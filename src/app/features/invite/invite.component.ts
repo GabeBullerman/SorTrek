@@ -1,12 +1,11 @@
-import { Component, OnInit, inject } from '@angular/core';
+﻿import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { Auth } from '@angular/fire/auth';
 import { TripService } from '../../core/services/trip.service';
-import { AuthService } from '../../core/services/auth.service';
-import { firstValueFrom } from 'rxjs';
-import { filter } from 'rxjs/operators';
 
 const PENDING_INVITE_KEY = 'pendingInviteToken';
 
@@ -18,17 +17,11 @@ const PENDING_INVITE_KEY = 'pendingInviteToken';
     <div class="invite-page">
       @if (state === 'loading') {
         <mat-spinner diameter="48"></mat-spinner>
-        <p>Joining trip…</p>
+        <p>Joining trip...</p>
       } @else if (state === 'success') {
         <mat-icon class="invite-icon success">check_circle</mat-icon>
         <h2>You're in!</h2>
-        <p>You've been added to <strong>{{ tripName }}</strong>.</p>
-        <button mat-flat-button color="primary" (click)="goToTrip()">Open Trip</button>
-      } @else if (state === 'already') {
-        <mat-icon class="invite-icon info">group</mat-icon>
-        <h2>Already a member</h2>
-        <p>You're already part of <strong>{{ tripName }}</strong>.</p>
-        <button mat-flat-button color="primary" (click)="goToTrip()">Open Trip</button>
+        <p>You've been added to <strong>{{ tripName }}</strong>. Taking you there...</p>
       } @else if (state === 'invalid') {
         <mat-icon class="invite-icon error">link_off</mat-icon>
         <h2>Invalid invite link</h2>
@@ -58,7 +51,6 @@ const PENDING_INVITE_KEY = 'pendingInviteToken';
     .invite-icon {
       font-size: 56px; width: 56px; height: 56px;
       &.success { color: #a5d6a7; }
-      &.info    { color: #90caf9; }
       &.error   { color: #ef9a9a; }
     }
   `],
@@ -67,19 +59,20 @@ export class InviteComponent implements OnInit {
   readonly router = inject(Router);
   private route = inject(ActivatedRoute);
   private tripService = inject(TripService);
-  private auth = inject(AuthService);
+  private firebaseAuth = inject(Auth);
+  private snackBar = inject(MatSnackBar);
 
-  state: 'loading' | 'success' | 'already' | 'invalid' = 'loading';
+  state: 'loading' | 'success' | 'invalid' = 'loading';
   tripName = '';
   tripId = '';
 
   async ngOnInit() {
     const token = this.route.snapshot.paramMap.get('token') ?? '';
 
-    // Wait for Firebase auth to resolve (currentUser is null until SDK initializes)
-    const user = await firstValueFrom(
-      this.auth.currentUser$.pipe(filter(u => u !== undefined))
-    );
+    // authStateReady() resolves once Firebase has finished restoring the persisted
+    // session -- auth.currentUser is null until then even if the user is signed in.
+    await this.firebaseAuth.authStateReady();
+    const user = this.firebaseAuth.currentUser;
 
     if (!user) {
       localStorage.setItem(PENDING_INVITE_KEY, token);
@@ -99,14 +92,22 @@ export class InviteComponent implements OnInit {
       }
       this.tripId = result.tripId;
       this.tripName = result.tripName;
-      this.state = result.alreadyMember ? 'already' : 'success';
+
+      if (result.alreadyMember) {
+        // Skip the loading screen -- go straight to the trip with a toast
+        this.router.navigate(['/trips', this.tripId]);
+        this.snackBar.open(`You're already a member of ${this.tripName}`, undefined, { duration: 4000 });
+      } else {
+        // Briefly show "You're in!" then navigate
+        this.state = 'success';
+        setTimeout(() => {
+          this.router.navigate(['/trips', this.tripId]);
+          this.snackBar.open(`Welcome to ${this.tripName}!`, undefined, { duration: 4000 });
+        }, 1500);
+      }
     } catch {
       this.state = 'invalid';
     }
-  }
-
-  goToTrip() {
-    this.router.navigate(['/trips', this.tripId]);
   }
 }
 
