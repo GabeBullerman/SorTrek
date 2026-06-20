@@ -12,6 +12,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { TripService } from '../../../core/services/trip.service';
+import { CoverPhotoService } from '../../../core/services/cover-photo.service';
 import { GoogleMapsLoaderService } from '../../../core/services/google-maps-loader.service';
 import { Trip } from '../../../core/models/trip.model';
 import { Timestamp } from '@angular/fire/firestore';
@@ -38,6 +39,7 @@ const CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'MXN', 'BRL', 'INR
 export class TripFormDialogComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private tripService = inject(TripService);
+  private coverPhotoService = inject(CoverPhotoService);
   private dialogRef = inject(MatDialogRef<TripFormDialogComponent>);
   private snackBar = inject(MatSnackBar);
   private mapsLoader = inject(GoogleMapsLoaderService);
@@ -145,7 +147,7 @@ export class TripFormDialogComponent implements OnInit, OnDestroy {
     );
   }
 
-  submit() {
+  async submit() {
     this.form.markAllAsTouched();
     if (this.form.invalid) {
       this.snackBar.open('Please fill in all required fields.', 'OK', { duration: 3000 });
@@ -154,6 +156,18 @@ export class TripFormDialogComponent implements OnInit, OnDestroy {
     this.loading.set(true);
     try {
       const { name, destination, description, startDate, endDate, currency } = this.form.value;
+
+      // Persist the cover to Storage so the (otherwise short-lived) Google photo
+      // URL doesn't expire. Falls back to whatever we have if persistence fails.
+      let coverPhotoUrl = this.selectedPhotoUrl() ?? this.data?.trip?.coverPhotoUrl ?? '';
+      if (coverPhotoUrl && !this.coverPhotoService.isPersisted(coverPhotoUrl)) {
+        try {
+          coverPhotoUrl = await this.coverPhotoService.persist(coverPhotoUrl);
+        } catch {
+          this.snackBar.open('Couldn\'t save a permanent copy of the cover photo — using a temporary one.', 'OK', { duration: 4000 });
+        }
+      }
+
       const payload: Omit<Trip, 'id' | 'userId' | 'createdAt' | 'updatedAt'> = {
         name: name!,
         destination: destination!,
@@ -161,7 +175,7 @@ export class TripFormDialogComponent implements OnInit, OnDestroy {
         startDate: Timestamp.fromDate(startDate!),
         endDate: Timestamp.fromDate(endDate!),
         currency: currency!,
-        coverPhotoUrl: this.selectedPhotoUrl() ?? this.data?.trip?.coverPhotoUrl ?? '',
+        coverPhotoUrl,
       };
 
       const op: Observable<void> = this.isEdit
