@@ -51,8 +51,10 @@ export interface Booking {
   // ── Flight-specific ────────────────────────────────────────────
   /** e.g. "DL123" or "BA 256" — IATA flight number, used for status lookups. */
   flightNumber?: string;
-  /** Per-passenger ticket / e-ticket numbers, keyed by TripParticipant id. */
+  /** Per-passenger ticket / e-ticket numbers, keyed by TripParticipant id (legacy). */
   ticketNumbers?: Record<string, string>;
+  /** Free-form per-person ticket numbers — one row per traveller on the flight. */
+  passengerTickets?: { name: string; ticket: string }[];
   /** Departure airport IATA code, e.g. "JFK". */
   departureAirport?: string;
   /** Arrival airport IATA code, e.g. "LAX". */

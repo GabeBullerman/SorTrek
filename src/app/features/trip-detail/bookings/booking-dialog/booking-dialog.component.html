@@ -107,6 +107,32 @@
           </mat-form-field>
         </div>
 
+        <!-- Free-form per-person ticket numbers -->
+        <div class="ticket-section" formArrayName="passengerTickets">
+          <div class="ticket-section-label">Passengers &amp; ticket numbers</div>
+          @for (row of passengerTickets.controls; track $index) {
+            <div class="ticket-row" [formGroupName]="$index">
+              <mat-form-field appearance="outline" class="ticket-name">
+                <mat-label>Passenger</mat-label>
+                <input matInput formControlName="name" placeholder="e.g. Maggie" />
+                <mat-icon matPrefix>person</mat-icon>
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="ticket-num">
+                <mat-label>Ticket #</mat-label>
+                <input matInput formControlName="ticket" placeholder="0062357891234" />
+                <mat-icon matPrefix>airplane_ticket</mat-icon>
+              </mat-form-field>
+              <button mat-icon-button type="button" class="ticket-remove"
+                      (click)="removePassengerTicket($index)" matTooltip="Remove">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          }
+          <button mat-stroked-button type="button" (click)="addPassengerTicket()">
+            <mat-icon>add</mat-icon> Add passenger
+          </button>
+        </div>
+
         <div class="status-lookup">
           <button mat-stroked-button type="button" (click)="checkFlightStatus()" [disabled]="statusLoading()">
             @if (statusLoading()) { <mat-spinner diameter="16"></mat-spinner> &nbsp;Checking… }
@@ -236,21 +262,6 @@
           </mat-form-field>
         </div>
 
-        <!-- One ticket-number field per assigned passenger (flights only) -->
-        @if (isFlight() && selectedPassengers().length > 0) {
-          <div class="ticket-section" formGroupName="ticketNumbers">
-            <div class="ticket-section-label">Ticket / e-ticket numbers</div>
-            @for (p of selectedPassengers(); track p.id) {
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>{{ p.name }}'s ticket #</mat-label>
-                <input matInput [formControlName]="p.id!" placeholder="e.g. 0062357891234" />
-                <mat-icon matPrefix>airplane_ticket</mat-icon>
-              </mat-form-field>
-            }
-          </div>
-        } @else if (isFlight()) {
-          <p class="ticket-hint">Tip: choose who this flight is for above to add a ticket number for each person.</p>
-        }
       }
 
       <mat-form-field appearance="outline" class="full-width mt-16">

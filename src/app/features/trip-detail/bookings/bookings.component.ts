@@ -146,13 +146,19 @@ export class BookingsComponent implements OnInit {
     return stops.join(' → ');
   }
 
-  /** Resolve per-passenger ticket numbers to [name, ticket] pairs for display. */
+  /** Resolve per-passenger ticket numbers to [name, ticket] pairs for display.
+   *  Prefers the free-form passengerTickets; falls back to legacy ticketNumbers. */
   getTicketEntries(booking: Booking, participants: TripParticipant[]): { name: string; ticket: string }[] {
-    if (!booking.ticketNumbers) return [];
-    return Object.entries(booking.ticketNumbers).map(([id, ticket]) => ({
-      name: participants.find(p => p.id === id)?.name ?? 'Passenger',
-      ticket,
-    }));
+    if (booking.passengerTickets?.length) {
+      return booking.passengerTickets.map(pt => ({ name: pt.name || 'Passenger', ticket: pt.ticket }));
+    }
+    if (booking.ticketNumbers) {
+      return Object.entries(booking.ticketNumbers).map(([id, ticket]) => ({
+        name: participants.find(p => p.id === id)?.name ?? 'Passenger',
+        ticket,
+      }));
+    }
+    return [];
   }
 
   /** True when a timestamp carries a meaningful time-of-day (not midnight). */

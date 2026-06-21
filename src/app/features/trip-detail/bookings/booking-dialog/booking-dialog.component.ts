@@ -1,6 +1,6 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { DatePipe, TitleCasePipe } from '@angular/common';
-import { FormBuilder, FormControl, FormRecord, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -10,6 +10,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { BookingService } from '../../../../core/services/booking.service';
 import { FlightService, FlightStatusResult } from '../../../../core/services/flight.service';
@@ -38,7 +39,7 @@ interface TypeLabels {
   imports: [
     ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
     MatButtonModule, MatSelectModule, MatDatepickerModule, MatNativeDateModule,
-    MatIconModule, MatProgressSpinnerModule, MatSnackBarModule, DatePipe, TitleCasePipe,
+    MatIconModule, MatProgressSpinnerModule, MatSnackBarModule, MatTooltipModule, DatePipe, TitleCasePipe,
   ],
   templateUrl: './booking-dialog.component.html',
   styleUrl: './booking-dialog.component.scss',
@@ -94,17 +95,6 @@ export class BookingDialogComponent implements OnInit {
 
   isFlight = computed(() => this.selectedType() === 'flight');
 
-  /** Passenger ids currently selected, mirrored so the template can render
-   *  one ticket-number field per assigned person. */
-  selectedPassengerIds = signal<string[]>(this.data.booking?.passengerIds ?? []);
-
-  /** The participant objects for the selected passengers (id + name). */
-  selectedPassengers = computed(() =>
-    this.selectedPassengerIds()
-      .map(id => this.participants().find(p => p.id === id))
-      .filter((p): p is TripParticipant => !!p)
-  );
-
   form = this.fb.group({
     type: [this.data.booking?.type ?? 'flight' as BookingType, Validators.required],
     title: [this.data.booking?.title ?? '', Validators.required],
@@ -128,37 +118,33 @@ export class BookingDialogComponent implements OnInit {
     notes: [this.data.booking?.notes ?? ''],
     passengerIds: [this.data.booking?.passengerIds ?? [] as string[]],
     paidById: [this.data.booking?.paidById ?? null as string | null],
-    ticketNumbers: new FormRecord<FormControl<string>>({}),
+    passengerTickets: this.fb.array<FormGroup>([]),
   });
 
   ngOnInit() {
-    // Seed ticket-number controls for any passengers already assigned.
-    this.syncTicketControls(this.selectedPassengerIds());
+    // Seed the free-form passenger/ticket rows from any saved data.
+    const saved = this.data.booking?.passengerTickets ?? [];
+    for (const pt of saved) this.addPassengerTicket(pt.name, pt.ticket);
 
     this.participantService.getParticipants(this.data.tripId).subscribe(p => {
       this.participants.set(p);
     });
-
-    // Keep the per-passenger ticket fields in sync with the assignment select.
-    this.form.get('passengerIds')!.valueChanges.subscribe(ids => {
-      const list = (ids as string[]) ?? [];
-      this.selectedPassengerIds.set(list);
-      this.syncTicketControls(list);
-    });
   }
 
-  /** Add a ticket-number control for each assigned passenger, drop the rest. */
-  private syncTicketControls(ids: string[]) {
-    const group = this.form.controls.ticketNumbers as FormRecord<FormControl<string>>;
-    const existing = this.data.booking?.ticketNumbers ?? {};
-    // Remove controls for passengers no longer assigned.
-    Object.keys(group.controls).forEach(key => {
-      if (!ids.includes(key)) group.removeControl(key);
-    });
-    // Add controls for newly assigned passengers, preserving any saved value.
-    ids.forEach(id => {
-      if (!group.get(id)) group.addControl(id, new FormControl(existing[id] ?? '', { nonNullable: true }));
-    });
+  get passengerTickets(): FormArray<FormGroup> {
+    return this.form.controls.passengerTickets;
+  }
+
+  /** Add an empty (or pre-filled) passenger/ticket row. */
+  addPassengerTicket(name = '', ticket = '') {
+    this.passengerTickets.push(this.fb.group({
+      name: new FormControl(name, { nonNullable: true }),
+      ticket: new FormControl(ticket, { nonNullable: true }),
+    }));
+  }
+
+  removePassengerTicket(index: number) {
+    this.passengerTickets.removeAt(index);
   }
 
   /** Step 1: pick the type, then reveal the rest of the form. */
@@ -237,7 +223,7 @@ export class BookingDialogComponent implements OnInit {
       passengerIds: (v.passengerIds as string[])?.length ? (v.passengerIds as string[]) : undefined,
       paidById: v.paidById ?? null,
       flightNumber: isFlight && v.flightNumber ? v.flightNumber.trim().toUpperCase() : undefined,
-      ticketNumbers: isFlight ? cleanTicketNumbers(v.ticketNumbers as Record<string, string> | undefined) : undefined,
+      passengerTickets: isFlight ? cleanPassengerTickets(this.passengerTickets.value) : undefined,
       departureAirport: isFlight && v.departureAirport ? v.departureAirport.trim().toUpperCase() : undefined,
       arrivalAirport: isFlight && v.arrivalAirport ? v.arrivalAirport.trim().toUpperCase() : undefined,
       layovers: isFlight ? cleanLayovers([v.layover1, v.layover2, v.layover3, v.layover4]) : undefined,
@@ -281,15 +267,14 @@ function cleanLayovers(values: (string | null | undefined)[]): string[] | undefi
   return out.length ? out : undefined;
 }
 
-/** Drop blank ticket numbers; return undefined if none remain. */
-function cleanTicketNumbers(map: Record<string, string> | undefined): Record<string, string> | undefined {
-  if (!map) return undefined;
-  const out: Record<string, string> = {};
-  for (const [id, val] of Object.entries(map)) {
-    const trimmed = (val ?? '').trim();
-    if (trimmed) out[id] = trimmed;
-  }
-  return Object.keys(out).length ? out : undefined;
+/** Keep rows that have a name or a ticket; trim values; undefined if none. */
+function cleanPassengerTickets(
+  rows: { name?: string; ticket?: string }[],
+): { name: string; ticket: string }[] | undefined {
+  const out = rows
+    .map(r => ({ name: (r.name ?? '').trim(), ticket: (r.ticket ?? '').trim() }))
+    .filter(r => r.name || r.ticket);
+  return out.length ? out : undefined;
 }
 
 /** A friendlier "no status" message that accounts for flights too far out to track. */
