@@ -62,6 +62,18 @@
       </div>
     }
 
+    @if (mapsReady() && form.get('destination')?.value) {
+      <button type="button" mat-stroked-button class="change-photo-btn mt-12"
+              (click)="changePhoto()" [disabled]="fetchingPhoto()">
+        @if (fetchingPhoto()) {
+          <mat-spinner diameter="16"></mat-spinner> &nbsp;Finding photos…
+        } @else {
+          <mat-icon>image_search</mat-icon>
+          {{ (photoOptions().length || selectedPhotoUrl()) ? 'Change cover photo' : 'Find cover photo' }}
+        }
+      </button>
+    }
+
     <mat-form-field appearance="outline" class="full-width mt-16">
       <mat-label>Description (optional)</mat-label>
       <textarea matInput formControlName="description" rows="3"

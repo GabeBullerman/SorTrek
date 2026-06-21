@@ -264,29 +264,37 @@ export class OverviewComponent implements OnInit {
     }
   }
 
-  /** A teardrop pin with a type glyph (hotel/house/car) for a booking marker. */
-  bookingMarkerOptions(booking: Booking): google.maps.MarkerOptions {
-    const glyph =
-      booking.type === 'hotel'       ? '🏨' :
-      booking.type === 'airbnb'      ? '🏠' :
-      booking.type === 'car-rental'  ? '🚗' : '📍';
-    const color =
-      booking.type === 'hotel'       ? '#00897b' :
-      booking.type === 'airbnb'      ? '#5e35b1' :
-      booking.type === 'car-rental'  ? '#1565c0' : '#546e7a';
+  /** Build a teardrop map-pin icon with an emoji glyph in a coloured pin. */
+  private pinIcon(glyph: string, color: string): google.maps.Icon {
     const svg =
       '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="48" viewBox="0 0 40 48">' +
       `<path d="M20 0C9 0 0 9 0 20c0 14 20 28 20 28s20-14 20-28C40 9 31 0 20 0z" fill="${color}"/>` +
       '<circle cx="20" cy="19" r="13" fill="#ffffff"/>' +
       `<text x="20" y="25" font-size="16" text-anchor="middle">${glyph}</text></svg>`;
     return {
-      title: booking.title,
-      icon: {
-        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
-        scaledSize: new google.maps.Size(40, 48),
-        anchor: new google.maps.Point(20, 48),
-      },
+      url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
+      scaledSize: new google.maps.Size(40, 48),
+      anchor: new google.maps.Point(20, 48),
     };
+  }
+
+  /** A teardrop pin with a type glyph (hotel/house/car) for a booking marker. */
+  bookingMarkerOptions(booking: Booking): google.maps.MarkerOptions {
+    const [glyph, color] =
+      booking.type === 'hotel'      ? ['🏨', '#00897b'] :
+      booking.type === 'airbnb'     ? ['🏠', '#5e35b1'] :
+      booking.type === 'car-rental' ? ['🚗', '#1565c0'] : ['📍', '#546e7a'];
+    return { title: booking.title, icon: this.pinIcon(glyph, color) };
+  }
+
+  /** Category-based pin for a scheduled plan: ticket/home/car/food/etc. */
+  itineraryMarkerOptions(item: ItineraryItem): google.maps.MarkerOptions {
+    const [glyph, color] =
+      item.category === 'activity'      ? ['🎟️', '#00897b'] :
+      item.category === 'accommodation' ? ['🏠', '#5e35b1'] :
+      item.category === 'transport'     ? ['🚗', '#1565c0'] :
+      item.category === 'food'          ? ['🍴', '#ef6c00'] : ['📍', '#546e7a'];
+    return { title: item.title, icon: this.pinIcon(glyph, color) };
   }
 
   openBookingInfo(infoWindow: MapInfoWindow, marker: MapMarker, booking: Booking) {

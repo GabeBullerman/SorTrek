@@ -128,6 +128,26 @@ export class TripFormDialogComponent implements OnInit, OnDestroy {
     );
   }
 
+  /** Re-fetch cover-photo options for the current destination (e.g. when
+   *  editing a trip, without re-selecting from the autocomplete). */
+  changePhoto(): void {
+    const dest = this.form.get('destination')?.value?.trim();
+    if (!dest || !this.mapsReady() || !this.autocompleteService) return;
+    this.fetchingPhoto.set(true);
+    this.autocompleteService.getPlacePredictions(
+      { input: dest, types: ['geocode'] },
+      (predictions, status) => {
+        this.ngZone.run(() => {
+          if (status === google.maps.places.PlacesServiceStatus.OK && predictions?.[0]) {
+            this.fetchPlacePhoto(predictions[0].place_id);
+          } else {
+            this.fetchingPhoto.set(false);
+          }
+        });
+      }
+    );
+  }
+
   private fetchPlacePhoto(placeId: string): void {
     this.fetchingPhoto.set(true);
     const el = document.createElement('div');

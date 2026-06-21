@@ -130,7 +130,7 @@
                 <map-marker
                   #marker="mapMarker"
                   [position]="pin.position"
-                  [title]="pin.item.title"
+                  [options]="itineraryMarkerOptions(pin.item)"
                   (mapClick)="openInfo(infoWindow, marker, pin.item)" />
               }
               @for (bpin of bookingPins(); track bpin.booking.id) {
