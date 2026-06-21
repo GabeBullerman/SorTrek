@@ -115,10 +115,7 @@ export class BookingDialogComponent implements OnInit {
     flightNumber: [this.data.booking?.flightNumber ?? ''],
     departureAirport: [this.data.booking?.departureAirport ?? ''],
     arrivalAirport: [this.data.booking?.arrivalAirport ?? ''],
-    layover1: [this.data.booking?.layovers?.[0] ?? ''],
-    layover2: [this.data.booking?.layovers?.[1] ?? ''],
-    layover3: [this.data.booking?.layovers?.[2] ?? ''],
-    layover4: [this.data.booking?.layovers?.[3] ?? ''],
+    connections: this.fb.array<FormGroup>([]),
     cost: [this.data.booking?.cost ?? null],
     currency: [this.data.booking?.currency ?? 'USD'],
     status: [this.data.booking?.status ?? 'confirmed' as BookingStatus, Validators.required],
@@ -132,6 +129,12 @@ export class BookingDialogComponent implements OnInit {
     // Seed the free-form passenger/ticket rows from any saved data.
     const saved = this.data.booking?.passengerTickets ?? [];
     for (const pt of saved) this.addPassengerTicket(pt.name, pt.ticket);
+
+    // Seed connecting flights from saved data, migrating legacy plain layovers.
+    const conns: { airport: string; flightNumber?: string; departTime?: string }[] =
+      this.data.booking?.connections
+      ?? (this.data.booking?.layovers ?? []).map(a => ({ airport: a }));
+    for (const c of conns) this.addConnection(c.airport, c.flightNumber, c.departTime);
 
     this.participantService.getParticipants(this.data.tripId).subscribe(p => {
       this.participants.set(p);
@@ -152,6 +155,23 @@ export class BookingDialogComponent implements OnInit {
 
   removePassengerTicket(index: number) {
     this.passengerTickets.removeAt(index);
+  }
+
+  get connections(): FormArray<FormGroup> {
+    return this.form.controls.connections;
+  }
+
+  /** Add a connecting-flight row: layover airport + onward flight info. */
+  addConnection(airport = '', flightNumber = '', departTime = '') {
+    this.connections.push(this.fb.group({
+      airport: new FormControl(airport, { nonNullable: true }),
+      flightNumber: new FormControl(flightNumber ?? '', { nonNullable: true }),
+      departTime: new FormControl(departTime ?? '', { nonNullable: true }),
+    }));
+  }
+
+  removeConnection(index: number) {
+    this.connections.removeAt(index);
   }
 
   /** Step 1: pick the type, then reveal the rest of the form. */
@@ -233,7 +253,8 @@ export class BookingDialogComponent implements OnInit {
       passengerTickets: isFlight ? cleanPassengerTickets(this.passengerTickets.value) : undefined,
       departureAirport: isFlight && v.departureAirport ? v.departureAirport.trim().toUpperCase() : undefined,
       arrivalAirport: isFlight && v.arrivalAirport ? v.arrivalAirport.trim().toUpperCase() : undefined,
-      layovers: isFlight ? cleanLayovers([v.layover1, v.layover2, v.layover3, v.layover4]) : undefined,
+      connections: isFlight ? cleanConnections(this.connections.value) : undefined,
+      layovers: isFlight ? deriveLayovers(this.connections.value) : undefined,
       flightStatus: isFlight && this.statusResult() ? toFlightStatus(this.statusResult()!) : undefined,
     };
 
@@ -266,11 +287,23 @@ function toDateStr(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-/** Trim/uppercase layover codes, drop blanks; undefined if none. */
-function cleanLayovers(values: (string | null | undefined)[]): string[] | undefined {
-  const out = values
-    .map(v => (v ?? '').trim().toUpperCase())
-    .filter(v => v.length > 0);
+interface ConnectionRow { airport?: string; flightNumber?: string; departTime?: string }
+
+/** Keep connection rows that have a layover airport; trim/uppercase; undefined if none. */
+function cleanConnections(rows: ConnectionRow[]): { airport: string; flightNumber?: string; departTime?: string }[] | undefined {
+  const out = rows
+    .map(r => ({
+      airport: (r.airport ?? '').trim().toUpperCase(),
+      flightNumber: (r.flightNumber ?? '').trim().toUpperCase() || undefined,
+      departTime: (r.departTime ?? '').trim() || undefined,
+    }))
+    .filter(r => r.airport);
+  return out.length ? out : undefined;
+}
+
+/** The layover airport list (for the route display), derived from connections. */
+function deriveLayovers(rows: ConnectionRow[]): string[] | undefined {
+  const out = rows.map(r => (r.airport ?? '').trim().toUpperCase()).filter(Boolean);
   return out.length ? out : undefined;
 }
 

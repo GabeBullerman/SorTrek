@@ -182,3 +182,13 @@ mat-dialog-content {
   mat-form-field { width: 100%; }
   .ticket-remove { color: #b0455a; }
 }
+
+.connection-row {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr 0.9fr auto;
+  gap: 10px;
+  align-items: center;
+
+  mat-form-field { width: 100%; }
+  .ticket-remove { color: #b0455a; }
+}

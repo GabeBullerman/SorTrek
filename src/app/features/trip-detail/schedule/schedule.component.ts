@@ -40,7 +40,8 @@ export interface ScheduleBookingEntry {
   title: string;
   subtitle?: string;
   timeLabel?: string;
-  sortTime: string;   // HH:mm for ordering; '' sorts first
+  sortMinutes: number;   // minutes-of-day used to order entries within a day
+  kindOrder: number;     // tiebreak when two entries share the same time
 }
 
 export interface PlanSuggestion {
@@ -114,9 +115,21 @@ export class ScheduleComponent implements OnInit {
   }
 
   hasTransport(day: DayGroup): boolean {
-    // A transport activity, or a flight/car-rental booking on this day, counts.
+    // A transport activity, a flight/car-rental booking on this day, OR a
+    // multi-day car rental whose period covers this day, all count.
     return day.items.some(i => i.category === 'transport')
-      || day.bookingEntries.some(e => e.booking.type === 'flight' || e.booking.type === 'car-rental');
+      || day.bookingEntries.some(e => e.booking.type === 'flight' || e.booking.type === 'car-rental')
+      || this.bookings().some(b => b.type === 'car-rental' && b.status !== 'cancelled'
+            && this.dayWithinBooking(day.date, b));
+  }
+
+  /** True if the day falls within a booking's check-in → check-out span (inclusive). */
+  private dayWithinBooking(day: Date, b: Booking): boolean {
+    if (!b.checkIn) return false;
+    const d = day.getTime();
+    const start = startOfDay(b.checkIn.toDate());
+    const end = b.checkOut ? startOfDay(b.checkOut.toDate()) : start;
+    return d >= start && d <= end;
   }
 
   isFirstDay(day: DayGroup): boolean {
@@ -159,7 +172,7 @@ export class ScheduleComponent implements OnInit {
           }),
         bookingEntries: bookingEntries
           .filter(e => e.day === dayStr)
-          .sort((a, b) => a.entry.sortTime.localeCompare(b.entry.sortTime))
+          .sort((a, b) => a.entry.sortMinutes - b.entry.sortMinutes || a.entry.kindOrder - b.entry.kindOrder)
           .map(e => e.entry),
       });
       cur.setDate(cur.getDate() + 1);
@@ -173,16 +186,37 @@ export class ScheduleComponent implements OnInit {
   private buildBookingEntries(bookings: Booking[]): { day: string; entry: ScheduleBookingEntry }[] {
     const out: { day: string; entry: ScheduleBookingEntry }[] = [];
     const fmt = (ts: Timestamp) => ts.toDate().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    const hhmm = (ts: Timestamp) => {
-      const d = ts.toDate();
-      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+
+    // When no explicit time is set, fall back to a sensible default time-of-day
+    // per kind so a typical day flows: land → rent car → check in … then
+    // check out → drop car → fly out. Each kind also has a tiebreak order.
+    const KIND: Record<string, { default: number; order: number }> = {
+      'flight-arrive': { default: 9 * 60,  order: 0 },
+      'car-pickup':    { default: 10 * 60, order: 1 },
+      'checkin':       { default: 15 * 60, order: 2 },
+      'other':         { default: 12 * 60, order: 3 },
+      'checkout':      { default: 11 * 60, order: 4 },
+      'car-dropoff':   { default: 17 * 60, order: 5 },
+      'flight-depart': { default: 18 * 60, order: 6 },
     };
-    const push = (ts: Timestamp | undefined, entry: Omit<ScheduleBookingEntry, 'timeLabel' | 'sortTime'>) => {
+
+    const push = (
+      ts: Timestamp | undefined,
+      kind: keyof typeof KIND,
+      entry: Pick<ScheduleBookingEntry, 'booking' | 'icon' | 'title' | 'subtitle'>,
+    ) => {
       if (!ts) return;
-      const hasTime = ts.toDate().getHours() !== 0 || ts.toDate().getMinutes() !== 0;
+      const d = ts.toDate();
+      const hasTime = d.getHours() !== 0 || d.getMinutes() !== 0;
+      const k = KIND[kind];
       out.push({
-        day: ts.toDate().toDateString(),
-        entry: { ...entry, timeLabel: hasTime ? fmt(ts) : undefined, sortTime: hasTime ? hhmm(ts) : '' },
+        day: d.toDateString(),
+        entry: {
+          ...entry,
+          timeLabel: hasTime ? fmt(ts) : undefined,
+          sortMinutes: hasTime ? d.getHours() * 60 + d.getMinutes() : k.default,
+          kindOrder: k.order,
+        },
       });
     };
 
@@ -190,16 +224,16 @@ export class ScheduleComponent implements OnInit {
       if (b.status === 'cancelled') continue;
       if (b.type === 'flight') {
         const route = [b.departureAirport, ...(b.layovers ?? []), b.arrivalAirport].filter(Boolean).join(' → ');
-        push(b.checkIn,  { booking: b, icon: 'flight_takeoff', title: `Depart — ${b.title}`, subtitle: route || undefined });
-        push(b.checkOut, { booking: b, icon: 'flight_land',    title: `Arrive — ${b.title}`, subtitle: route || undefined });
+        push(b.checkIn,  'flight-depart', { booking: b, icon: 'flight_takeoff', title: `Depart — ${b.title}`, subtitle: route || undefined });
+        push(b.checkOut, 'flight-arrive', { booking: b, icon: 'flight_land',    title: `Arrive — ${b.title}`, subtitle: route || undefined });
       } else if (b.type === 'hotel' || b.type === 'airbnb') {
-        push(b.checkIn,  { booking: b, icon: 'login',  title: `Check-in — ${b.title}`,  subtitle: b.provider });
-        push(b.checkOut, { booking: b, icon: 'logout', title: `Check-out — ${b.title}`, subtitle: b.provider });
+        push(b.checkIn,  'checkin',  { booking: b, icon: 'login',  title: `Check-in — ${b.title}`,  subtitle: b.provider });
+        push(b.checkOut, 'checkout', { booking: b, icon: 'logout', title: `Check-out — ${b.title}`, subtitle: b.provider });
       } else if (b.type === 'car-rental') {
-        push(b.checkIn,  { booking: b, icon: 'directions_car', title: `Pick-up — ${b.title}`,  subtitle: b.provider });
-        push(b.checkOut, { booking: b, icon: 'directions_car', title: `Drop-off — ${b.title}`, subtitle: b.provider });
+        push(b.checkIn,  'car-pickup',  { booking: b, icon: 'directions_car', title: `Pick-up — ${b.title}`,  subtitle: b.provider });
+        push(b.checkOut, 'car-dropoff', { booking: b, icon: 'directions_car', title: `Drop-off — ${b.title}`, subtitle: b.provider });
       } else {
-        push(b.checkIn,  { booking: b, icon: 'bookmark', title: b.title, subtitle: b.provider });
+        push(b.checkIn,  'other', { booking: b, icon: 'bookmark', title: b.title, subtitle: b.provider });
       }
     }
     return out;
@@ -398,4 +432,9 @@ export class ScheduleComponent implements OnInit {
       }
     });
   }
+}
+
+/** Local-midnight timestamp for a date, for day-range comparisons. */
+function startOfDay(d: Date): number {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
 }

@@ -87,24 +87,33 @@
           </mat-form-field>
         </div>
 
-        <div class="layover-label">Layovers / connections (optional, in order)</div>
-        <div class="four-col">
-          <mat-form-field appearance="outline">
-            <mat-label>Stop 1</mat-label>
-            <input matInput formControlName="layover1" placeholder="LIS" maxlength="4" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Stop 2</mat-label>
-            <input matInput formControlName="layover2" placeholder="LHR" maxlength="4" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Stop 3</mat-label>
-            <input matInput formControlName="layover3" maxlength="4" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Stop 4</mat-label>
-            <input matInput formControlName="layover4" maxlength="4" />
-          </mat-form-field>
+        <!-- Connecting flights through layovers -->
+        <div class="ticket-section" formArrayName="connections">
+          <div class="ticket-section-label">Connecting flights (optional, in order)</div>
+          @for (row of connections.controls; track $index) {
+            <div class="connection-row" [formGroupName]="$index">
+              <mat-form-field appearance="outline" class="conn-airport">
+                <mat-label>Layover</mat-label>
+                <input matInput formControlName="airport" placeholder="LIS" maxlength="4" />
+                <mat-icon matPrefix>connecting_airports</mat-icon>
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="conn-flight">
+                <mat-label>Connecting flight #</mat-label>
+                <input matInput formControlName="flightNumber" placeholder="TP1234" />
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="conn-time">
+                <mat-label>Departs</mat-label>
+                <input matInput type="time" formControlName="departTime" />
+              </mat-form-field>
+              <button mat-icon-button type="button" class="ticket-remove"
+                      (click)="removeConnection($index)" matTooltip="Remove">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          }
+          <button mat-stroked-button type="button" (click)="addConnection()">
+            <mat-icon>add</mat-icon> Add connecting flight
+          </button>
         </div>
 
         <!-- Free-form per-person ticket numbers -->
