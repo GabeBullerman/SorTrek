@@ -57,8 +57,6 @@ export class ItineraryItemDialogComponent {
     endTime: [this.data.item?.endTime ?? ''],
     category: [this.data.item?.category ?? 'activity' as ItemCategory, Validators.required],
     location: [this.data.item?.location ?? ''],
-    latitude: [this.data.item?.latitude ?? null],
-    longitude: [this.data.item?.longitude ?? null],
     cost: [this.data.item?.cost ?? null],
     currency: [this.data.item?.currency ?? 'USD'],
     costType: [this.data.item?.costType ?? 'total' as 'total' | 'per-person'],
@@ -78,8 +76,10 @@ export class ItineraryItemDialogComponent {
       endTime: v.endTime ?? undefined,
       category: v.category!,
       location: v.location ?? undefined,
-      latitude: v.latitude ? Number(v.latitude) : undefined,
-      longitude: v.longitude ? Number(v.longitude) : undefined,
+      // Preserve any coordinates an item already had (set elsewhere); the form
+      // no longer collects them.
+      latitude: this.data.item?.latitude,
+      longitude: this.data.item?.longitude,
       cost: v.cost ? Number(v.cost) : undefined,
       currency: v.currency ?? undefined,
       costType: v.cost ? (v.costType ?? 'total') : undefined,
