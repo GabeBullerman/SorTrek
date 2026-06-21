@@ -17,8 +17,11 @@
       <div class="trips-grid">
         @for (trip of trips; track trip.id) {
           <mat-card class="trip-card" (click)="openTrip(trip.id!)">
-            <div class="trip-cover"
-                 [style.background-image]="trip.coverPhotoUrl ? 'url(' + trip.coverPhotoUrl + ')' : null">
+            <div class="trip-cover">
+              @if (trip.coverPhotoUrl) {
+                <img class="cover-img" [src]="trip.coverPhotoUrl" alt=""
+                     (error)="$any($event.target).style.display='none'" />
+              }
               <div class="cover-overlay">
                 <span class="memory-badge">
                   <mat-icon>photo_album</mat-icon> Memory

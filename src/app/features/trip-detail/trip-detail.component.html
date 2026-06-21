@@ -2,7 +2,11 @@
   <div class="trip-detail-page">
 
     <!-- Hero Header -->
-    <div class="trip-hero" [style.background-image]="trip.coverPhotoUrl ? 'url(' + trip.coverPhotoUrl + ')' : null">
+    <div class="trip-hero">
+      @if (trip.coverPhotoUrl) {
+        <img class="hero-img" [src]="trip.coverPhotoUrl" alt=""
+             (error)="$any($event.target).style.display='none'" />
+      }
       <div class="hero-overlay">
         <div class="hero-content">
           <button mat-icon-button class="back-btn" (click)="back()" matTooltip="Back to trips">
