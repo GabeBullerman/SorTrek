@@ -12,6 +12,20 @@
   mat-form-field { width: 100%; }
 }
 
+.four-col {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  mat-form-field { width: 100%; }
+}
+
+.layover-label {
+  margin: 14px 0 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #455a64;
+}
+
 /* Date + time pair on one row */
 .datetime-row {
   display: grid;

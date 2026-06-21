@@ -87,6 +87,26 @@
           </mat-form-field>
         </div>
 
+        <div class="layover-label">Layovers / connections (optional, in order)</div>
+        <div class="four-col">
+          <mat-form-field appearance="outline">
+            <mat-label>Stop 1</mat-label>
+            <input matInput formControlName="layover1" placeholder="LIS" maxlength="4" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Stop 2</mat-label>
+            <input matInput formControlName="layover2" placeholder="LHR" maxlength="4" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Stop 3</mat-label>
+            <input matInput formControlName="layover3" maxlength="4" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Stop 4</mat-label>
+            <input matInput formControlName="layover4" maxlength="4" />
+          </mat-form-field>
+        </div>
+
         <div class="status-lookup">
           <button mat-stroked-button type="button" (click)="checkFlightStatus()" [disabled]="statusLoading()">
             @if (statusLoading()) { <mat-spinner diameter="16"></mat-spinner> &nbsp;Checking… }

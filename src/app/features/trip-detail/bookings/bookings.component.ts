@@ -136,6 +136,16 @@ export class BookingsComponent implements OnInit {
     return participants.find(p => p.id === booking.paidById)?.name ?? null;
   }
 
+  /** Full route string including any layovers, e.g. "MAD → LIS → JFK". */
+  routeWithLayovers(booking: Booking): string {
+    const stops = [
+      booking.departureAirport ?? '?',
+      ...(booking.layovers ?? []),
+      booking.arrivalAirport ?? '?',
+    ];
+    return stops.join(' → ');
+  }
+
   /** Resolve per-passenger ticket numbers to [name, ticket] pairs for display. */
   getTicketEntries(booking: Booking, participants: TripParticipant[]): { name: string; ticket: string }[] {
     if (!booking.ticketNumbers) return [];

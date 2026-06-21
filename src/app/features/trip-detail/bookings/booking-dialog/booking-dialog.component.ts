@@ -118,6 +118,10 @@ export class BookingDialogComponent implements OnInit {
     flightNumber: [this.data.booking?.flightNumber ?? ''],
     departureAirport: [this.data.booking?.departureAirport ?? ''],
     arrivalAirport: [this.data.booking?.arrivalAirport ?? ''],
+    layover1: [this.data.booking?.layovers?.[0] ?? ''],
+    layover2: [this.data.booking?.layovers?.[1] ?? ''],
+    layover3: [this.data.booking?.layovers?.[2] ?? ''],
+    layover4: [this.data.booking?.layovers?.[3] ?? ''],
     cost: [this.data.booking?.cost ?? null],
     currency: [this.data.booking?.currency ?? 'USD'],
     status: [this.data.booking?.status ?? 'confirmed' as BookingStatus, Validators.required],
@@ -236,6 +240,7 @@ export class BookingDialogComponent implements OnInit {
       ticketNumbers: isFlight ? cleanTicketNumbers(v.ticketNumbers as Record<string, string> | undefined) : undefined,
       departureAirport: isFlight && v.departureAirport ? v.departureAirport.trim().toUpperCase() : undefined,
       arrivalAirport: isFlight && v.arrivalAirport ? v.arrivalAirport.trim().toUpperCase() : undefined,
+      layovers: isFlight ? cleanLayovers([v.layover1, v.layover2, v.layover3, v.layover4]) : undefined,
       flightStatus: isFlight && this.statusResult() ? toFlightStatus(this.statusResult()!) : undefined,
     };
 
@@ -266,6 +271,14 @@ function toTimeStr(d?: Date | null): string {
 
 function toDateStr(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** Trim/uppercase layover codes, drop blanks; undefined if none. */
+function cleanLayovers(values: (string | null | undefined)[]): string[] | undefined {
+  const out = values
+    .map(v => (v ?? '').trim().toUpperCase())
+    .filter(v => v.length > 0);
+  return out.length ? out : undefined;
 }
 
 /** Drop blank ticket numbers; return undefined if none remain. */

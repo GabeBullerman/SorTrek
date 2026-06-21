@@ -108,7 +108,7 @@
                           <mat-icon>confirmation_number</mat-icon>
                           <span>Flight <strong>{{ booking.flightNumber }}</strong>
                             @if (booking.departureAirport || booking.arrivalAirport) {
-                              ({{ booking.departureAirport ?? '?' }} → {{ booking.arrivalAirport ?? '?' }})
+                              ({{ routeWithLayovers(booking) }})
                             }
                           </span>
                         </div>

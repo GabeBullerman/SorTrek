@@ -57,6 +57,8 @@ export interface Booking {
   departureAirport?: string;
   /** Arrival airport IATA code, e.g. "LAX". */
   arrivalAirport?: string;
+  /** Layover/connection airport IATA codes, in order, between departure and arrival. */
+  layovers?: string[];
   /** Last live status pulled from the flight-tracking API. */
   flightStatus?: FlightStatus;
 

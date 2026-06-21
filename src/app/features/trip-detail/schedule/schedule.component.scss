@@ -627,3 +627,50 @@
   justify-content: center;
   padding: 40px;
 }
+
+/* ── Bookings surfaced in the schedule (read-only) ─────────────────── */
+.booking-strip {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1px solid #d6e4ff;
+  border-radius: 12px;
+  background: #f4f8ff;
+
+  .booking-strip-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #1565c0;
+    margin-bottom: 8px;
+    mat-icon { font-size: 18px; width: 18px; height: 18px; }
+  }
+}
+
+.booking-entry {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+
+  & + .booking-entry { border-top: 1px solid #e3edff; }
+
+  .booking-entry-icon { color: #1976d2; }
+  .booking-entry-body { flex: 1; min-width: 0; }
+  .booking-entry-title { font-weight: 600; font-size: 0.9rem; }
+  .booking-entry-time { color: #607d8b; font-weight: 500; }
+  .booking-entry-sub { font-size: 0.8rem; color: #607d8b; }
+  .booking-entry-tag {
+    font-size: 0.66rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #1565c0;
+    background: #e3edff;
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+}

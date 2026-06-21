@@ -29,6 +29,18 @@ interface DayGroup {
   shortLabel: string;
   dayNumber: number;
   items: ItineraryItem[];
+  /** Read-only entries derived from bookings that fall on this day. */
+  bookingEntries: ScheduleBookingEntry[];
+}
+
+/** A booking surfaced in the schedule timeline (not editable here). */
+export interface ScheduleBookingEntry {
+  booking: Booking;
+  icon: string;
+  title: string;
+  subtitle?: string;
+  timeLabel?: string;
+  sortTime: string;   // HH:mm for ordering; '' sorts first
 }
 
 export interface PlanSuggestion {
@@ -92,17 +104,12 @@ export class ScheduleComponent implements OnInit {
 
   ngOnInit() {
     combineLatest([
-      this.itineraryService.getItems(this.tripId).pipe(
-        map(items => this.groupByDay(items)),
-        catchError(() => of(this.groupByDay([]))),
-      ),
-      this.bookingService.getBookings(this.tripId).pipe(
-        catchError(() => of([])),
-      ),
+      this.itineraryService.getItems(this.tripId).pipe(catchError(() => of([] as ItineraryItem[]))),
+      this.bookingService.getBookings(this.tripId).pipe(catchError(() => of([] as Booking[]))),
     ]).pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(([days, bookings]) => {
-        this.allDays.set(days);
+      .subscribe(([items, bookings]) => {
         this.bookings.set(bookings);
+        this.allDays.set(this.groupByDay(items, bookings));
       });
   }
 
@@ -126,9 +133,10 @@ export class ScheduleComponent implements OnInit {
     return icons[cat] ?? 'circle';
   }
 
-  private groupByDay(items: ItineraryItem[]): DayGroup[] {
+  private groupByDay(items: ItineraryItem[], bookings: Booking[]): DayGroup[] {
     const start = this.trip.startDate.toDate();
     const end   = this.trip.endDate.toDate();
+    const bookingEntries = this.buildBookingEntries(bookings);
     const days: DayGroup[] = [];
     const cur = new Date(start);
     cur.setHours(0, 0, 0, 0);
@@ -147,11 +155,52 @@ export class ScheduleComponent implements OnInit {
             if (a.startTime && b.startTime) return a.startTime.localeCompare(b.startTime);
             return a.order - b.order;
           }),
+        bookingEntries: bookingEntries
+          .filter(e => e.day === dayStr)
+          .sort((a, b) => a.entry.sortTime.localeCompare(b.entry.sortTime))
+          .map(e => e.entry),
       });
       cur.setDate(cur.getDate() + 1);
       dayNum++;
     }
     return days;
+  }
+
+  /** Turn each booking into one or two dated schedule entries (e.g. flight
+   *  departure + arrival; hotel check-in + check-out). */
+  private buildBookingEntries(bookings: Booking[]): { day: string; entry: ScheduleBookingEntry }[] {
+    const out: { day: string; entry: ScheduleBookingEntry }[] = [];
+    const fmt = (ts: Timestamp) => ts.toDate().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    const hhmm = (ts: Timestamp) => {
+      const d = ts.toDate();
+      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    };
+    const push = (ts: Timestamp | undefined, entry: Omit<ScheduleBookingEntry, 'timeLabel' | 'sortTime'>) => {
+      if (!ts) return;
+      const hasTime = ts.toDate().getHours() !== 0 || ts.toDate().getMinutes() !== 0;
+      out.push({
+        day: ts.toDate().toDateString(),
+        entry: { ...entry, timeLabel: hasTime ? fmt(ts) : undefined, sortTime: hasTime ? hhmm(ts) : '' },
+      });
+    };
+
+    for (const b of bookings) {
+      if (b.status === 'cancelled') continue;
+      if (b.type === 'flight') {
+        const route = [b.departureAirport, ...(b.layovers ?? []), b.arrivalAirport].filter(Boolean).join(' → ');
+        push(b.checkIn,  { booking: b, icon: 'flight_takeoff', title: `Depart — ${b.title}`, subtitle: route || undefined });
+        push(b.checkOut, { booking: b, icon: 'flight_land',    title: `Arrive — ${b.title}`, subtitle: route || undefined });
+      } else if (b.type === 'hotel' || b.type === 'airbnb') {
+        push(b.checkIn,  { booking: b, icon: 'login',  title: `Check-in — ${b.title}`,  subtitle: b.provider });
+        push(b.checkOut, { booking: b, icon: 'logout', title: `Check-out — ${b.title}`, subtitle: b.provider });
+      } else if (b.type === 'car-rental') {
+        push(b.checkIn,  { booking: b, icon: 'directions_car', title: `Pick-up — ${b.title}`,  subtitle: b.provider });
+        push(b.checkOut, { booking: b, icon: 'directions_car', title: `Drop-off — ${b.title}`, subtitle: b.provider });
+      } else {
+        push(b.checkIn,  { booking: b, icon: 'bookmark', title: b.title, subtitle: b.provider });
+      }
+    }
+    return out;
   }
 
   selectDay(index: number) {
