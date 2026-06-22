@@ -11,12 +11,12 @@
     margin: 0;
     font-size: 2rem;
     font-weight: 700;
-    color: #1a237e;
+    color: var(--st-primary);
   }
 
   .subtitle {
     margin: 4px 0 0;
-    color: #757575;
+    color: var(--st-on-surface-muted);
   }
 }
 
@@ -93,7 +93,7 @@
   margin: 0 0 4px;
   font-size: 1.1rem;
   font-weight: 600;
-  color: #37474f;
+  color: var(--st-on-surface-muted);
 }
 
 .trip-destination {
@@ -101,7 +101,7 @@
   align-items: center;
   gap: 2px;
   margin: 0 0 12px;
-  color: #78909c;
+  color: var(--st-on-surface-faint);
   font-size: 0.875rem;
 }
 
@@ -120,7 +120,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    color: #90a4ae;
+    color: var(--st-on-surface-faint);
     font-size: 0.82rem;
 
     mat-icon { font-size: 15px; width: 15px; height: 15px; }
@@ -130,10 +130,10 @@
 .empty-state {
   text-align: center;
   padding: 80px 24px;
-  color: #9e9e9e;
+  color: var(--st-on-surface-faint);
 
   mat-icon { font-size: 64px; width: 64px; height: 64px; opacity: 0.35; }
-  h3 { margin: 16px 0 8px; font-size: 1.3rem; color: #616161; }
+  h3 { margin: 16px 0 8px; font-size: 1.3rem; color: var(--st-on-surface-muted); }
   p { margin: 0; }
 }
 
@@ -141,4 +141,21 @@
   display: flex;
   justify-content: center;
   padding: 80px;
+}
+
+/* ── Mobile responsiveness ───────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .past-trips-page {
+    padding: 16px;
+  }
+
+  .page-header {
+    margin-bottom: 20px;
+    h1 { font-size: 1.5rem; }
+  }
+
+  .trips-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
 }

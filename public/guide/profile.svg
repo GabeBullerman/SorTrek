@@ -1,0 +1,54 @@
+<svg viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
+  <style>
+    .av{animation:pop .45s .2s ease both;opacity:0}
+    .c1{animation:fadeUp .5s .35s ease both}
+    .c2{animation:fadeUp .5s .55s ease both}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes pop{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
+  </style>
+  <rect width="680" height="300" fill="#f0f2fb"/>
+  <rect width="680" height="50" fill="#1a237e"/>
+  <text x="20" y="32" fill="white" font-size="15" font-weight="700" letter-spacing=".5">SorTrek</text>
+  <text x="580" y="32" fill="#c5cae9" font-size="12">Profile &amp; Settings</text>
+
+  <!-- avatar + name -->
+  <g class="av">
+    <circle cx="70" cy="120" r="34" fill="#3949ab" filter="url(#sh)"/>
+    <text x="70" y="132" fill="white" font-size="30" font-weight="700" text-anchor="middle">A</text>
+  </g>
+  <text x="120" y="112" fill="#212121" font-size="18" font-weight="700">Alex Bonnet</text>
+  <text x="120" y="134" fill="#9e9e9e" font-size="12">alex@example.com</text>
+
+  <!-- form fields -->
+  <g class="c1">
+    <rect x="20" y="168" width="300" height="44" rx="10" fill="white" filter="url(#sh)"/>
+    <text x="34" y="185" fill="#5c6bc0" font-size="9" font-weight="700" letter-spacing="1">DISPLAY NAME</text>
+    <text x="34" y="202" fill="#212121" font-size="13">Alex Bonnet</text>
+
+    <rect x="20" y="222" width="146" height="44" rx="10" fill="white" filter="url(#sh)"/>
+    <text x="34" y="239" fill="#5c6bc0" font-size="9" font-weight="700" letter-spacing="1">HOME CITY</text>
+    <text x="34" y="256" fill="#212121" font-size="13">📍 Lyon, FR</text>
+
+    <rect x="174" y="222" width="146" height="44" rx="10" fill="white" filter="url(#sh)"/>
+    <text x="188" y="239" fill="#5c6bc0" font-size="9" font-weight="700" letter-spacing="1">HOME CURRENCY</text>
+    <text x="188" y="256" fill="#212121" font-size="13">€ EUR — Euro</text>
+  </g>
+
+  <!-- notifications + save -->
+  <g class="c2">
+    <rect x="340" y="168" width="316" height="60" rx="12" fill="white" filter="url(#sh)"/>
+    <text x="358" y="192" fill="#212121" font-size="13" font-weight="700">🔔 Push Notifications</text>
+    <text x="358" y="212" fill="#9e9e9e" font-size="11">Trip alerts &amp; reminders</text>
+    <rect x="588" y="186" width="52" height="26" rx="13" fill="#2e7d32"/>
+    <circle cx="627" cy="199" r="10" fill="white"/>
+
+    <rect x="340" y="238" width="316" height="28" rx="14" fill="#1a237e"/>
+    <text x="498" y="257" fill="white" font-size="12" font-weight="700" text-anchor="middle">Save Profile</text>
+  </g>
+
+  <defs>
+    <filter id="sh" x="-8%" y="-8%" width="116%" height="130%">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#0000001a"/>
+    </filter>
+  </defs>
+</svg>

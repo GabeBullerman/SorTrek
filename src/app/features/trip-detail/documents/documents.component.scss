@@ -13,7 +13,7 @@
     margin: 0;
     font-size: 1.4rem;
     font-weight: 600;
-    color: #1a237e;
+    color: var(--st-primary);
     flex: 1;
   }
 }
@@ -58,8 +58,8 @@
 
 /* ── Inline upload form ───────────────────────────────────────────────────── */
 .upload-form-panel {
-  background: #fff;
-  border: 1.5px solid #c5cae9;
+  background: var(--st-surface);
+  border: 1.5px solid var(--st-border);
   border-radius: 14px;
   padding: 20px 24px;
   margin-bottom: 24px;
@@ -76,7 +76,7 @@
     font-size: 36px;
     width: 36px;
     height: 36px;
-    color: #3949ab;
+    color: var(--st-primary-soft);
   }
 
   .upload-form-file-info {
@@ -87,12 +87,12 @@
   .upload-form-filename {
     font-size: 0.95rem;
     font-weight: 600;
-    color: #1a237e;
+    color: var(--st-primary);
   }
 
   .upload-form-filesize {
     font-size: 0.78rem;
-    color: #9e9e9e;
+    color: var(--st-on-surface-faint);
   }
 }
 
@@ -122,18 +122,18 @@
   min-height: 320px;
   border: 2px dashed #90caf9;
   border-radius: 16px;
-  background: #f8f9ff;
+  background: var(--st-surface-2);
   cursor: pointer;
   transition: border-color 0.2s, background 0.2s;
   gap: 10px;
   text-align: center;
   padding: 40px;
 
-  &:hover { border-color: #1a237e; background: #e8eaf6; }
+  &:hover { border-color: var(--st-primary); background: var(--st-primary-tint-bg); }
 
   mat-icon { font-size: 56px; width: 56px; height: 56px; color: #90caf9; }
-  h3 { margin: 0; color: #1a237e; font-weight: 600; }
-  p { margin: 0; color: #9e9e9e; font-size: 0.875rem; max-width: 360px; }
+  h3 { margin: 0; color: var(--st-primary); font-weight: 600; }
+  p { margin: 0; color: var(--st-on-surface-faint); font-size: 0.875rem; max-width: 360px; }
 }
 
 .docs-drop-overlay {
@@ -147,7 +147,7 @@
   gap: 16px;
   margin-bottom: 20px;
   font-size: 0.85rem;
-  color: #757575;
+  color: var(--st-on-surface-muted);
 
   span {
     display: flex;
@@ -157,7 +157,7 @@
     mat-icon { font-size: 16px; width: 16px; height: 16px; }
   }
 
-  .shared-hint { color: #3949ab; }
+  .shared-hint { color: var(--st-primary-soft); }
 }
 
 /* ── Category group ──────────────────────────────────────────────────────── */
@@ -170,7 +170,7 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 12px;
-  color: #1a237e;
+  color: var(--st-primary);
   font-size: 0.95rem;
   font-weight: 600;
 
@@ -178,8 +178,8 @@
 
   .doc-group-count {
     margin-left: auto;
-    background: #e8eaf6;
-    color: #3949ab;
+    background: var(--st-primary-tint-bg);
+    color: var(--st-primary-soft);
     border-radius: 10px;
     padding: 1px 8px;
     font-size: 0.78rem;
@@ -195,14 +195,14 @@
 }
 
 .doc-card {
-  background: #fff;
+  background: var(--st-surface);
   border-radius: 14px;
   padding: 16px;
   display: flex;
   align-items: flex-start;
   gap: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-  border: 1px solid #e8eaf6;
+  border: 1px solid var(--st-border);
   transition: box-shadow 0.2s;
 
   &:hover {
@@ -215,13 +215,13 @@
   width: 42px;
   height: 42px;
   border-radius: 10px;
-  background: #e8eaf6;
+  background: var(--st-primary-tint-bg);
   display: flex;
   align-items: center;
   justify-content: center;
 
   mat-icon {
-    color: #3949ab;
+    color: var(--st-primary-soft);
     font-size: 22px;
     width: 22px;
     height: 22px;
@@ -239,7 +239,7 @@
 .doc-name {
   font-size: 0.92rem;
   font-weight: 600;
-  color: #212121;
+  color: var(--st-on-surface);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -252,8 +252,8 @@
 }
 
 .doc-type-badge {
-  background: #f5f5f5;
-  color: #616161;
+  background: var(--st-surface-2);
+  color: var(--st-on-surface-muted);
   border-radius: 4px;
   padding: 1px 6px;
   font-size: 0.7rem;
@@ -264,7 +264,7 @@
 
 .doc-size {
   font-size: 0.75rem;
-  color: #9e9e9e;
+  color: var(--st-on-surface-faint);
 }
 
 .doc-expiry {
@@ -272,14 +272,14 @@
   align-items: center;
   gap: 4px;
   font-size: 0.75rem;
-  color: #757575;
+  color: var(--st-on-surface-muted);
 
   mat-icon { font-size: 13px; width: 13px; height: 13px; }
 
   &.expiry-warning {
-    color: #e65100;
+    color: var(--st-warn-strong);
     font-weight: 600;
-    mat-icon { color: #e65100; }
+    mat-icon { color: var(--st-warn-strong); }
   }
 
   &.expiry-expired {
@@ -291,7 +291,7 @@
 
 .doc-notes {
   font-size: 0.75rem;
-  color: #757575;
+  color: var(--st-on-surface-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -321,7 +321,7 @@
 .uploader-name {
   font-size: 0.75rem;
   font-weight: 500;
-  color: #616161;
+  color: var(--st-on-surface-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -330,7 +330,7 @@
 
 .upload-date {
   font-size: 0.72rem;
-  color: #9e9e9e;
+  color: var(--st-on-surface-faint);
   white-space: nowrap;
 }
 
@@ -346,4 +346,51 @@
   display: flex;
   justify-content: center;
   padding: 40px;
+}
+
+/* ── Search field ────────────────────────────────────────────────────────── */
+.search-field-wrap {
+  margin-bottom: 12px;
+}
+
+.search-field {
+  width: 100%;
+  max-width: 320px;
+}
+
+.no-matches {
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.9rem;
+  padding: 4px 0 12px;
+}
+
+/* ── Mobile responsiveness ───────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .search-field {
+    max-width: none;
+  }
+
+  .doc-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  // Two-column upload form fields stack on phones
+  .upload-form-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .upload-form-panel {
+    padding: 16px;
+  }
+
+  .upload-form-actions button {
+    flex: 1;
+  }
+
+  // Touch targets for the per-doc action buttons (download / delete)
+  .doc-card-actions button {
+    min-width: 44px;
+    min-height: 44px;
+  }
 }

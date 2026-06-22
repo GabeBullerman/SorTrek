@@ -16,12 +16,12 @@
     margin: 0;
     font-size: 2rem;
     font-weight: 700;
-    color: #1a237e;
+    color: var(--st-primary);
   }
 
   .subtitle {
     margin: 4px 0 0;
-    color: #757575;
+    color: var(--st-on-surface-muted);
   }
 
   button {
@@ -107,7 +107,7 @@ mat-card-content {
     margin: 0;
     font-size: 1.1rem;
     font-weight: 600;
-    color: #1a237e;
+    color: var(--st-primary);
     line-height: 1.3;
   }
 
@@ -116,7 +116,7 @@ mat-card-content {
     display: flex;
     align-items: center;
     gap: 2px;
-    color: #616161;
+    color: var(--st-on-surface-muted);
     font-size: 0.875rem;
   }
 }
@@ -131,14 +131,14 @@ mat-card-content {
     display: flex;
     align-items: center;
     gap: 6px;
-    color: #616161;
+    color: var(--st-on-surface-muted);
     font-size: 0.85rem;
 
     mat-icon {
       font-size: 16px;
       width: 16px;
       height: 16px;
-      color: #9e9e9e;
+      color: var(--st-on-surface-faint);
     }
   }
 }
@@ -161,7 +161,7 @@ mat-card-content {
 
   &.status-upcoming {
     background: rgba(255, 255, 255, 0.9);
-    color: #1565c0;
+    color: var(--st-accent);
   }
 
   &.status-ongoing {
@@ -173,6 +173,22 @@ mat-card-content {
     background: rgba(0, 0, 0, 0.45);
     color: white;
   }
+}
+
+.countdown-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.45);
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 10px;
+  backdrop-filter: blur(4px);
+  white-space: nowrap;
+
+  mat-icon { font-size: 13px; width: 13px; height: 13px; }
 }
 
 .days-until {
@@ -191,4 +207,34 @@ mat-card-content {
 .delete-item {
   color: #c62828;
   mat-icon { color: #c62828; }
+}
+
+/* ── Mobile responsiveness ───────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .trips-page {
+    padding: 16px;
+  }
+
+  .page-header {
+    margin-bottom: 20px;
+
+    h1 { font-size: 1.5rem; }
+
+    button { width: 100%; }
+  }
+
+  .trips-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  // Allow the cover badges (status + countdown + shared) to wrap on
+  // narrow screens instead of overflowing the cover.
+  .trip-card .trip-cover .cover-gradient {
+    flex-wrap: wrap;
+  }
+
+  .countdown-badge {
+    font-size: 0.68rem;
+  }
 }

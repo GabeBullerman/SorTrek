@@ -23,7 +23,7 @@
   margin: 14px 0 4px;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #455a64;
+  color: var(--st-on-surface-muted);
 }
 
 /* Date + time pair on one row */
@@ -37,7 +37,7 @@
 /* ── Type-first picker ─────────────────────────────────────────── */
 .type-picker-intro {
   margin: 4px 0 16px;
-  color: #616161;
+  color: var(--st-on-surface-muted);
   font-size: 0.9rem;
 }
 
@@ -53,9 +53,9 @@
   align-items: flex-start;
   gap: 4px;
   padding: 16px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--st-border);
   border-radius: 12px;
-  background: #fafafa;
+  background: var(--st-surface-2);
   cursor: pointer;
   text-align: left;
   transition: border-color 0.15s, background 0.15s, transform 0.05s;
@@ -64,11 +64,11 @@
   &:active { transform: scale(0.99); }
 
   mat-icon {
-    color: #1976d2;
+    color: var(--st-accent);
     width: 28px; height: 28px; font-size: 28px;
   }
   .type-card-label { font-weight: 600; font-size: 0.95rem; }
-  .type-card-hint  { color: #757575; font-size: 0.78rem; line-height: 1.2; }
+  .type-card-hint  { color: var(--st-on-surface-muted); font-size: 0.78rem; line-height: 1.2; }
 }
 
 /* ── Flight status lookup ──────────────────────────────────────── */
@@ -126,13 +126,13 @@
   .leg-time    { font-size: 0.88rem; color: #333; }
   .leg-delay   { font-size: 0.78rem; color: #c62828; font-weight: 600; }
   .leg-gate    { font-size: 0.76rem; color: #616161; }
-  .leg-arrow   { color: #90a4ae; }
+  .leg-arrow   { color: var(--st-on-surface-faint); }
 }
 
 .status-foot {
   margin: 10px 0 0;
   font-size: 0.74rem;
-  color: #78909c;
+  color: var(--st-on-surface-faint);
 }
 
 .actions-spacer { flex: 1; }
@@ -149,7 +149,7 @@ mat-dialog-content {
   align-items: center;
   gap: 10px;
   margin-top: 20px;
-  color: #757575;
+  color: var(--st-on-surface-muted);
   font-size: 0.8rem;
   font-weight: 500;
   text-transform: uppercase;
@@ -159,7 +159,7 @@ mat-dialog-content {
     content: '';
     flex: 1;
     height: 1px;
-    background: #e0e0e0;
+    background: var(--st-border);
   }
 }
 
@@ -170,7 +170,7 @@ mat-dialog-content {
 .ticket-section-label {
   font-size: 0.8rem;
   font-weight: 600;
-  color: #455a64;
+  color: var(--st-on-surface-muted);
   margin-bottom: 8px;
 }
 .ticket-row {

@@ -7,10 +7,9 @@
       <h2>App Members</h2>
     </div>
     <p class="section-desc">
+      Registered SorTrek users who can <strong>see &amp; edit this trip</strong> in real time (a SorTrek account is required).
       @if (isOwner) {
-        Invite a registered SorTrek user by email or share a link. They'll see this trip in their trips list.
-      } @else {
-        People with app access to this trip.
+        Invite someone by email or share a link, and they'll see this trip in their trips list.
       }
     </p>
 
@@ -94,16 +93,19 @@
               @if (isOwner && !c.isOwner && c.uid !== currentUserId) {
                 <button mat-icon-button
                         matTooltip="Make co-owner"
+                        aria-label="Make co-owner"
                         (click)="makeCoOwner(c.uid, c.displayName)">
                   <mat-icon>shield_person</mat-icon>
                 </button>
                 <button mat-icon-button
                         matTooltip="Transfer ownership"
+                        aria-label="Transfer ownership"
                         (click)="transferOwnership(c.uid, c.displayName)">
                   <mat-icon>workspace_premium</mat-icon>
                 </button>
                 <button mat-icon-button
                         matTooltip="Remove collaborator"
+                        aria-label="Remove collaborator"
                         (click)="removeCollaborator(c.uid, c.displayName, c.email)">
                   <mat-icon>person_remove</mat-icon>
                 </button>
@@ -111,11 +113,13 @@
               @if (isOwner && c.isCoOwner && c.uid !== currentUserId) {
                 <button mat-icon-button
                         matTooltip="Remove co-owner (keep as collaborator)"
+                        aria-label="Remove co-owner (keep as collaborator)"
                         (click)="removeCoOwner(c.uid, c.displayName)">
                   <mat-icon>remove_moderator</mat-icon>
                 </button>
                 <button mat-icon-button
                         matTooltip="Remove from trip"
+                        aria-label="Remove from trip"
                         (click)="removeCollaborator(c.uid, c.displayName, c.email)">
                   <mat-icon>person_remove</mat-icon>
                 </button>
@@ -151,6 +155,10 @@
     }
   </div>
 
+  <p class="section-desc companions-desc">
+    Everyone on the trip — <strong>for splitting costs &amp; assigning bookings</strong>. No SorTrek account needed; add an email later only if you want to invite them in.
+  </p>
+
   @if (showAddForm()) {
     <div class="add-card">
       <form [formGroup]="addForm" (ngSubmit)="saveAdd()">
@@ -173,7 +181,7 @@
             <input matInput formControlName="homeCity" placeholder="e.g. Denver, CO" />
           </mat-form-field>
           <div class="inline-actions">
-            <button mat-icon-button type="button" (click)="cancelAdd()" matTooltip="Cancel">
+            <button mat-icon-button type="button" (click)="cancelAdd()" matTooltip="Cancel" aria-label="Cancel">
               <mat-icon>close</mat-icon>
             </button>
             <button mat-flat-button color="primary" type="submit"
@@ -219,7 +227,7 @@
                     <input matInput formControlName="homeCity" />
                   </mat-form-field>
                   <div class="inline-actions">
-                    <button mat-icon-button type="button" (click)="cancelEdit()" matTooltip="Cancel">
+                    <button mat-icon-button type="button" (click)="cancelEdit()" matTooltip="Cancel" aria-label="Cancel">
                       <mat-icon>close</mat-icon>
                     </button>
                     <button mat-flat-button color="primary" type="submit" [disabled]="editForm.invalid">
@@ -271,16 +279,16 @@
                 }
                 <!-- Edit/remove for trip owner -->
                 @if (isOwner && !isMe(p)) {
-                  <button mat-icon-button (click)="startEdit(p)" matTooltip="Edit">
+                  <button mat-icon-button (click)="startEdit(p)" matTooltip="Edit" aria-label="Edit companion">
                     <mat-icon>edit</mat-icon>
                   </button>
-                  <button mat-icon-button (click)="remove(p)" matTooltip="Remove"
+                  <button mat-icon-button (click)="remove(p)" matTooltip="Remove" aria-label="Remove companion"
                           [disabled]="p.isOrganizer">
                     <mat-icon>person_remove</mat-icon>
                   </button>
                 }
                 @if (isOwner && isMe(p)) {
-                  <button mat-icon-button (click)="startEdit(p)" matTooltip="Edit">
+                  <button mat-icon-button (click)="startEdit(p)" matTooltip="Edit" aria-label="Edit companion">
                     <mat-icon>edit</mat-icon>
                   </button>
                 }

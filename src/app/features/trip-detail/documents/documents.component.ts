@@ -50,6 +50,9 @@ export class DocumentsComponent implements OnInit {
 
   documents$!: Observable<TripDocument[]>;
 
+  /** Client-side search term for filtering the document list. */
+  searchTerm = signal('');
+
   // Upload state
   uploadProgress = signal<number | null>(null);
   uploadingName = signal('');
@@ -190,6 +193,21 @@ export class DocumentsComponent implements OnInit {
       case 'flight-confirmation': return 'flight';
       default:                    return 'folder_open';
     }
+  }
+
+  /** Filter documents by the current search term, matching name, category
+   *  label, and file type. Empty term returns all documents. */
+  filterDocs(docs: TripDocument[]): TripDocument[] {
+    const term = this.searchTerm().trim().toLowerCase();
+    if (!term) return docs;
+    return docs.filter(d => {
+      const fields = [
+        d.name,
+        this.categoryLabel(d.category),
+        d.fileType,
+      ];
+      return fields.some(f => f?.toLowerCase().includes(term));
+    });
   }
 
   groupedDocs(docs: TripDocument[]): { category: DocumentCategory; label: string; docs: TripDocument[] }[] {

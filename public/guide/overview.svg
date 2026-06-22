@@ -1,0 +1,53 @@
+<svg viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
+  <style>
+    .c1{animation:fadeUp .5s .15s ease both}
+    .c2{animation:fadeUp .5s .4s ease both}
+    .pin1{animation:pop .4s .7s ease both;opacity:0}
+    .pin2{animation:pop .4s .9s ease both;opacity:0}
+    .pin3{animation:pop .4s 1.1s ease both;opacity:0}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes pop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:scale(1)}}
+  </style>
+  <rect width="680" height="300" fill="#f0f2fb"/>
+  <rect width="680" height="50" fill="#1a237e"/>
+  <text x="20" y="32" fill="white" font-size="15" font-weight="700" letter-spacing=".5">SorTrek</text>
+  <text x="600" y="32" fill="#c5cae9" font-size="12">Overview &amp; Map</text>
+
+  <!-- map panel -->
+  <g class="c1">
+    <rect x="20" y="70" width="400" height="210" rx="12" fill="#dfe6ef" filter="url(#sh)"/>
+    <path d="M20 150 L140 120 L260 165 L380 130 L420 150 L420 210 L20 210 Z" fill="#cde0cf"/>
+    <path d="M20 230 L420 200 L420 280 L20 280 Z" fill="#bcd4ea"/>
+    <!-- route line -->
+    <path d="M90 120 Q200 95 280 150 T360 175" stroke="#1a237e" stroke-width="4" fill="none" stroke-opacity=".8" stroke-linecap="round"/>
+    <!-- pins -->
+    <g class="pin1"><path d="M90 110c-8 0-14 6-14 14 0 10 14 20 14 20s14-10 14-20c0-8-6-14-14-14z" fill="#00897b"/><circle cx="90" cy="124" r="8" fill="#fff"/><text x="90" y="129" font-size="11" text-anchor="middle">🎟️</text></g>
+    <g class="pin2"><path d="M280 140c-8 0-14 6-14 14 0 10 14 20 14 20s14-10 14-20c0-8-6-14-14-14z" fill="#5e35b1"/><circle cx="280" cy="154" r="8" fill="#fff"/><text x="280" y="159" font-size="11" text-anchor="middle">🏠</text></g>
+    <g class="pin3"><path d="M360 165c-8 0-14 6-14 14 0 10 14 20 14 20s14-10 14-20c0-8-6-14-14-14z" fill="#ef6c00"/><circle cx="360" cy="179" r="8" fill="#fff"/><text x="360" y="184" font-size="11" text-anchor="middle">🍴</text></g>
+    <!-- mode chips -->
+    <rect x="32" y="82" width="120" height="22" rx="11" fill="white"/>
+    <text x="44" y="97" fill="#1a237e" font-size="10" font-weight="700">🚶 Walking · Day 1</text>
+  </g>
+
+  <!-- side cards -->
+  <g class="c2">
+    <rect x="436" y="70" width="220" height="64" rx="12" fill="white" filter="url(#sh)"/>
+    <text x="452" y="92" fill="#5c6bc0" font-size="11" font-weight="700" letter-spacing="1">WEATHER</text>
+    <text x="452" y="118" fill="#212121" font-size="20" font-weight="700">☀️ 24°C</text>
+    <text x="560" y="118" fill="#9e9e9e" font-size="11">Paris · Sun</text>
+
+    <rect x="436" y="144" width="220" height="64" rx="12" fill="white" filter="url(#sh)"/>
+    <text x="452" y="166" fill="#5c6bc0" font-size="11" font-weight="700" letter-spacing="1">TOTAL COST</text>
+    <text x="452" y="192" fill="#2e7d32" font-size="20" font-weight="700">€1,840</text>
+
+    <rect x="436" y="218" width="220" height="62" rx="12" fill="#fff3e0" filter="url(#sh)"/>
+    <text x="452" y="242" fill="#e65100" font-size="11" font-weight="700">💳 Flag your card</text>
+    <text x="452" y="262" fill="#bf6000" font-size="10">Departure in 9 days</text>
+  </g>
+
+  <defs>
+    <filter id="sh" x="-8%" y="-8%" width="116%" height="130%">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#0000001a"/>
+    </filter>
+  </defs>
+</svg>

@@ -2,6 +2,14 @@
   @if (bookings$ | async; as bookings) {
     @if (items$ | async; as items) {
 
+      <!-- Overview Actions -->
+      <div class="overview-actions">
+        <button mat-stroked-button (click)="exportToCalendar()">
+          <mat-icon>calendar_month</mat-icon>
+          Add to Calendar
+        </button>
+      </div>
+
       <!-- Card Reminder Banner -->
       @if (showCardReminder()) {
         <div class="card-reminder-banner">
@@ -219,7 +227,8 @@
                       class="mode-btn"
                       [class.mode-active]="travelMode() === m.value"
                       (click)="travelMode.set(m.value)"
-                      [title]="m.label">
+                      [title]="m.label"
+                      [attr.aria-label]="m.label">
                 <mat-icon>{{ m.icon }}</mat-icon>
               </button>
             }
@@ -306,8 +315,14 @@
                       <small class="booking-when">
                         <mat-icon>schedule</mat-icon>
                         {{ booking.checkIn.toDate() | date: (hasTime(booking.checkIn) ? 'MMM d · h:mm a' : 'MMM d') }}
+                        @if (depZoneLabel(booking); as dz) {
+                          <span class="tz-label" matTooltip="Local time at the departure airport">{{ dz }}</span>
+                        }
                         @if (booking.checkOut) {
                           – {{ booking.checkOut.toDate() | date: (hasTime(booking.checkOut) ? 'MMM d · h:mm a' : 'MMM d') }}
+                          @if (arrZoneLabel(booking); as az) {
+                            <span class="tz-label" matTooltip="Local time at the arrival airport">{{ az }}</span>
+                          }
                         }
                       </small>
                     }

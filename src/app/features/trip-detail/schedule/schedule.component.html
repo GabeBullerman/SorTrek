@@ -135,6 +135,7 @@
                   <div class="booking-entry-title">
                     {{ be.title }}
                     @if (be.timeLabel) { <span class="booking-entry-time">· {{ be.timeLabel }}</span> }
+                    @if (be.zoneLabel) { <span class="tz-label" matTooltip="Local time at the airport">{{ be.zoneLabel }}</span> }
                   </div>
                   @if (be.subtitle) { <div class="booking-entry-sub">{{ be.subtitle }}</div> }
                 </div>

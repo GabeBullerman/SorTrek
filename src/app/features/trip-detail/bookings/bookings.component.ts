@@ -1,7 +1,9 @@
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, Input, OnInit, inject, signal } from '@angular/core';
 import { AsyncPipe, DatePipe, CurrencyPipe, TitleCasePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatDialog } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -12,6 +14,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { BookingService } from '../../../core/services/booking.service';
 import { FlightService } from '../../../core/services/flight.service';
 import { ParticipantService } from '../../../core/services/participant.service';
+import { TimezoneService } from '../../../core/services/timezone.service';
 import { Booking, BookingType, FlightStatus } from '../../../core/models/booking.model';
 import { Timestamp } from '@angular/fire/firestore';
 import { TripParticipant } from '../../../core/models/trip-participant.model';
@@ -46,6 +49,7 @@ interface BookingsData {
     AsyncPipe, DatePipe, CurrencyPipe, TitleCasePipe,
     MatButtonModule, MatIconModule, MatMenuModule,
     MatTooltipModule, MatProgressSpinnerModule, MatExpansionModule, MatChipsModule,
+    MatFormFieldModule, MatInputModule,
   ],
   templateUrl: './bookings.component.html',
   styleUrl: './bookings.component.scss',
@@ -57,6 +61,7 @@ export class BookingsComponent implements OnInit {
   private bookingService = inject(BookingService);
   private flightService = inject(FlightService);
   private participantService = inject(ParticipantService);
+  private tz = inject(TimezoneService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
 
@@ -64,6 +69,38 @@ export class BookingsComponent implements OnInit {
 
   /** Booking ids currently being refreshed, so we can show a spinner per card. */
   refreshing = new Set<string>();
+
+  /** Client-side search term for filtering the booking list. */
+  searchTerm = signal('');
+
+  /** Total bookings across all groups (used to decide whether to show search). */
+  totalBookings(groups: BookingGroup[]): number {
+    return groups.reduce((n, g) => n + g.bookings.length, 0);
+  }
+
+  /** Filter groups by the current search term, matching booking text fields.
+   *  Empty term returns all groups; groups with no matches are dropped. */
+  filterGroups(groups: BookingGroup[]): BookingGroup[] {
+    const term = this.searchTerm().trim().toLowerCase();
+    if (!term) return groups;
+    return groups
+      .map(g => ({ ...g, bookings: g.bookings.filter(b => this.bookingMatches(b, term)) }))
+      .filter(g => g.bookings.length > 0);
+  }
+
+  private bookingMatches(b: Booking, term: string): boolean {
+    const fields = [
+      b.title,
+      b.provider,
+      b.confirmationNumber,
+      b.type,
+      b.flightNumber,
+      b.departureAirport,
+      b.arrivalAirport,
+      ...(b.layovers ?? []),
+    ];
+    return fields.some(f => f?.toLowerCase().includes(term));
+  }
 
   ngOnInit() {
     this.data$ = combineLatest([
@@ -186,6 +223,30 @@ export class BookingsComponent implements OnInit {
       }));
     }
     return [];
+  }
+
+  /** True when a flight's departure & arrival airports are in different time
+   *  zones, so we should annotate each time with its airport's zone. */
+  flightCrossesZones(b: Booking): boolean {
+    return b.type === 'flight'
+      && this.tz.crossesZones(
+        b.departureAirport, b.arrivalAirport,
+        b.checkIn?.toDate(), b.checkOut?.toDate(),
+      );
+  }
+
+  /** Short zone label (e.g. "MST") for the departure airport — null unless the
+   *  flight crosses zones. */
+  depZoneLabel(b: Booking): string | null {
+    return this.flightCrossesZones(b)
+      ? this.tz.zoneLabel(b.departureAirport, b.checkIn?.toDate()) : null;
+  }
+
+  /** Short zone label (e.g. "CEST") for the arrival airport — null unless the
+   *  flight crosses zones. */
+  arrZoneLabel(b: Booking): string | null {
+    return this.flightCrossesZones(b)
+      ? this.tz.zoneLabel(b.arrivalAirport, b.checkOut?.toDate()) : null;
   }
 
   /** True when a timestamp carries a meaningful time-of-day (not midnight). */

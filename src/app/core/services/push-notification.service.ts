@@ -51,8 +51,8 @@ export class PushNotificationService {
     if (this.permission !== 'granted') return;
     new Notification(title, {
       body,
-      icon: '/LightBGNoBackground.png',
-      badge: '/LightBGNoBackground.png',
+      icon: '/ClearLogoWhiteCircle.png',
+      badge: '/ClearLogoWhiteCircle.png',
       ...options,
     });
   }

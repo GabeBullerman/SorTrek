@@ -11,6 +11,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { AsyncPipe } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
 import { UserService } from '../../core/services/user.service';
+import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
 import { Timestamp } from '@angular/fire/firestore';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { filter, map, switchMap, take } from 'rxjs/operators';
@@ -26,6 +27,7 @@ import { PwaInstallPromptComponent } from '../../shared/components/pwa-install-p
     MatSidenavModule, MatToolbarModule, MatButtonModule,
     MatIconModule, MatListModule, MatMenuModule, MatTooltipModule,
     AsyncPipe, CurrencyConverterComponent, PwaInstallPromptComponent,
+    ThemeToggleComponent,
   ],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.scss',

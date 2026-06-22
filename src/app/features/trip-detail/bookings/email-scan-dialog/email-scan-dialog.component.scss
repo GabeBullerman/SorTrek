@@ -3,9 +3,9 @@ h2[mat-dialog-title] {
   align-items: center;
   gap: 10px;
   font-size: 1.15rem;
-  color: #1a237e;
+  color: var(--st-primary);
 
-  mat-icon { color: #1a237e; }
+  mat-icon { color: var(--st-primary); }
 }
 
 mat-dialog-content {
@@ -17,9 +17,9 @@ mat-dialog-content {
 .state-panel {
   padding: 16px 0 8px;
 
-  h3 { margin: 0 0 10px; font-size: 1.05rem; color: #1a237e; }
-  p  { margin: 0 0 14px; color: #616161; font-size: 0.9rem; line-height: 1.55; }
-  small { color: #9e9e9e; font-size: 0.8rem; }
+  h3 { margin: 0 0 10px; font-size: 1.05rem; color: var(--st-primary); }
+  p  { margin: 0 0 14px; color: var(--st-on-surface-muted); font-size: 0.9rem; line-height: 1.55; }
+  small { color: var(--st-on-surface-faint); font-size: 0.8rem; }
 
   &.centered {
     display: flex;
@@ -35,10 +35,10 @@ mat-dialog-content {
   font-size: 56px;
   width: 56px;
   height: 56px;
-  color: #1a237e;
+  color: var(--st-primary);
   opacity: 0.5;
 
-  &.muted { color: #9e9e9e; }
+  &.muted { color: var(--st-on-surface-faint); }
   &.error-icon { color: #c62828; opacity: 1; }
 }
 
@@ -55,9 +55,9 @@ mat-dialog-content {
     align-items: center;
     gap: 10px;
     font-size: 0.875rem;
-    color: #424242;
+    color: var(--st-on-surface);
 
-    mat-icon { font-size: 18px; width: 18px; height: 18px; color: #5c6bc0; }
+    mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--st-primary-soft); }
   }
 }
 
@@ -65,14 +65,14 @@ mat-dialog-content {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #e8f5e9;
+  background: var(--st-status-confirmed-bg);
   border-radius: 8px;
   padding: 10px 14px;
   font-size: 0.8rem !important;
-  color: #2e7d32 !important;
+  color: var(--st-status-confirmed-fg) !important;
   margin-bottom: 0 !important;
 
-  mat-icon { font-size: 16px; width: 16px; height: 16px; color: #2e7d32; flex-shrink: 0; }
+  mat-icon { font-size: 16px; width: 16px; height: 16px; color: var(--st-status-confirmed-fg); flex-shrink: 0; }
 }
 
 /* ── Results ── */
@@ -82,7 +82,7 @@ mat-dialog-content {
   justify-content: space-between;
   padding: 12px 0 8px;
   font-size: 0.85rem;
-  color: #757575;
+  color: var(--st-on-surface-muted);
 
   .select-actions {
     display: flex;
@@ -104,13 +104,13 @@ mat-dialog-content {
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  border: 1.5px solid #e0e0e0;
+  border: 1.5px solid var(--st-border);
   border-radius: 12px;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 
-  &:hover    { background: #f5f7ff; }
-  &.selected { background: #e8eaf6; border-color: #7986cb; }
+  &:hover    { background: var(--st-surface-2); }
+  &.selected { background: var(--st-primary-tint-bg); border-color: #7986cb; }
 }
 
 .booking-icon {
@@ -121,15 +121,15 @@ mat-dialog-content {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: #e8eaf6;
+  background: var(--st-primary-tint-bg);
 
-  mat-icon { font-size: 20px; width: 20px; height: 20px; color: #3949ab; }
+  mat-icon { font-size: 20px; width: 20px; height: 20px; color: var(--st-primary-soft); }
 
-  &.type-flight      { background: #e3f2fd; mat-icon { color: #1565c0; } }
+  &.type-flight      { background: var(--st-cat-transport-bg); mat-icon { color: var(--st-cat-transport-fg); } }
   &.type-hotel       { background: #fce4ec; mat-icon { color: #c2185b; } }
   &.type-airbnb      { background: #fce4ec; mat-icon { color: #e91e63; } }
-  &.type-car-rental  { background: #e8f5e9; mat-icon { color: #2e7d32; } }
-  &.type-restaurant  { background: #fff3e0; mat-icon { color: #e65100; } }
+  &.type-car-rental  { background: var(--st-cat-activity-bg); mat-icon { color: var(--st-cat-activity-fg); } }
+  &.type-restaurant  { background: var(--st-cat-food-bg); mat-icon { color: var(--st-cat-food-fg); } }
 }
 
 .booking-info {
@@ -140,7 +140,7 @@ mat-dialog-content {
 .booking-title {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #212121;
+  color: var(--st-on-surface);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -158,12 +158,12 @@ mat-dialog-content {
   align-items: center;
   gap: 3px;
   font-size: 0.72rem;
-  background: #f5f5f5;
+  background: var(--st-surface-2);
   border-radius: 8px;
   padding: 2px 8px;
-  color: #616161;
+  color: var(--st-on-surface-muted);
 
-  &.conf { background: #e8eaf6; color: #1a237e; font-weight: 600; }
+  &.conf { background: var(--st-primary-tint-bg); color: var(--st-primary-tint-fg); font-weight: 600; }
 
   mat-icon { font-size: 12px; width: 12px; height: 12px; }
 }
@@ -179,12 +179,12 @@ mat-dialog-content {
 .booking-cost {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #1a237e;
+  color: var(--st-primary);
 }
 
 .type-label {
   font-size: 0.7rem;
-  color: #9e9e9e;
+  color: var(--st-on-surface-faint);
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
@@ -194,7 +194,7 @@ mat-dialog-content {
   align-items: center;
   gap: 6px;
   font-size: 0.78rem;
-  color: #9e9e9e;
+  color: var(--st-on-surface-faint);
   margin: 12px 0 0;
 
   mat-icon { font-size: 14px; width: 14px; height: 14px; }

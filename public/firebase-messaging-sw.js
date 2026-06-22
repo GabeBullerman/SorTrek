@@ -16,8 +16,8 @@ self.addEventListener('message', event => {
       const { title, body, icon } = payload.notification ?? {};
       self.registration.showNotification(title ?? 'SorTrek', {
         body: body ?? '',
-        icon: icon ?? '/LightBGNoBackground.png',
-        badge: '/LightBGNoBackground.png',
+        icon: icon ?? '/ClearLogoWhiteCircle.png',
+        badge: '/ClearLogoWhiteCircle.png',
         data: payload.data,
       });
     });

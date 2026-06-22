@@ -6,9 +6,14 @@
   margin: 0 auto;
 }
 
+.overview-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .card-reminder-banner {
-  background: #fff8e1;
-  border-left: 4px solid #f9a825;
+  background: var(--st-warn-bg);
+  border-left: 4px solid var(--st-warn-accent);
   border-radius: 0 12px 12px 0;
   padding: 16px 20px;
   box-shadow: 0 2px 8px rgba(249, 168, 37, 0.15);
@@ -26,7 +31,7 @@
 
       strong {
         font-size: 0.95rem;
-        color: #e65100;
+        color: var(--st-warn-strong);
       }
     }
 
@@ -40,7 +45,7 @@
   }
 
   .reminder-icon {
-    color: #f9a825;
+    color: var(--st-warn-accent);
     font-size: 22px;
     width: 22px;
     height: 22px;
@@ -53,7 +58,7 @@
     margin: 0 0 12px;
     line-height: 1.5;
 
-    strong { color: #e65100; }
+    strong { color: var(--st-warn-strong); }
   }
 
   .reminder-checklist {
@@ -69,13 +74,13 @@
       align-items: center;
       gap: 8px;
       font-size: 0.845rem;
-      color: #5d4037;
+      color: var(--st-warn-fg);
 
       mat-icon {
         font-size: 16px;
         width: 16px;
         height: 16px;
-        color: #f9a825;
+        color: var(--st-warn-accent);
         flex-shrink: 0;
       }
     }
@@ -111,14 +116,14 @@
       align-items: center;
       gap: 5px;
       font-size: 0.82rem;
-      color: #2e7d32;
+      color: var(--st-success-fg);
       font-weight: 500;
 
       mat-icon {
         font-size: 16px;
         width: 16px;
         height: 16px;
-        color: #2e7d32;
+        color: var(--st-success-fg);
       }
     }
   }
@@ -150,20 +155,20 @@
   flex: 1 1 0;
   min-width: 72px;
   padding: 14px 8px;
-  background: #f5f7ff;
+  background: var(--st-surface-2);
   border-radius: 14px;
 
   &.trip-day {
-    background: #e8eaf6;
+    background: var(--st-primary-tint-bg);
     border: 1px solid #c5cae9;
   }
 
-  .w-trip-day { font-size: 0.68rem; font-weight: 700; color: #3949ab; text-transform: uppercase; letter-spacing: 0.4px; }
-  .w-day      { font-size: 0.72rem; font-weight: 600; color: #9e9e9e; text-transform: uppercase; }
+  .w-trip-day { font-size: 0.68rem; font-weight: 700; color: var(--st-primary-soft); text-transform: uppercase; letter-spacing: 0.4px; }
+  .w-day      { font-size: 0.72rem; font-weight: 600; color: var(--st-on-surface-faint); text-transform: uppercase; }
   .w-emoji    { font-size: 1.6rem; line-height: 1; }
-  .w-hi       { font-size: 1rem; font-weight: 700; color: #e65100; }
-  .w-lo       { font-size: 0.82rem; color: #90a4ae; }
-  .w-desc     { font-size: 0.68rem; color: #bdbdbd; text-align: center; }
+  .w-hi       { font-size: 1rem; font-weight: 700; color: var(--st-warn-strong); }
+  .w-lo       { font-size: 0.82rem; color: var(--st-on-surface-faint); }
+  .w-desc     { font-size: 0.68rem; color: var(--st-on-surface-faint); text-align: center; }
 }
 
 .stats-row {
@@ -185,20 +190,20 @@
     font-size: 32px;
     width: 32px;
     height: 32px;
-    color: #1a237e;
+    color: var(--st-primary);
     opacity: 0.7;
   }
 
   .stat-value {
     font-size: 1.4rem;
     font-weight: 700;
-    color: #1a237e;
+    color: var(--st-primary);
     &.accent { font-size: 1rem; }
   }
 
   .stat-label {
     font-size: 0.8rem;
-    color: #757575;
+    color: var(--st-on-surface-muted);
     margin-top: 2px;
   }
 }
@@ -212,7 +217,7 @@
     align-items: center;
     gap: 8px;
     font-size: 1rem;
-    mat-icon { color: #1a237e; }
+    mat-icon { color: var(--st-primary); }
   }
 }
 
@@ -222,9 +227,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #f5f7fa;
+  background: var(--st-bg);
   border-radius: 8px;
-  color: #9e9e9e;
+  color: var(--st-on-surface-faint);
   gap: 12px;
   mat-icon { font-size: 48px; width: 48px; height: 48px; opacity: 0.3; }
   p { margin: 0; text-align: center; max-width: 300px; }
@@ -241,7 +246,7 @@
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
-  background: #f8f9fa;
+  background: var(--st-surface-2);
   border-radius: 8px;
 
   .booking-type-icon {
@@ -259,7 +264,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    small { color: #757575; font-size: 0.8rem; }
+    small { color: var(--st-on-surface-muted); font-size: 0.8rem; }
   }
 
   .booking-status {
@@ -268,17 +273,17 @@
     font-size: 0.75rem;
     font-weight: 500;
     text-transform: capitalize;
-    background: #e8f5e9;
-    color: #2e7d32;
+    background: var(--st-status-confirmed-bg);
+    color: var(--st-status-confirmed-fg);
   }
 
-  .status-confirmed { background: #e8f5e9; color: #2e7d32; }
-  .status-pending { background: #fff8e1; color: #f57f17; }
-  .status-cancelled { background: #ffebee; color: #c62828; }
+  .status-confirmed { background: var(--st-status-confirmed-bg); color: var(--st-status-confirmed-fg); }
+  .status-pending { background: var(--st-status-pending-bg); color: var(--st-status-pending-fg); }
+  .status-cancelled { background: var(--st-status-cancelled-bg); color: var(--st-status-cancelled-fg); }
 
   .booking-cost {
     font-weight: 600;
-    color: #1a237e;
+    color: var(--st-primary);
     font-size: 0.9rem;
   }
 }
@@ -292,7 +297,7 @@
     align-items: center;
     gap: 8px;
     font-size: 1rem !important;
-    mat-icon { color: #1a237e; }
+    mat-icon { color: var(--st-primary); }
   }
 
   .day-select {
@@ -306,7 +311,7 @@
   align-items: center;
   gap: 10px;
   padding: 20px 0;
-  color: #9e9e9e;
+  color: var(--st-on-surface-faint);
   font-size: 0.9rem;
   mat-icon { font-size: 20px; }
 }
@@ -334,7 +339,7 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background: #1a237e;
+    background: var(--st-primary);
     color: white;
     font-size: 0.78rem;
     font-weight: 700;
@@ -348,7 +353,7 @@
     width: 2px;
     flex: 1;
     min-height: 24px;
-    background: #c5cae9;
+    background: var(--st-border);
     margin: 4px 0;
   }
 }
@@ -360,7 +365,7 @@
   .stop-title {
     font-weight: 600;
     font-size: 0.9rem;
-    color: #212121;
+    color: var(--st-on-surface);
     line-height: 1.4;
   }
 
@@ -369,7 +374,7 @@
     align-items: center;
     gap: 4px;
     font-size: 0.78rem;
-    color: #757575;
+    color: var(--st-on-surface-muted);
     margin-top: 2px;
     mat-icon { font-size: 14px; width: 14px; height: 14px; }
   }
@@ -387,19 +392,19 @@
   margin-bottom: 12px;
 
   .mode-btn {
-    color: #9e9e9e;
+    color: var(--st-on-surface-faint);
     transition: color 0.15s, background 0.15s;
 
     &.mode-active {
-      color: #1a237e;
-      background: #e8eaf6;
+      color: var(--st-primary-tint-fg);
+      background: var(--st-primary-tint-bg);
       border-radius: 50%;
     }
   }
 
   .mode-label {
     font-size: 0.82rem;
-    color: #616161;
+    color: var(--st-on-surface-muted);
     margin-left: 4px;
   }
 }
@@ -413,11 +418,11 @@
   background: #f0f4ff;
   border-radius: 6px;
   font-size: 0.78rem;
-  color: #3949ab;
+  color: var(--st-primary-soft);
 
   mat-icon { font-size: 14px; width: 14px; height: 14px; }
 
-  .leg-distance { color: #757575; }
+  .leg-distance { color: var(--st-on-surface-muted); }
 }
 
 .route-loading {
@@ -426,12 +431,12 @@
   gap: 10px;
   padding: 12px 0 4px;
   font-size: 0.85rem;
-  color: #757575;
+  color: var(--st-on-surface-muted);
 }
 
 .no-locations-note {
   font-size: 0.8rem;
-  color: #9e9e9e;
+  color: var(--st-on-surface-faint);
   text-align: center;
   margin-top: 8px;
 }
@@ -444,7 +449,7 @@
   .info-title {
     font-weight: 700;
     font-size: 0.95rem;
-    color: #1a237e;
+    color: var(--st-primary);
     margin-bottom: 6px;
   }
 
@@ -473,7 +478,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: #1565c0;
+  color: var(--st-accent);
   font-weight: 500;
   mat-icon { font-size: 15px; width: 15px; height: 15px; }
 }

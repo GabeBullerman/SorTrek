@@ -17,7 +17,7 @@ import { TripFormDialogComponent } from './trip-form-dialog/trip-form-dialog.com
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import { DaysUntilPipe } from '../../shared/pipes/days-until.pipe';
 import { from, of } from 'rxjs';
-import { catchError, take } from 'rxjs/operators';
+import { catchError, map, take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-trips',
@@ -42,7 +42,27 @@ export class TripsComponent implements OnInit {
   readonly currentUserId = this.auth.currentUser?.uid ?? '';
   readonly currentUserEmail = this.auth.currentUser?.email ?? '';
 
-  trips$ = this.tripService.getTrips().pipe(catchError(() => of([])));
+  trips$ = this.tripService.getTrips().pipe(
+    map(trips => this.sortTrips(trips)),
+    catchError(() => of([])),
+  );
+
+  /**
+   * Orders trips so the most relevant come first: ongoing, then upcoming
+   * (soonest departure first), then past (most recent first).
+   */
+  private sortTrips(trips: Trip[]): Trip[] {
+    const rank: Record<'ongoing' | 'upcoming' | 'past', number> = { ongoing: 0, upcoming: 1, past: 2 };
+    return [...trips].sort((a, b) => {
+      const sa = this.tripStatus(a);
+      const sb = this.tripStatus(b);
+      if (rank[sa] !== rank[sb]) return rank[sa] - rank[sb];
+      const ta = a.startDate.toDate().getTime();
+      const tb = b.startDate.toDate().getTime();
+      // upcoming/ongoing: soonest first; past: most recently finished first
+      return sa === 'past' ? tb - ta : ta - tb;
+    });
+  }
 
   ngOnInit() {
     // Auto-accept any pending invites for this user's email
@@ -148,5 +168,28 @@ export class TripsComponent implements OnInit {
     if (now < start) return 'upcoming';
     if (now > end) return 'past';
     return 'ongoing';
+  }
+
+  /**
+   * Friendly countdown for FUTURE trips only.
+   * Returns null if the trip is in progress or has ended.
+   * Days are counted between local-midnight boundaries so partial
+   * days don't skew the result.
+   */
+  countdownLabel(trip: Trip): string | null {
+    // Only show for upcoming trips.
+    if (this.tripStatus(trip) !== 'upcoming') return null;
+
+    const startOfDay = (d: Date) =>
+      new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+
+    const today = startOfDay(new Date());
+    const tripDay = startOfDay(trip.startDate.toDate());
+
+    const days = Math.round((tripDay - today) / (1000 * 60 * 60 * 24));
+
+    if (days <= 0) return 'Today';
+    if (days === 1) return 'Tomorrow';
+    return `${days} days to go`;
   }
 }

@@ -9,17 +9,17 @@
       }
       <div class="hero-overlay">
         <div class="hero-content">
-          <button mat-icon-button class="back-btn" (click)="back()" matTooltip="Back to trips">
+          <button mat-icon-button class="back-btn" (click)="back()" matTooltip="Back to trips" aria-label="Back to trips">
             <mat-icon>arrow_back</mat-icon>
           </button>
           <div class="hero-text">
             <h1>{{ trip.name }}</h1>
             <p class="hero-destination">
-              <mat-icon>location_on</mat-icon>
+              <mat-icon aria-hidden="true">location_on</mat-icon>
               {{ trip.destination }}
             </p>
             <p class="hero-dates">
-              <mat-icon>calendar_today</mat-icon>
+              <mat-icon aria-hidden="true">calendar_today</mat-icon>
               {{ trip.startDate.toDate() | date:'MMM d' }} –
               {{ trip.endDate.toDate() | date:'MMM d, y' }}
               &nbsp;·&nbsp; {{ tripDuration(trip) }} days
@@ -27,10 +27,10 @@
           </div>
           @if (isOwner(trip)) {
             <div class="hero-actions">
-              <button mat-icon-button matTooltip="Edit trip" (click)="editTrip(trip)">
+              <button mat-icon-button matTooltip="Edit trip" aria-label="Edit trip" (click)="editTrip(trip)">
                 <mat-icon>edit</mat-icon>
               </button>
-              <button mat-icon-button matTooltip="Delete trip" (click)="deleteTrip(trip)">
+              <button mat-icon-button matTooltip="Delete trip" aria-label="Delete trip" (click)="deleteTrip(trip)">
                 <mat-icon>delete</mat-icon>
               </button>
             </div>

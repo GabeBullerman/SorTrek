@@ -72,6 +72,15 @@
           {{ (photoOptions().length || selectedPhotoUrl()) ? 'Change cover photo' : 'Find cover photo' }}
         }
       </button>
+      <p class="photo-hint">
+        @if (photoOptions().length || selectedPhotoUrl()) {
+          Change the cover photo anytime — it appears on this trip's card.
+        } @else {
+          Tip: pick a cover photo to brighten up this trip's card.
+        }
+      </p>
+    } @else if (form.get('destination')?.value) {
+      <p class="photo-hint">Loading photo options…</p>
     }
 
     <mat-form-field appearance="outline" class="full-width mt-16">

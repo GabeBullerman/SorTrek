@@ -32,6 +32,11 @@
                 <div class="trip-status-badge" [class]="'status-' + tripStatus(trip)">
                   {{ tripStatus(trip) | titlecase }}
                 </div>
+                @if (countdownLabel(trip)) {
+                  <span class="countdown-badge">
+                    <mat-icon>hourglass_top</mat-icon> {{ countdownLabel(trip) }}
+                  </span>
+                }
                 @if (isCollaborator(trip)) {
                   <div class="shared-badge collab-badge">
                     <mat-icon>manage_accounts</mat-icon> Shared with you
@@ -49,12 +54,12 @@
                 <div>
                   <h2 class="trip-name">{{ trip.name }}</h2>
                   <p class="trip-destination">
-                    <mat-icon class="inline-icon">location_on</mat-icon>
+                    <mat-icon class="inline-icon" aria-hidden="true">location_on</mat-icon>
                     {{ trip.destination }}
                   </p>
                 </div>
                 <button mat-icon-button [matMenuTriggerFor]="tripMenu"
-                        (click)="$event.stopPropagation()">
+                        (click)="$event.stopPropagation()" aria-label="Trip options">
                   <mat-icon>more_vert</mat-icon>
                 </button>
                 <mat-menu #tripMenu>

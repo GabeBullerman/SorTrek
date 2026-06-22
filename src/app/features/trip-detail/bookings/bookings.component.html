@@ -31,10 +31,30 @@
         <mat-icon>confirmation_number</mat-icon>
         <h3>No bookings yet</h3>
         <p>Add flights, hotels, Airbnbs, and other bookings here</p>
+        <button mat-flat-button color="primary" (click)="openAddBooking()">
+          <mat-icon>add</mat-icon> Add Booking
+        </button>
       </div>
     } @else {
+      <div class="search-field-wrap">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-icon matPrefix>search</mat-icon>
+          <input matInput type="text" placeholder="Search bookings…"
+                 [value]="searchTerm()" (input)="searchTerm.set($any($event.target).value)" />
+          @if (searchTerm()) {
+            <button matSuffix mat-icon-button aria-label="Clear search" (click)="searchTerm.set('')">
+              <mat-icon>close</mat-icon>
+            </button>
+          }
+        </mat-form-field>
+      </div>
+
+      @let filteredGroups = filterGroups(data.groups);
+      @if (filteredGroups.length === 0) {
+        <p class="no-matches">No matches for "{{ searchTerm() }}"</p>
+      } @else {
       <mat-accordion multi>
-        @for (group of data.groups; track group.type) {
+        @for (group of filteredGroups; track group.type) {
           <mat-expansion-panel [expanded]="true" class="booking-group">
             <mat-expansion-panel-header>
               <mat-panel-title class="group-title">
@@ -71,6 +91,7 @@
                       <div class="booking-card-actions">
                         @if (booking.type === 'flight' && booking.flightNumber) {
                           <button mat-icon-button matTooltip="Refresh live flight status"
+                                  aria-label="Refresh live flight status"
                                   [disabled]="refreshing.has(booking.id!)"
                                   (click)="refreshFlightStatus(booking)">
                             @if (refreshing.has(booking.id!)) {
@@ -82,14 +103,15 @@
                         }
                         @if (booking.bookingUrl) {
                           <button mat-icon-button matTooltip="Open booking link"
+                                  aria-label="Open booking link"
                                   (click)="openBookingUrl(booking.bookingUrl)">
                             <mat-icon>open_in_new</mat-icon>
                           </button>
                         }
-                        <button mat-icon-button matTooltip="Edit" (click)="openEditBooking(booking)">
+                        <button mat-icon-button matTooltip="Edit" aria-label="Edit booking" (click)="openEditBooking(booking)">
                           <mat-icon>edit</mat-icon>
                         </button>
-                        <button mat-icon-button matTooltip="Delete" (click)="deleteBooking(booking)">
+                        <button mat-icon-button matTooltip="Delete" aria-label="Delete booking" (click)="deleteBooking(booking)">
                           <mat-icon>delete</mat-icon>
                         </button>
                       </div>
@@ -125,10 +147,16 @@
                         <div class="detail-item">
                           <mat-icon>{{ booking.type === 'flight' ? 'flight_takeoff' : 'login' }}</mat-icon>
                           <span>{{ booking.checkIn.toDate() | date: (hasTime(booking.checkIn) ? 'MMM d, y · h:mm a' : 'MMM d, y') }}</span>
+                          @if (depZoneLabel(booking); as dz) {
+                            <span class="tz-label" matTooltip="Local time at the departure airport">{{ dz }}</span>
+                          }
                           @if (booking.checkOut) {
                             <span class="date-arrow">→</span>
                             <mat-icon>{{ booking.type === 'flight' ? 'flight_land' : 'logout' }}</mat-icon>
                             <span>{{ booking.checkOut.toDate() | date: (hasTime(booking.checkOut) ? 'MMM d, y · h:mm a' : 'MMM d, y') }}</span>
+                            @if (arrZoneLabel(booking); as az) {
+                              <span class="tz-label" matTooltip="Local time at the arrival airport">{{ az }}</span>
+                            }
                           }
                         </div>
                       }
@@ -220,6 +248,7 @@
           </mat-expansion-panel>
         }
       </mat-accordion>
+      }
     }
   } @else {
     <div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>

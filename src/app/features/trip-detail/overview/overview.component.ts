@@ -14,7 +14,9 @@ import { Observable, of, catchError, tap } from 'rxjs';
 import { Trip } from '../../../core/models/trip.model';
 import { ItineraryService } from '../../../core/services/itinerary.service';
 import { BookingService } from '../../../core/services/booking.service';
+import { IcsExportService } from '../../../core/services/ics-export.service';
 import { GoogleMapsLoaderService } from '../../../core/services/google-maps-loader.service';
+import { TimezoneService } from '../../../core/services/timezone.service';
 import { WeatherService, WeatherDay } from '../../../core/services/weather.service';
 import { CardReminderService } from '../../../core/services/card-reminder.service';
 import { PushNotificationService } from '../../../core/services/push-notification.service';
@@ -59,7 +61,9 @@ export class OverviewComponent implements OnInit {
   private weatherService = inject(WeatherService);
   private cardReminderService = inject(CardReminderService);
   private pushNotificationService = inject(PushNotificationService);
+  private icsExportService = inject(IcsExportService);
   private snackBar = inject(MatSnackBar);
+  private tz = inject(TimezoneService);
 
   items$!: Observable<ItineraryItem[]>;
   bookings$!: Observable<Booking[]>;
@@ -402,11 +406,48 @@ export class OverviewComponent implements OnInit {
     );
   }
 
+  /** True when a flight's departure & arrival airports are in different time
+   *  zones, so we should annotate each time with its airport's zone. */
+  flightCrossesZones(b: Booking): boolean {
+    return b.type === 'flight'
+      && this.tz.crossesZones(
+        b.departureAirport, b.arrivalAirport,
+        b.checkIn?.toDate(), b.checkOut?.toDate(),
+      );
+  }
+
+  /** Short zone label (e.g. "MST") for the departure airport — null unless the
+   *  flight crosses zones. */
+  depZoneLabel(b: Booking): string | null {
+    return this.flightCrossesZones(b)
+      ? this.tz.zoneLabel(b.departureAirport, b.checkIn?.toDate()) : null;
+  }
+
+  /** Short zone label (e.g. "CEST") for the arrival airport — null unless the
+   *  flight crosses zones. */
+  arrZoneLabel(b: Booking): string | null {
+    return this.flightCrossesZones(b)
+      ? this.tz.zoneLabel(b.arrivalAirport, b.checkOut?.toDate()) : null;
+  }
+
   /** True when a timestamp carries a meaningful time-of-day (not midnight). */
   hasTime(ts?: { toDate(): Date } | null): boolean {
     if (!ts) return false;
     const d = ts.toDate();
     return d.getHours() !== 0 || d.getMinutes() !== 0;
+  }
+
+  /** Build a .ics calendar from the trip's bookings + itinerary and download it. */
+  exportToCalendar(): void {
+    const bookings = this.allBookings();
+    const items = this.allItems();
+    const ics = this.icsExportService.buildIcs(this.trip, bookings, items);
+    if (!ics) {
+      this.snackBar.open('Nothing to add to calendar yet', undefined, { duration: 2500 });
+      return;
+    }
+    const name = (this.trip?.name || 'trip').trim();
+    this.icsExportService.download(`${name}.ics`, ics);
   }
 
   activeModeIcon(): string {

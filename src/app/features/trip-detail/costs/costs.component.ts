@@ -97,6 +97,10 @@ export class CostsComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
 
   costs$!: Observable<CostsData>;
+
+  /** Client-side search term for filtering the expenses list. */
+  searchTerm = signal('');
+
   homeCurrency = signal<string | null>(null);
   rateResult = signal<RateResult | null>(null);
   loadingRate = signal(false);
@@ -200,6 +204,21 @@ export class CostsComponent implements OnInit {
     from(this.expenseService.deleteExpense(expense.id!)).subscribe(() =>
       this.snackBar.open('Expense removed', undefined, { duration: 2000 })
     );
+  }
+
+  /** Filter expenses by the current search term, matching description (title),
+   *  category label, and who paid. Empty term returns all expenses. */
+  filterExpenses(expenses: Expense[], participants: TripParticipant[]): Expense[] {
+    const term = this.searchTerm().trim().toLowerCase();
+    if (!term) return expenses;
+    return expenses.filter(e => {
+      const fields = [
+        e.title,
+        this.categoryMeta[e.category]?.label ?? e.category,
+        e.paidById ? this.participantName(e.paidById, participants) : null,
+      ];
+      return fields.some(f => f?.toLowerCase().includes(term));
+    });
   }
 
   participantName(id: string | null | undefined, participants: TripParticipant[]): string {

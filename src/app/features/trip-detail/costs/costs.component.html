@@ -212,6 +212,9 @@
         <mat-icon>savings</mat-icon>
         <h3>No costs tracked yet</h3>
         <p>Add an expense or assign costs to bookings and schedule items</p>
+        <button mat-flat-button color="primary" (click)="openAddExpense()">
+          <mat-icon>add</mat-icon> Add Expense
+        </button>
       </div>
     } @else {
 
@@ -359,8 +362,25 @@
             </mat-card-title>
           </mat-card-header>
           <mat-card-content>
+            <div class="search-field-wrap">
+              <mat-form-field appearance="outline" class="search-field">
+                <mat-icon matPrefix>search</mat-icon>
+                <input matInput type="text" placeholder="Search expenses…"
+                       [value]="searchTerm()" (input)="searchTerm.set($any($event.target).value)" />
+                @if (searchTerm()) {
+                  <button matSuffix mat-icon-button aria-label="Clear search" (click)="searchTerm.set('')">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                }
+              </mat-form-field>
+            </div>
+
+            @let filteredExpenses = filterExpenses(data.expenses, data.participants);
+            @if (filteredExpenses.length === 0) {
+              <p class="no-matches">No matches for "{{ searchTerm() }}"</p>
+            }
             <div class="expense-list">
-              @for (expense of data.expenses; track expense.id) {
+              @for (expense of filteredExpenses; track expense.id) {
                 <div class="expense-row">
                   <div class="expense-icon-wrap" [style.background]="categoryMeta[expense.category]?.color + '22'">
                     <mat-icon [style.color]="categoryMeta[expense.category]?.color">

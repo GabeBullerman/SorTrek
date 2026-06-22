@@ -8,8 +8,8 @@
   "theme_color": "#1a237e",
   "orientation": "portrait-primary",
   "icons": [
-    { "src": "/LightBGNoBackground.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/LightBGNoBackground.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "/ClearLogoWhiteCircle.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/ClearLogoWhiteCircle.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ],
   "categories": ["travel", "lifestyle"],
   "lang": "en-US"

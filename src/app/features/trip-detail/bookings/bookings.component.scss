@@ -15,7 +15,7 @@
     margin: 0;
     font-size: 1.4rem;
     font-weight: 600;
-    color: #1a237e;
+    color: var(--st-primary);
   }
 
   .header-actions {
@@ -41,13 +41,13 @@ mat-accordion {
   align-items: center;
   gap: 8px;
   font-weight: 600;
-  color: #1a237e;
+  color: var(--st-primary);
 
-  mat-icon { color: #1a237e; }
+  mat-icon { color: var(--st-primary); }
 
   .count-badge {
-    background: #e8eaf6;
-    color: #1a237e;
+    background: var(--st-primary-tint-bg);
+    color: var(--st-primary-tint-fg);
     padding: 1px 7px;
     border-radius: 10px;
     font-size: 0.75rem;
@@ -63,10 +63,10 @@ mat-accordion {
 }
 
 .booking-card {
-  background: #f8f9fa;
+  background: var(--st-surface-2);
   border-radius: 10px;
   padding: 16px;
-  border-left: 4px solid #1a237e;
+  border-left: 4px solid var(--st-primary);
 }
 
 .suggested-banner {
@@ -74,16 +74,16 @@ mat-accordion {
   align-items: flex-start;
   gap: 8px;
   padding: 8px 12px;
-  background: #fff3e0;
-  border: 1px dashed #ffb74d;
+  background: var(--st-warn-bg);
+  border: 1px dashed var(--st-warn-border);
   border-radius: 8px;
   margin-bottom: 10px;
   font-size: 0.8rem;
-  color: #bf360c;
+  color: var(--st-warn-strong);
   line-height: 1.5;
 
-  mat-icon { font-size: 16px; width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; color: #e65100; }
-  strong { color: #bf360c; }
+  mat-icon { font-size: 16px; width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; color: var(--st-warn-strong); }
+  strong { color: var(--st-warn-strong); }
 }
 
 .booking-card-header {
@@ -104,7 +104,7 @@ mat-accordion {
     margin: 0;
     font-size: 1rem;
     font-weight: 600;
-    color: #212121;
+    color: var(--st-on-surface);
   }
 }
 
@@ -124,10 +124,10 @@ mat-accordion {
   white-space: nowrap;
 }
 
-.status-confirmed  { background: #e8f5e9; color: #2e7d32; }
-.status-pending    { background: #fff8e1; color: #f57f17; }
-.status-cancelled  { background: #ffebee; color: #c62828; }
-.status-suggested  { background: #fff3e0; color: #e65100; border: 1px dashed #ffb74d; }
+.status-confirmed  { background: var(--st-status-confirmed-bg); color: var(--st-status-confirmed-fg); }
+.status-pending    { background: var(--st-status-pending-bg); color: var(--st-status-pending-fg); }
+.status-cancelled  { background: var(--st-status-cancelled-bg); color: var(--st-status-cancelled-fg); }
+.status-suggested  { background: var(--st-warn-bg); color: var(--st-warn-strong); border: 1px dashed var(--st-warn-border); }
 
 .booking-details {
   display: flex;
@@ -139,15 +139,15 @@ mat-accordion {
     align-items: center;
     gap: 6px;
     font-size: 0.875rem;
-    color: #424242;
+    color: var(--st-on-surface);
 
-    mat-icon { font-size: 16px; width: 16px; height: 16px; color: #757575; }
+    mat-icon { font-size: 16px; width: 16px; height: 16px; color: var(--st-on-surface-muted); }
 
-    &.confirmation strong { color: #1a237e; }
-    &.cost { color: #1a237e; strong { font-size: 1rem; } }
+    &.confirmation strong { color: var(--st-primary); }
+    &.cost { color: var(--st-primary); strong { font-size: 1rem; } }
   }
 
-  .date-arrow { color: #9e9e9e; }
+  .date-arrow { color: var(--st-on-surface-faint); }
 }
 
 .booking-notes {
@@ -156,10 +156,10 @@ mat-accordion {
   gap: 6px;
   margin-top: 10px;
   padding: 8px 10px;
-  background: #fff8e1;
+  background: var(--st-warn-bg);
   border-radius: 6px;
   font-size: 0.8rem;
-  color: #795548;
+  color: var(--st-warn-fg);
 
   mat-icon { font-size: 14px; width: 14px; height: 14px; flex-shrink: 0; margin-top: 1px; }
 }
@@ -176,18 +176,18 @@ mat-accordion {
   align-items: center;
   gap: 10px;
   padding: 10px 14px;
-  background: #fffbf0;
-  border: 1px solid #ffe082;
-  border-left: 4px solid #f9a825;
+  background: var(--st-warn-bg);
+  border: 1px solid var(--st-warn-border);
+  border-left: 4px solid var(--st-warn-accent);
   border-radius: 8px;
   font-size: 0.875rem;
-  color: #5d4037;
+  color: var(--st-warn-fg);
 
   .hint-icon {
     font-size: 18px;
     width: 18px;
     height: 18px;
-    color: #f9a825;
+    color: var(--st-warn-accent);
     flex-shrink: 0;
   }
 
@@ -199,8 +199,8 @@ mat-accordion {
     height: 28px;
     line-height: 28px;
     padding: 0 10px;
-    border-color: #f9a825;
-    color: #e65100;
+    border-color: var(--st-warn-accent);
+    color: var(--st-warn-strong);
 
     mat-icon { font-size: 14px; width: 14px; height: 14px; vertical-align: middle; }
   }
@@ -212,7 +212,7 @@ mat-accordion {
   gap: 6px;
   margin-top: 10px;
   padding: 8px 10px;
-  background: #f3f4ff;
+  background: var(--st-primary-tint-bg);
   border-radius: 6px;
 }
 
@@ -225,7 +225,7 @@ mat-accordion {
     font-size: 15px;
     width: 15px;
     height: 15px;
-    color: #3949ab;
+    color: var(--st-primary-soft);
     flex-shrink: 0;
   }
 }
@@ -240,14 +240,14 @@ mat-accordion {
   font-size: 0.75rem;
   padding: 2px 8px;
   border-radius: 10px;
-  background: #e8eaf6;
-  color: #1a237e;
+  background: var(--st-primary-tint-bg);
+  color: var(--st-primary-tint-fg);
   font-weight: 500;
 }
 
 .payer-label {
   font-size: 0.8rem;
-  color: #424242;
+  color: var(--st-on-surface);
 }
 
 .loading-center {
@@ -264,11 +264,11 @@ mat-accordion {
   gap: 8px 12px;
   margin-top: 6px;
   font-size: 0.8rem;
-  color: #546e7a;
+  color: var(--st-on-surface-muted);
 
   .fs-delay   { color: #c62828; font-weight: 600; }
-  .fs-gate    { color: #455a64; }
-  .fs-updated { color: #90a4ae; font-size: 0.74rem; margin-left: auto; }
+  .fs-gate    { color: var(--st-on-surface-muted); }
+  .fs-updated { color: var(--st-on-surface-faint); font-size: 0.74rem; margin-left: auto; }
 }
 
 .flight-status-badge {
@@ -295,11 +295,11 @@ mat-accordion {
   gap: 8px;
   margin-top: 8px;
   font-size: 0.82rem;
-  color: #455a64;
+  color: var(--st-on-surface-muted);
 
-  .people-icon { color: #607d8b; flex-shrink: 0; }
+  .people-icon { color: var(--st-on-surface-muted); flex-shrink: 0; }
   .ticket-rows { display: flex; flex-direction: column; gap: 2px; }
-  .ticket-row strong { color: #263238; }
+  .ticket-row strong { color: var(--st-on-surface); }
 }
 
 /* ── Arrival / Departure direction badge ───────────────────────────── */
@@ -317,5 +317,51 @@ mat-accordion {
   mat-icon { font-size: 15px; width: 15px; height: 15px; }
 
   &.dir-arrival   { background: #e3f2fd; color: #1565c0; }
-  &.dir-departure { background: #fff3e0; color: #e65100; }
+  &.dir-departure { background: var(--st-warn-bg); color: var(--st-warn-strong); }
+}
+
+/* ── Search field ────────────────────────────────────────────────────────── */
+.search-field-wrap {
+  margin-bottom: 12px;
+}
+
+.search-field {
+  width: 100%;
+  max-width: 320px;
+}
+
+.no-matches {
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.9rem;
+  padding: 8px 4px;
+}
+
+/* ── Mobile responsiveness ───────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .search-field {
+    max-width: none;
+  }
+
+  .bookings-header .header-actions {
+    width: 100%;
+    flex-wrap: wrap;
+
+    button { flex: 1; }
+  }
+
+  .booking-card {
+    padding: 12px;
+  }
+
+  // Title + actions: let the actions wrap under a long title instead of squishing
+  .booking-card-header {
+    flex-wrap: wrap;
+  }
+
+  // Larger touch targets for edit/delete on each booking card
+  .booking-card-actions button {
+    width: 44px;
+    height: 44px;
+    line-height: 44px;
+  }
 }

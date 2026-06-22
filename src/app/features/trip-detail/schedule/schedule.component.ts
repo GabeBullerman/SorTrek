@@ -22,6 +22,7 @@ import { GoogleMapsLoaderService } from '../../../core/services/google-maps-load
 import { Trip } from '../../../core/models/trip.model';
 import { ItineraryItemDialogComponent } from './itinerary-item-dialog/itinerary-item-dialog.component';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { TimezoneService } from '../../../core/services/timezone.service';
 
 interface DayGroup {
   date: Date;
@@ -40,6 +41,9 @@ export interface ScheduleBookingEntry {
   title: string;
   subtitle?: string;
   timeLabel?: string;
+  /** Airport zone label (e.g. "MST") to annotate the time — only set for
+   *  flight depart/arrive entries when the flight crosses time zones. */
+  zoneLabel?: string;
   sortMinutes: number;   // minutes-of-day used to order entries within a day
   kindOrder: number;     // tiebreak when two entries share the same time
 }
@@ -87,6 +91,7 @@ export class ScheduleComponent implements OnInit {
   private snackBar         = inject(MatSnackBar);
   private http             = inject(HttpClient);
   private destroyRef       = inject(DestroyRef);
+  private tz               = inject(TimezoneService);
 
   allDays          = signal<DayGroup[]>([]);
   selectedDayIndex = signal(0);
@@ -204,6 +209,7 @@ export class ScheduleComponent implements OnInit {
       ts: Timestamp | undefined,
       kind: keyof typeof KIND,
       entry: Pick<ScheduleBookingEntry, 'booking' | 'icon' | 'title' | 'subtitle'>,
+      zoneLabel?: string,
     ) => {
       if (!ts) return;
       const d = ts.toDate();
@@ -214,6 +220,7 @@ export class ScheduleComponent implements OnInit {
         entry: {
           ...entry,
           timeLabel: hasTime ? fmt(ts) : undefined,
+          zoneLabel: hasTime ? zoneLabel : undefined,
           sortMinutes: hasTime ? d.getHours() * 60 + d.getMinutes() : k.default,
           kindOrder: k.order,
         },
@@ -224,8 +231,16 @@ export class ScheduleComponent implements OnInit {
       if (b.status === 'cancelled') continue;
       if (b.type === 'flight') {
         const route = [b.departureAirport, ...(b.layovers ?? []), b.arrivalAirport].filter(Boolean).join(' → ');
-        push(b.checkIn,  'flight-depart', { booking: b, icon: 'flight_takeoff', title: `Depart — ${b.title}`, subtitle: route || undefined });
-        push(b.checkOut, 'flight-arrive', { booking: b, icon: 'flight_land',    title: `Arrive — ${b.title}`, subtitle: route || undefined });
+        // Annotate each flight time with its airport's zone, but only when the
+        // flight actually crosses time zones (mirrors the Bookings tab).
+        const crosses = this.tz.crossesZones(
+          b.departureAirport, b.arrivalAirport,
+          b.checkIn?.toDate(), b.checkOut?.toDate(),
+        );
+        const depZone = crosses ? (this.tz.zoneLabel(b.departureAirport, b.checkIn?.toDate()) ?? undefined) : undefined;
+        const arrZone = crosses ? (this.tz.zoneLabel(b.arrivalAirport, b.checkOut?.toDate()) ?? undefined) : undefined;
+        push(b.checkIn,  'flight-depart', { booking: b, icon: 'flight_takeoff', title: `Depart — ${b.title}`, subtitle: route || undefined }, depZone);
+        push(b.checkOut, 'flight-arrive', { booking: b, icon: 'flight_land',    title: `Arrive — ${b.title}`, subtitle: route || undefined }, arrZone);
       } else if (b.type === 'hotel' || b.type === 'airbnb') {
         push(b.checkIn,  'checkin',  { booking: b, icon: 'login',  title: `Check-in — ${b.title}`,  subtitle: b.provider });
         push(b.checkOut, 'checkout', { booking: b, icon: 'logout', title: `Check-out — ${b.title}`, subtitle: b.provider });

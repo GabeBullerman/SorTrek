@@ -13,7 +13,7 @@
     margin: 0;
     font-size: 1.4rem;
     font-weight: 600;
-    color: #1a237e;
+    color: var(--st-primary);
     flex: 1;
   }
 }
@@ -40,18 +40,18 @@
   min-height: 320px;
   border: 2px dashed #90caf9;
   border-radius: 16px;
-  background: #f8f9ff;
+  background: var(--st-surface-2);
   cursor: pointer;
   transition: border-color 0.2s, background 0.2s;
   gap: 10px;
   text-align: center;
   padding: 40px;
 
-  &:hover { border-color: #1a237e; background: #e8eaf6; }
+  &:hover { border-color: var(--st-primary); background: var(--st-primary-tint-bg); }
 
   mat-icon { font-size: 56px; width: 56px; height: 56px; color: #90caf9; }
-  h3 { margin: 0; color: #1a237e; font-weight: 600; }
-  p { margin: 0; color: #9e9e9e; font-size: 0.875rem; max-width: 320px; }
+  h3 { margin: 0; color: var(--st-primary); font-weight: 600; }
+  p { margin: 0; color: var(--st-on-surface-faint); font-size: 0.875rem; max-width: 320px; }
 }
 
 .drop-overlay {
@@ -64,7 +64,7 @@
   gap: 16px;
   margin-bottom: 16px;
   font-size: 0.85rem;
-  color: #757575;
+  color: var(--st-on-surface-muted);
 
   .photo-count, .shared-hint {
     display: flex;
@@ -73,7 +73,7 @@
     mat-icon { font-size: 16px; width: 16px; height: 16px; }
   }
 
-  .shared-hint { color: #3949ab; }
+  .shared-hint { color: var(--st-primary-soft); }
 }
 
 .photo-grid {
@@ -125,7 +125,7 @@
 }
 
 .photo-footer {
-  background: white;
+  background: var(--st-surface);
   padding: 8px 10px;
   display: flex;
   flex-direction: column;
@@ -162,7 +162,7 @@
 .uploader-name {
   font-size: 0.78rem;
   font-weight: 500;
-  color: #424242;
+  color: var(--st-on-surface);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -170,7 +170,7 @@
 
 .photo-caption-text {
   font-size: 0.72rem;
-  color: #9e9e9e;
+  color: var(--st-on-surface-faint);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -256,4 +256,37 @@
   margin-left: auto;
   color: #ef9a9a !important;
   border-color: #ef9a9a !important;
+}
+
+/* ── Mobile responsiveness ───────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .photo-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  // Touch devices have no hover, so reveal the delete overlay/button always
+  .photo-tile .photo-overlay {
+    opacity: 1;
+    background: transparent;
+
+    .delete-btn {
+      width: 44px;
+      height: 44px;
+      line-height: 44px;
+    }
+  }
+
+  .lightbox {
+    padding: 16px;
+
+    .lightbox-close {
+      width: 44px;
+      height: 44px;
+    }
+  }
+
+  .lightbox-inner img {
+    max-height: calc(100vh - 160px);
+  }
 }

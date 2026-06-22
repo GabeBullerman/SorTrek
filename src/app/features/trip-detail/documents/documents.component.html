@@ -90,8 +90,25 @@
           <span class="shared-hint"><mat-icon>lock</mat-icon> Visible to all trip members</span>
         </div>
 
+        <div class="search-field-wrap">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-icon matPrefix>search</mat-icon>
+            <input matInput type="text" placeholder="Search documents…"
+                   [value]="searchTerm()" (input)="searchTerm.set($any($event.target).value)" />
+            @if (searchTerm()) {
+              <button matSuffix mat-icon-button aria-label="Clear search" (click)="searchTerm.set('')">
+                <mat-icon>close</mat-icon>
+              </button>
+            }
+          </mat-form-field>
+        </div>
+
+        @let filteredDocs = filterDocs(docs);
+        @if (filteredDocs.length === 0) {
+          <p class="no-matches">No matches for "{{ searchTerm() }}"</p>
+        }
         <!-- Grouped sections -->
-        @for (group of groupedDocs(docs); track group.category) {
+        @for (group of groupedDocs(filteredDocs); track group.category) {
           <div class="doc-group">
             <div class="doc-group-header">
               <mat-icon>{{ categoryIcon(group.category) }}</mat-icon>
@@ -141,12 +158,12 @@
                   </div>
 
                   <div class="doc-card-actions">
-                    <button mat-icon-button matTooltip="Download"
+                    <button mat-icon-button matTooltip="Download" aria-label="Download document"
                             (click)="downloadDocument(doc)">
                       <mat-icon>download</mat-icon>
                     </button>
                     @if (doc.userId === currentUserId) {
-                      <button mat-icon-button matTooltip="Delete" color="warn"
+                      <button mat-icon-button matTooltip="Delete" aria-label="Delete document" color="warn"
                               (click)="deleteDocument(doc)">
                         <mat-icon>delete</mat-icon>
                       </button>

@@ -19,12 +19,12 @@
     margin: 0;
     font-size: 1.4rem;
     font-weight: 600;
-    color: #1a237e;
+    color: var(--st-primary);
   }
 }
 
 .section-icon {
-  color: #3949ab;
+  color: var(--st-primary-soft);
   font-size: 22px;
   width: 22px;
   height: 22px;
@@ -33,7 +33,7 @@
 .section-desc {
   margin: 0 0 14px;
   font-size: 0.85rem;
-  color: #616161;
+  color: var(--st-on-surface-muted);
 }
 
 .invite-link-row {
@@ -41,14 +41,14 @@
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-  background: #f5f7ff;
-  border: 1px solid #e8eaf6;
+  background: var(--st-surface-2);
+  border: 1px solid var(--st-border);
   border-radius: 10px;
   padding: 12px 16px;
   margin-bottom: 16px;
 
   .invite-link-icon {
-    color: #5c6bc0;
+    color: var(--st-primary-soft);
     font-size: 20px;
     width: 20px;
     height: 20px;
@@ -58,7 +58,7 @@
   .invite-link-label {
     flex: 1;
     font-size: 0.85rem;
-    color: #424242;
+    color: var(--st-on-surface);
     min-width: 160px;
   }
 
@@ -106,10 +106,10 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  background: #f5f7ff;
+  background: var(--st-surface-2);
   border-radius: 10px;
   padding: 12px 16px;
-  border: 1.5px solid #e8eaf6;
+  border: 1.5px solid var(--st-border);
 }
 
 .collab-avatar {
@@ -122,14 +122,14 @@
 
 .no-collabs-hint {
   font-size: 0.82rem;
-  color: #9e9e9e;
+  color: var(--st-on-surface-faint);
   margin: 4px 0 8px;
   font-style: italic;
 }
 
 .section-divider {
   border: none;
-  border-top: 1.5px solid #e8eaf6;
+  border-top: 1.5px solid var(--st-border);
   margin: 24px 0;
 }
 
@@ -137,24 +137,24 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 6px;
 
   // When used standalone (no section-heading wrapper)
   > h2 {
     margin: 0;
     font-size: 1.4rem;
     font-weight: 600;
-    color: #1a237e;
+    color: var(--st-primary);
   }
 }
 
 .add-card {
-  background: white;
+  background: var(--st-surface);
   border-radius: 12px;
   padding: 16px 20px;
   margin-bottom: 16px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  border: 2px solid #e8eaf6;
+  border: 2px solid var(--st-border);
 }
 
 .inline-form {
@@ -181,9 +181,9 @@
   gap: 6px;
   margin-top: 4px;
   font-size: 0.78rem;
-  color: #757575;
+  color: var(--st-on-surface-muted);
 
-  mat-icon { font-size: 15px; width: 15px; height: 15px; flex-shrink: 0; margin-top: 1px; color: #3949ab; }
+  mat-icon { font-size: 15px; width: 15px; height: 15px; flex-shrink: 0; margin-top: 1px; color: var(--st-primary-soft); }
 }
 
 .participants-list {
@@ -196,7 +196,7 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  background: white;
+  background: var(--st-surface);
   border-radius: 12px;
   padding: 14px 18px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.06);
@@ -205,10 +205,10 @@
 
   &:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
 
-  &.is-me { border-color: #e8eaf6; background: #fafbff; }
+  &.is-me { border-color: var(--st-border); background: var(--st-surface-2); }
 
   &.editing {
-    border-color: #e8eaf6;
+    border-color: var(--st-border);
     padding: 12px 16px;
   }
 }
@@ -235,7 +235,7 @@
 .participant-name {
   font-size: 1rem;
   font-weight: 600;
-  color: #212121;
+  color: var(--st-on-surface);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -252,12 +252,12 @@
   white-space: nowrap;
 }
 
-.badge-organizer { background: #e8eaf6; color: #1a237e; }
-.badge-you       { background: #e8f5e9; color: #2e7d32; }
-.badge-pending   { background: #fff8e1; color: #f57c00; }
-.badge-accepted  { background: #e8f5e9; color: #2e7d32; }
+.badge-organizer { background: var(--st-primary-tint-bg); color: var(--st-primary-tint-fg); }
+.badge-you       { background: var(--st-success-bg); color: var(--st-success-fg); }
+.badge-pending   { background: var(--st-warn-bg); color: #f57c00; }
+.badge-accepted  { background: var(--st-success-bg); color: var(--st-success-fg); }
 .badge-owner     {
-  background: #fff8e1; color: #e65100;
+  background: var(--st-warn-bg); color: var(--st-warn-strong);
   display: inline-flex; align-items: center; gap: 2px;
   .badge-crown { font-size: 13px; width: 13px; height: 13px; }
 }
@@ -275,7 +275,7 @@
   align-items: center;
   gap: 3px;
   font-size: 0.78rem;
-  color: #757575;
+  color: var(--st-on-surface-muted);
 
   mat-icon { font-size: 13px; width: 13px; height: 13px; }
 }
@@ -301,7 +301,7 @@
 .empty-state {
   text-align: center;
   padding: 60px 20px;
-  color: #9e9e9e;
+  color: var(--st-on-surface-faint);
 
   mat-icon {
     font-size: 56px;
@@ -311,7 +311,7 @@
     opacity: 0.4;
   }
 
-  h3 { margin: 0 0 8px; font-size: 1.1rem; font-weight: 600; color: #424242; }
+  h3 { margin: 0 0 8px; font-size: 1.1rem; font-weight: 600; color: var(--st-on-surface); }
   p  { margin: 0 0 20px; font-size: 0.9rem; max-width: 340px; margin-inline: auto; }
 }
 
@@ -319,4 +319,52 @@
   display: flex;
   justify-content: center;
   padding: 40px;
+}
+
+/* ── Mobile responsiveness ───────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  // Let avatar + info sit on the first row and actions wrap below
+  .participant-card,
+  .collaborator-card {
+    flex-wrap: wrap;
+    gap: 10px 12px;
+  }
+
+  .participant-info,
+  .collaborator-card .participant-info {
+    // Keep info next to the avatar but allow it to take the remaining width
+    flex: 1 1 60%;
+  }
+
+  .participant-actions {
+    // Drop actions onto their own full-width row so buttons aren't squished
+    flex-basis: 100%;
+    justify-content: flex-end;
+  }
+
+  // Touch targets
+  .participant-actions button,
+  .inline-actions button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .leave-btn {
+    height: 40px;
+    line-height: 40px;
+  }
+
+  // Stacked invite / inline forms read better full-width on phones
+  .invite-row .invite-email-field,
+  .inline-form .name-field,
+  .inline-form .email-field,
+  .inline-form .city-field {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .invite-row button {
+    width: 100%;
+    justify-content: center;
+  }
 }

@@ -6,7 +6,7 @@
     class="shell-sidenav"
   >
     <div class="sidenav-header">
-      <img src="LightBGNoBackground.png" alt="SorTrek" class="brand-logo" />
+      <img src="ClearLogoWhiteCircle.png" alt="SorTrek" class="brand-logo" />
     </div>
 
     <mat-nav-list>
@@ -31,17 +31,20 @@
 
   <mat-sidenav-content class="shell-content">
     <mat-toolbar class="shell-toolbar" color="primary">
-      <button mat-icon-button (click)="sidenav.toggle()" matTooltip="Toggle menu">
+      <button mat-icon-button (click)="sidenav.toggle()" matTooltip="Toggle menu" aria-label="Toggle menu">
         <mat-icon>menu</mat-icon>
       </button>
       <span class="toolbar-spacer"></span>
+      <!-- Animated dark / light theme toggle (Within) -->
+      <app-theme-toggle />
+
       <!-- Guide -->
-      <button mat-icon-button (click)="openGuide()" matTooltip="Feature guide">
+      <button mat-icon-button (click)="openGuide()" matTooltip="Feature guide" aria-label="Feature guide">
         <mat-icon>help_outline</mat-icon>
       </button>
 
       <!-- Currency converter popover -->
-      <button mat-icon-button [matMenuTriggerFor]="converterMenu" matTooltip="Currency converter">
+      <button mat-icon-button [matMenuTriggerFor]="converterMenu" matTooltip="Currency converter" aria-label="Currency converter">
         <mat-icon>currency_exchange</mat-icon>
       </button>
       <mat-menu #converterMenu xPosition="before">
@@ -51,10 +54,10 @@
       </mat-menu>
 
       @if (currentUser$ | async; as user) {
-        <button mat-icon-button [routerLink]="'/profile'" matTooltip="Profile">
+        <button mat-icon-button [routerLink]="'/profile'" matTooltip="Profile" aria-label="Profile">
           <mat-icon>account_circle</mat-icon>
         </button>
-        <button mat-icon-button [matMenuTriggerFor]="userMenu" matTooltip="Account">
+        <button mat-icon-button [matMenuTriggerFor]="userMenu" matTooltip="Account" aria-label="Account menu">
           <mat-icon>more_vert</mat-icon>
         </button>
         <mat-menu #userMenu>

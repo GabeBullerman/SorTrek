@@ -23,7 +23,11 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withJsonpSupport()),
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideFirestore(() => initializeFirestore(getApp(), {
-      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+      // Belt-and-suspenders: silently drop `undefined` fields instead of throwing.
+      // Services still call stripUndefined(), but this prevents the class of
+      // "addDoc hangs/throws on an undefined field" bug app-wide.
+      ignoreUndefinedProperties: true,
     })),
     provideAuth(() => initializeAuth(getApp(), {
       persistence: browserLocalPersistence,

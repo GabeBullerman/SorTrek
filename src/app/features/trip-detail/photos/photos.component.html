@@ -39,12 +39,12 @@
           @for (photo of photos; track photo.id) {
             @if (!isFailed(photo.id)) {
             <div class="photo-tile" (click)="openLightbox(photo)">
-              <img [src]="photo.url" [alt]="photo.caption || 'Trip photo'" loading="lazy"
+              <img [src]="photo.url" [alt]="photo.caption || ('Trip photo by ' + (photo.uploaderName ?? 'Unknown'))" loading="lazy"
                    (error)="onImageLoadError(photo)" />
 
               <div class="photo-overlay">
                 @if (photo.userId === currentUserId) {
-                  <button mat-icon-button class="delete-btn" matTooltip="Delete"
+                  <button mat-icon-button class="delete-btn" matTooltip="Delete" aria-label="Delete photo"
                           (click)="$event.stopPropagation(); deletePhoto(photo)">
                     <mat-icon>delete</mat-icon>
                   </button>
@@ -75,7 +75,7 @@
 <!-- Lightbox -->
 @if (lightboxPhoto()) {
   <div class="lightbox" (click)="closeLightbox()">
-    <button mat-icon-button class="lightbox-close" (click)="closeLightbox()">
+    <button mat-icon-button class="lightbox-close" (click)="closeLightbox()" aria-label="Close">
       <mat-icon>close</mat-icon>
     </button>
     <div class="lightbox-inner" (click)="$event.stopPropagation()">
