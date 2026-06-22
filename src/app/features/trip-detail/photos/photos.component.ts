@@ -48,6 +48,16 @@ export class PhotosComponent implements OnInit {
   uploadCaption = signal('');
   lightboxPhoto = signal<Photo | null>(null);
 
+  /** IDs of photos whose <img> failed to load this session. Used to
+   *  unconditionally hide their tiles in the template so Firestore
+   *  cache re-emissions (which can briefly re-include the doc before
+   *  the delete propagates) can't flash the broken image back in. */
+  private failedIds = signal<ReadonlySet<string>>(new Set());
+
+  isFailed(id?: string): boolean {
+    return !!id && this.failedIds().has(id);
+  }
+
   triggerUpload() {
     this.fileInput.nativeElement.click();
   }
@@ -96,12 +106,15 @@ export class PhotosComponent implements OnInit {
   }
 
   /** Image failed to load — the underlying Storage object is missing.
-   *  Hide the tile immediately and purge the orphan Firestore doc so the
-   *  photo is gone for everyone on the next query. */
-  onImageLoadError(event: Event, photo: Photo) {
-    const tile = (event.target as HTMLElement).closest('.photo-tile') as HTMLElement | null;
-    if (tile) tile.style.display = 'none';
-    if (photo.id) this.photoService.purgeOrphanDoc(photo.id);
+   *  Mark the ID as failed (template hides it via @if) and purge the
+   *  orphan Firestore doc so the photo is gone for everyone next query. */
+  onImageLoadError(photo: Photo) {
+    if (!photo.id) return;
+    if (this.failedIds().has(photo.id)) return;
+    const next = new Set(this.failedIds());
+    next.add(photo.id);
+    this.failedIds.set(next);
+    this.photoService.purgeOrphanDoc(photo.id);
   }
 
   deletePhoto(photo: Photo) {
