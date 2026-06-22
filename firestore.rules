@@ -97,12 +97,16 @@ service cloud.firestore {
     }
 
     // ── Photos ──────────────────────────────────────────────────────────────
-    // Members can view the shared gallery; only the uploader can change/delete.
+    // Members can view the shared gallery; the uploader can edit captions;
+    // any trip member can delete (so orphan-cleanup of dangling docs works
+    // regardless of who first hits the broken image, and so trip owners can
+    // moderate the shared album).
     match /photos/{photoId} {
       allow read: if isTripMember(resource.data.tripId);
       allow create: if isTripMember(request.resource.data.tripId)
                     && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow delete: if isTripMember(resource.data.tripId);
     }
 
     // ── Trip Documents ────────────────────────────────────────────────────────

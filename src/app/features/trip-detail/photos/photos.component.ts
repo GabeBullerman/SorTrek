@@ -58,6 +58,11 @@ export class PhotosComponent implements OnInit {
     return !!id && this.failedIds().has(id);
   }
 
+  visibleCount(photos: Photo[]): number {
+    const failed = this.failedIds();
+    return photos.reduce((n, p) => n + (p.id && failed.has(p.id) ? 0 : 1), 0);
+  }
+
   triggerUpload() {
     this.fileInput.nativeElement.click();
   }

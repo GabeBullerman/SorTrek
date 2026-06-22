@@ -31,7 +31,7 @@
 
         <!-- Group header: photo count + who's contributed -->
         <div class="gallery-meta">
-          <span class="photo-count"><mat-icon>photo_library</mat-icon> {{ photos.length }} photo{{ photos.length !== 1 ? 's' : '' }}</span>
+          <span class="photo-count"><mat-icon>photo_library</mat-icon> {{ visibleCount(photos) }} photo{{ visibleCount(photos) !== 1 ? 's' : '' }}</span>
           <span class="shared-hint"><mat-icon>group</mat-icon> Shared with everyone on this trip</span>
         </div>
 
