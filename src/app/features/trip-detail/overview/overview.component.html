@@ -2,6 +2,49 @@
   @if (bookings$ | async; as bookings) {
     @if (items$ | async; as items) {
 
+      <!-- Today Card -->
+      @if (isOnTripNow()) {
+        <mat-card class="today-card">
+          <mat-card-content>
+            <div class="today-header">
+              <mat-icon class="today-badge-icon">today</mat-icon>
+              <div>
+                <div class="today-eyebrow">Today</div>
+                <div class="today-date">{{ todayDate | date:'EEEE, MMMM d' }}</div>
+              </div>
+            </div>
+
+            @let todayItems = todayItinerary(items);
+            @if (todayItems.length > 0) {
+              <div class="today-list">
+                @for (item of todayItems; track item.id) {
+                  <div class="today-item">
+                    <mat-icon class="today-item-icon">{{ categoryIcon(item.category) }}</mat-icon>
+                    <span class="today-item-title">{{ item.title }}</span>
+                    @if (item.startTime) {
+                      <span class="today-item-time">{{ item.startTime }}{{ item.endTime ? ' – ' + item.endTime : '' }}</span>
+                    }
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="today-empty">Nothing scheduled today — enjoy!</p>
+            }
+
+            @let upcoming = nextUp(bookings, items);
+            @if (upcoming) {
+              <div class="today-nextup">
+                <mat-icon>arrow_forward</mat-icon>
+                <span class="nextup-label">Next up:</span>
+                <mat-icon class="nextup-type-icon">{{ upcoming.icon }}</mat-icon>
+                <span class="nextup-title">{{ upcoming.label }}</span>
+                <span class="nextup-time">{{ upcoming.when | date:'EEE, MMM d · h:mm a' }}</span>
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+      }
+
       <!-- Overview Actions -->
       <div class="overview-actions">
         <button mat-stroked-button (click)="exportToCalendar()">

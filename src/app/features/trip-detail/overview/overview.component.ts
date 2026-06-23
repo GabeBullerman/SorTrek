@@ -399,6 +399,96 @@ export class OverviewComponent implements OnInit {
     return b + i;
   }
 
+  // ── "Today" card ─────────────────────────────────────────────────
+  /** True when today's local calendar day falls within [startDate, endDate]. */
+  isOnTripNow(): boolean {
+    const start = this.trip.startDate.toDate();
+    const end = this.trip.endDate.toDate();
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today >= start && today <= end;
+  }
+
+  /** Today's date as a Date at local midnight (for the card heading). */
+  get todayDate(): Date {
+    return new Date();
+  }
+
+  /** Itinerary items scheduled for today's local day, sorted by startTime
+   *  (items without a time sink to the end). */
+  todayItinerary(items: ItineraryItem[]): ItineraryItem[] {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return items
+      .filter(i => {
+        const d = i.date?.toDate();
+        if (!d) return false;
+        d.setHours(0, 0, 0, 0);
+        return d.getTime() === today.getTime();
+      })
+      .sort((a, b) => {
+        if (a.startTime && b.startTime) return a.startTime.localeCompare(b.startTime);
+        if (a.startTime) return -1;
+        if (b.startTime) return 1;
+        return (a.order ?? 0) - (b.order ?? 0);
+      });
+  }
+
+  /** Material icon for an itinerary category. */
+  categoryIcon(category: ItineraryItem['category']): string {
+    switch (category) {
+      case 'activity':      return 'local_activity';
+      case 'accommodation': return 'hotel';
+      case 'transport':     return 'directions_car';
+      case 'food':          return 'restaurant';
+      default:              return 'place';
+    }
+  }
+
+  /** Material icon for a booking type. */
+  bookingIcon(type: Booking['type']): string {
+    switch (type) {
+      case 'flight':      return 'flight';
+      case 'hotel':       return 'hotel';
+      case 'airbnb':      return 'home';
+      case 'car-rental':  return 'directions_car';
+      default:            return 'bookmark';
+    }
+  }
+
+  /** The single soonest dated thing strictly after now: a booking check-in
+   *  (flight departure) or a timed itinerary item. Null when nothing is left. */
+  nextUp(bookings: Booking[], items: ItineraryItem[]): { label: string; icon: string; when: Date } | null {
+    const now = new Date();
+    const candidates: { label: string; icon: string; when: Date }[] = [];
+
+    for (const b of bookings) {
+      if (b.status === 'cancelled' || !b.checkIn) continue;
+      const when = b.checkIn.toDate();
+      if (when > now) {
+        candidates.push({ label: b.title, icon: this.bookingIcon(b.type), when });
+      }
+    }
+
+    for (const i of items) {
+      const d = i.date?.toDate();
+      if (!d) continue;
+      if (i.startTime) {
+        const [h, m] = i.startTime.split(':').map(n => parseInt(n, 10));
+        if (!isNaN(h)) d.setHours(h, isNaN(m) ? 0 : m, 0, 0);
+      }
+      if (d > now) {
+        candidates.push({ label: i.title, icon: this.categoryIcon(i.category), when: d });
+      }
+    }
+
+    if (candidates.length === 0) return null;
+    candidates.sort((a, b) => a.when.getTime() - b.when.getTime());
+    return candidates[0];
+  }
+
   /** Bookings ordered by their start date+time; undated ones sink to the end. */
   bookingsByDate(bookings: Booking[]): Booking[] {
     return [...bookings].sort((a, b) =>
