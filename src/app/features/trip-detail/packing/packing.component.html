@@ -18,14 +18,16 @@
           }
         </select>
       }
-      <button mat-stroked-button (click)="fetchAiSuggestions()" [disabled]="loadingAi()">
-        @if (loadingAi()) {
-          <mat-spinner diameter="16"></mat-spinner>
-        } @else {
-          <mat-icon>auto_awesome</mat-icon>
-        }
-        AI Suggestions
-      </button>
+      @if (prefs.aiEnabled()) {
+        <button mat-stroked-button (click)="fetchAiSuggestions()" [disabled]="loadingAi()">
+          @if (loadingAi()) {
+            <mat-spinner diameter="16"></mat-spinner>
+          } @else {
+            <mat-icon>auto_awesome</mat-icon>
+          }
+          AI Suggestions
+        </button>
+      }
       @if (!showAddForm()) {
         <button mat-flat-button color="primary" (click)="showAddForm.set(true)">
           <mat-icon>add</mat-icon> Add Item
@@ -191,36 +193,86 @@
 
       <div class="item-list">
         @for (item of group.items; track item.id) {
-          <div class="packing-item" [class.packed]="packedByMe(item)">
-            <mat-checkbox [checked]="packedByMe(item)" (change)="togglePacked(item)"
-                          color="primary">
-            </mat-checkbox>
-            <div class="item-info">
-              <div class="item-main">
-                <span class="item-name">{{ item.name }}</span>
-                @if (item.quantity > 1) {
-                  <span class="item-qty">× {{ item.quantity }}</span>
+          @if (editingId() === item.id) {
+            <!-- Inline edit form -->
+            <div class="packing-item editing">
+              <form [formGroup]="editForm" (ngSubmit)="saveEdit(item)" class="edit-row">
+                <mat-form-field appearance="outline" class="field-name">
+                  <mat-label>Item name</mat-label>
+                  <input matInput formControlName="name" autofocus>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="field-category">
+                  <mat-label>Category</mat-label>
+                  <mat-select formControlName="category">
+                    @for (cat of categories; track cat.value) {
+                      <mat-option [value]="cat.value">
+                        <mat-icon [style.color]="cat.color">{{ cat.icon }}</mat-icon>
+                        {{ cat.label }}
+                      </mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="field-qty">
+                  <mat-label>Qty</mat-label>
+                  <input matInput type="number" formControlName="quantity" min="1">
+                </mat-form-field>
+                @if (participants().length > 0) {
+                  <mat-form-field appearance="outline" class="field-person">
+                    <mat-label>For</mat-label>
+                    <mat-select formControlName="assignedTo">
+                      <mat-option [value]="null">Everyone</mat-option>
+                      @for (p of participants(); track p.id) {
+                        <mat-option [value]="p.id">{{ p.name }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
                 }
-                @if (item.assignedTo) {
-                  <span class="item-assignee">{{ participantName(item.assignedTo) }}</span>
-                }
-                @if (item.visibility === 'personal') {
-                  <mat-icon class="personal-icon" matTooltip="Only visible to you">lock</mat-icon>
-                }
-              </div>
-              @if (packedByNames(item).length > 0) {
-                <div class="packed-by-row">
-                  @for (name of packedByNames(item); track name) {
-                    <span class="packed-by-chip">{{ name }}</span>
+                <div class="edit-actions">
+                  <button mat-icon-button type="button" (click)="cancelEdit()" matTooltip="Cancel">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                  <button mat-flat-button color="primary" type="submit" [disabled]="editForm.invalid">
+                    Save
+                  </button>
+                </div>
+              </form>
+            </div>
+          } @else {
+            <div class="packing-item" [class.packed]="packedByMe(item)">
+              <mat-checkbox [checked]="packedByMe(item)" (change)="togglePacked(item)"
+                            color="primary">
+              </mat-checkbox>
+              <div class="item-info">
+                <div class="item-main">
+                  <span class="item-name">{{ item.name }}</span>
+                  @if (item.quantity > 1) {
+                    <span class="item-qty">× {{ item.quantity }}</span>
+                  }
+                  @if (item.assignedTo) {
+                    <span class="item-assignee">{{ participantName(item.assignedTo) }}</span>
+                  }
+                  @if (item.visibility === 'personal') {
+                    <mat-icon class="personal-icon" matTooltip="Only visible to you">lock</mat-icon>
                   }
                 </div>
-              }
+                @if (packedByNames(item).length > 0) {
+                  <div class="packed-by-row">
+                    @for (name of packedByNames(item); track name) {
+                      <span class="packed-by-chip">{{ name }}</span>
+                    }
+                  </div>
+                }
+              </div>
+              <button mat-icon-button class="edit-btn" (click)="startEdit(item)"
+                      matTooltip="Edit">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button class="delete-btn" (click)="deleteItem(item)"
+                      matTooltip="Remove">
+                <mat-icon>close</mat-icon>
+              </button>
             </div>
-            <button mat-icon-button class="delete-btn" (click)="deleteItem(item)"
-                    matTooltip="Remove">
-              <mat-icon>close</mat-icon>
-            </button>
-          </div>
+          }
         }
       </div>
     </div>

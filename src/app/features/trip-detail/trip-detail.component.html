@@ -77,11 +77,13 @@
     <div class="trip-tab-nav-wrapper">
       <div class="trip-tab-nav" #tabNav>
         @for (tab of tabs; track tab.label; let i = $index) {
-          <button class="tab-link" [class.active]="selectedTab() === i" (click)="selectTab(i)"
-                  [attr.aria-label]="tab.label">
-            <mat-icon>{{ tab.icon }}</mat-icon>
-            <span class="tab-label">{{ tab.label }}</span>
-          </button>
+          @if (tab.label !== 'AI' || prefs.aiEnabled()) {
+            <button class="tab-link" [class.active]="selectedTab() === i" (click)="selectTab(i)"
+                    [attr.aria-label]="tab.label">
+              <mat-icon>{{ tab.icon }}</mat-icon>
+              <span class="tab-label">{{ tab.label }}</span>
+            </button>
+          }
         }
       </div>
     </div>

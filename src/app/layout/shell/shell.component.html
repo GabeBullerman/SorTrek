@@ -17,13 +17,6 @@
           <span matListItemTitle>{{ item.label }}</span>
         </a>
       }
-      <!-- Theme toggle for mobile (toolbar version is hidden on small screens). -->
-      @if (isMobile$ | async) {
-        <a mat-list-item (click)="theme.toggle()">
-          <mat-icon matListItemIcon>{{ theme.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
-          <span matListItemTitle>{{ theme.isDark() ? 'Light mode' : 'Dark mode' }}</span>
-        </a>
-      }
     </mat-nav-list>
 
     <div class="sidenav-footer">

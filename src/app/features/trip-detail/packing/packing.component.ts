@@ -18,6 +18,7 @@ import { take } from 'rxjs/operators';
 import { PackingService } from '../../../core/services/packing.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { UserService } from '../../../core/services/user.service';
+import { UserPreferencesService } from '../../../core/services/user-preferences.service';
 import { ParticipantService } from '../../../core/services/participant.service';
 import { AiAdvisorService, PackingSuggestion } from '../../../core/services/ai-advisor.service';
 import { PackingItem, PackingCategory } from '../../../core/models/packing-item.model';
@@ -60,6 +61,7 @@ export class PackingComponent implements OnInit {
 
   readonly currentUserId = this.auth.currentUser?.uid ?? '';
   private aiService = inject(AiAdvisorService);
+  readonly prefs = inject(UserPreferencesService);
   private fb = inject(FormBuilder);
   private destroyRef = inject(DestroyRef);
   private snackBar = inject(MatSnackBar);
@@ -93,6 +95,7 @@ export class PackingComponent implements OnInit {
   participants = signal<TripParticipant[]>([]);
   memberNames = signal<Record<string, string>>({});
   showAddForm = signal(false);
+  editingId = signal<string | null>(null);
   saving = signal(false);
   filterPersonId = signal<string>('');
   aiSuggestions = signal<PackingSuggestion[]>([]);
@@ -116,6 +119,13 @@ export class PackingComponent implements OnInit {
     quantity:   [1, [Validators.required, Validators.min(1)]],
     assignedTo: [null as string | null],
     personal:   [false],
+  });
+
+  editForm = this.fb.group({
+    name:       ['', [Validators.required]],
+    category:   ['other' as PackingCategory, [Validators.required]],
+    quantity:   [1, [Validators.required, Validators.min(1)]],
+    assignedTo: [null as string | null],
   });
 
   readonly filteredItems = computed(() => {
@@ -197,6 +207,37 @@ export class PackingComponent implements OnInit {
 
   deleteItem(item: PackingItem) {
     from(this.packingService.deleteItem(item.id!)).subscribe();
+  }
+
+  startEdit(item: PackingItem) {
+    this.editingId.set(item.id!);
+    this.editForm.setValue({
+      name: item.name,
+      category: item.category,
+      quantity: item.quantity,
+      assignedTo: item.assignedTo ?? null,
+    });
+  }
+
+  cancelEdit() {
+    this.editingId.set(null);
+  }
+
+  saveEdit(item: PackingItem) {
+    if (this.editForm.invalid) return;
+    const v = this.editForm.getRawValue();
+    const changes = {
+      name: v.name!.trim(),
+      category: v.category! as PackingCategory,
+      quantity: v.quantity!,
+      assignedTo: v.assignedTo ?? null,
+    };
+    // Optimistic update so the row reflects the change immediately
+    this.items.update(list => list.map(i => i.id === item.id ? { ...i, ...changes } : i));
+    this.editingId.set(null);
+    from(this.packingService.updateItem(item.id!, changes)).subscribe({
+      error: () => this.snackBar.open('Could not save changes', undefined, { duration: 3000 }),
+    });
   }
 
   saveAdd() {

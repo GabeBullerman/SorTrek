@@ -15,6 +15,7 @@ import { TripService } from '../../core/services/trip.service';
 import { AuthService } from '../../core/services/auth.service';
 import { CardReminderService } from '../../core/services/card-reminder.service';
 import { PushNotificationService } from '../../core/services/push-notification.service';
+import { UserPreferencesService } from '../../core/services/user-preferences.service';
 import { Trip } from '../../core/models/trip.model';
 import { TripFormDialogComponent } from '../trips/trip-form-dialog/trip-form-dialog.component';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
@@ -63,11 +64,19 @@ export class TripDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private snackBar = inject(MatSnackBar);
   private titleService = inject(Title);
+  readonly prefs = inject(UserPreferencesService);
 
   constructor() {
     effect(() => {
       const tab = this.tabs[this.selectedTab()]?.label;
       this.titleService.setTitle(tab ? `${APP_NAME} | ${tab}` : APP_NAME);
+    });
+
+    // If AI features are turned off while the AI tab is open, fall back to Overview.
+    effect(() => {
+      if (!this.prefs.aiEnabled() && this.tabs[this.selectedTab()]?.label === 'AI') {
+        this.selectedTab.set(0);
+      }
     });
   }
 
@@ -103,9 +112,10 @@ export class TripDetailComponent implements OnInit {
       if (idx !== -1) this.selectedTab.set(idx);
     }
 
-    // Schedule a departure-reminder notification on first load (no-op if timing is outside window)
+    // Schedule a departure-reminder notification on first load (no-op if timing is outside window).
+    // Skipped entirely when the user has turned reminders off in their profile.
     this.trip$.pipe(take(1)).subscribe(trip => {
-      if (trip) {
+      if (trip && this.prefs.remindersEnabled()) {
         this.cardReminderService.scheduleNotification(trip, this.pushNotificationService);
       }
     });

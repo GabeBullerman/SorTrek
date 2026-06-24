@@ -12,7 +12,6 @@ import { AsyncPipe } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
 import { UserService } from '../../core/services/user.service';
 import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
-import { ThemeService } from '../../core/services/theme.service';
 import { Timestamp } from '@angular/fire/firestore';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { filter, map, switchMap, take } from 'rxjs/operators';
@@ -39,8 +38,6 @@ export class ShellComponent implements OnInit {
   private router = inject(Router);
   private breakpointObserver = inject(BreakpointObserver);
   private dialog = inject(MatDialog);
-  // Used by the mobile sidenav theme toggle (toolbar toggle is its own component).
-  readonly theme = inject(ThemeService);
 
   @ViewChild('sidenav') sidenav!: MatSidenav;
 

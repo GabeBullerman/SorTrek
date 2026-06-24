@@ -124,3 +124,85 @@ html.dark {
   --st-warn-fg:           #e8dcc0;
   --st-warn-strong:       #ffb74d;
 }
+
+// ============================================================================
+//  Color palettes
+//  --------------------------------------------------------------------------
+//  Each palette overrides only the brand/primary/accent tokens (surfaces stay
+//  neutral) plus Material's --mat-sys-primary so `color="primary"` components
+//  follow too. Selected via <html data-theme="..."> by ThemeService. The
+//  default "indigo" has no block — it uses :root / html.dark above unchanged.
+//  Every palette has a light block and a `.dark` block.
+// ============================================================================
+
+// ── Pastel Pink ─────────────────────────────────────────────────────────────
+html[data-theme="pink"] {
+  --st-primary: #c2185b;  --st-primary-strong: #ad1457;  --st-primary-contrast: #ffffff;
+  --st-accent: #d81b60;
+  --st-brand: #d81b60;    --st-brand-contrast: #ffffff;
+  --st-primary-soft: #c2185b;
+  --st-primary-tint-bg: #fce4ec;  --st-primary-tint-fg: #880e4f;
+  --mat-sys-primary: #c2185b;  --mat-sys-on-primary: #ffffff;
+}
+html[data-theme="pink"].dark {
+  --st-primary: #f48fb1;  --st-primary-strong: #f06292;  --st-primary-contrast: #2a0a17;
+  --st-accent: #f06292;
+  --st-brand: #ad1457;    --st-brand-contrast: #ffffff;
+  --st-primary-soft: #f8bbd0;
+  --st-primary-tint-bg: rgba(244, 143, 177, 0.16);  --st-primary-tint-fg: #f8bbd0;
+  --mat-sys-primary: #f48fb1;  --mat-sys-on-primary: #3a0a1d;
+}
+
+// ── Crimson Red ─────────────────────────────────────────────────────────────
+html[data-theme="red"] {
+  --st-primary: #c62828;  --st-primary-strong: #b71c1c;  --st-primary-contrast: #ffffff;
+  --st-accent: #d32f2f;
+  --st-brand: #c62828;    --st-brand-contrast: #ffffff;
+  --st-primary-soft: #c62828;
+  --st-primary-tint-bg: #ffebee;  --st-primary-tint-fg: #b71c1c;
+  --mat-sys-primary: #c62828;  --mat-sys-on-primary: #ffffff;
+}
+html[data-theme="red"].dark {
+  --st-primary: #ef9a9a;  --st-primary-strong: #e57373;  --st-primary-contrast: #2a0a0a;
+  --st-accent: #e57373;
+  --st-brand: #b71c1c;    --st-brand-contrast: #ffffff;
+  --st-primary-soft: #ffcdd2;
+  --st-primary-tint-bg: rgba(239, 154, 154, 0.16);  --st-primary-tint-fg: #ffcdd2;
+  --mat-sys-primary: #ef9a9a;  --mat-sys-on-primary: #3a0c0c;
+}
+
+// ── Teal ────────────────────────────────────────────────────────────────────
+html[data-theme="teal"] {
+  --st-primary: #00695c;  --st-primary-strong: #004d40;  --st-primary-contrast: #ffffff;
+  --st-accent: #00897b;
+  --st-brand: #00695c;    --st-brand-contrast: #ffffff;
+  --st-primary-soft: #00796b;
+  --st-primary-tint-bg: #e0f2f1;  --st-primary-tint-fg: #004d40;
+  --mat-sys-primary: #00695c;  --mat-sys-on-primary: #ffffff;
+}
+html[data-theme="teal"].dark {
+  --st-primary: #80cbc4;  --st-primary-strong: #4db6ac;  --st-primary-contrast: #06201d;
+  --st-accent: #4db6ac;
+  --st-brand: #00695c;    --st-brand-contrast: #ffffff;
+  --st-primary-soft: #b2dfdb;
+  --st-primary-tint-bg: rgba(128, 203, 196, 0.16);  --st-primary-tint-fg: #b2dfdb;
+  --mat-sys-primary: #80cbc4;  --mat-sys-on-primary: #0a2b27;
+}
+
+// ── Purple ──────────────────────────────────────────────────────────────────
+html[data-theme="purple"] {
+  --st-primary: #6a1b9a;  --st-primary-strong: #4a148c;  --st-primary-contrast: #ffffff;
+  --st-accent: #8e24aa;
+  --st-brand: #6a1b9a;    --st-brand-contrast: #ffffff;
+  --st-primary-soft: #7b1fa2;
+  --st-primary-tint-bg: #f3e5f5;  --st-primary-tint-fg: #4a148c;
+  --mat-sys-primary: #6a1b9a;  --mat-sys-on-primary: #ffffff;
+}
+html[data-theme="purple"].dark {
+  --st-primary: #ce93d8;  --st-primary-strong: #ba68c8;  --st-primary-contrast: #21082a;
+  --st-accent: #ba68c8;
+  --st-brand: #6a1b9a;    --st-brand-contrast: #ffffff;
+  --st-primary-soft: #e1bee7;
+  --st-primary-tint-bg: rgba(206, 147, 216, 0.16);  --st-primary-tint-fg: #e1bee7;
+  --mat-sys-primary: #ce93d8;  --mat-sys-on-primary: #2e0c38;
+}

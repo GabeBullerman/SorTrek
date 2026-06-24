@@ -386,13 +386,38 @@
   }
 }
 
-.delete-btn {
+.delete-btn, .edit-btn {
   width: 30px;
   height: 30px;
   opacity: 0;
   transition: opacity 0.15s;
 
-  mat-icon { font-size: 16px; color: #bdbdbd; }
+  mat-icon { font-size: 16px; color: var(--st-on-surface-faint); }
 
   .packing-item:hover & { opacity: 1; }
+}
+
+/* Inline edit form row */
+.packing-item.editing {
+  display: block;
+  padding: 12px;
+}
+
+.edit-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  .field-name     { flex: 2; min-width: 160px; }
+  .field-category { flex: 1.5; min-width: 140px; }
+  .field-qty      { width: 78px; }
+  .field-person   { flex: 1; min-width: 120px; }
+
+  .edit-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding-top: 8px;
+  }
 }

@@ -3,14 +3,16 @@
   <!-- Header -->
   <div class="schedule-header">
     <h2>Daily Schedule</h2>
-    <button mat-stroked-button class="find-btn" (click)="findPlans()" [disabled]="findingPlans()">
-      @if (findingPlans()) {
-        <mat-spinner diameter="16"></mat-spinner>
-      } @else {
-        <mat-icon>auto_awesome</mat-icon>
-      }
-      Find Plans
-    </button>
+    @if (prefs.aiEnabled()) {
+      <button mat-stroked-button class="find-btn" (click)="findPlans()" [disabled]="findingPlans()">
+        @if (findingPlans()) {
+          <mat-spinner diameter="16"></mat-spinner>
+        } @else {
+          <mat-icon>auto_awesome</mat-icon>
+        }
+        Find Plans
+      </button>
+    }
   </div>
 
   @if (allDays().length > 0) {
@@ -150,9 +152,11 @@
           <div class="day-empty">
             <mat-icon>wb_sunny</mat-icon>
             <span>No plans yet for this day</span>
-            <button mat-stroked-button class="empty-find-btn" (click)="findPlans()" [disabled]="findingPlans()">
-              <mat-icon>auto_awesome</mat-icon> Find Plans
-            </button>
+            @if (prefs.aiEnabled()) {
+              <button mat-stroked-button class="empty-find-btn" (click)="findPlans()" [disabled]="findingPlans()">
+                <mat-icon>auto_awesome</mat-icon> Find Plans
+              </button>
+            }
           </div>
         } @else if (day.items.length > 0) {
 

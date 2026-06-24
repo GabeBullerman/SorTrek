@@ -24,6 +24,7 @@ import { ItineraryItemDialogComponent } from './itinerary-item-dialog/itinerary-
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { TimezoneService } from '../../../core/services/timezone.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { UserPreferencesService } from '../../../core/services/user-preferences.service';
 import { ParticipantService } from '../../../core/services/participant.service';
 import { TripParticipant } from '../../../core/models/trip-participant.model';
 
@@ -95,6 +96,7 @@ export class ScheduleComponent implements OnInit {
   private http             = inject(HttpClient);
   private destroyRef       = inject(DestroyRef);
   private tz               = inject(TimezoneService);
+  readonly prefs           = inject(UserPreferencesService);
   private auth             = inject(AuthService);
   private participantService = inject(ParticipantService);
 

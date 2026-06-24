@@ -8,8 +8,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { updateProfile } from '@angular/fire/auth';
 import { Auth } from '@angular/fire/auth';
 import { Timestamp } from '@angular/fire/firestore';
@@ -17,6 +19,8 @@ import { from } from 'rxjs';
 import { UserService } from '../../core/services/user.service';
 import { PushNotificationService } from '../../core/services/push-notification.service';
 import { GoogleMapsLoaderService } from '../../core/services/google-maps-loader.service';
+import { ThemeService, PALETTES, ThemePalette, ThemeMode } from '../../core/services/theme.service';
+import { UserPreferencesService } from '../../core/services/user-preferences.service';
 
 export const CURRENCIES = [
   { code: 'USD', label: 'USD — US Dollar' },
@@ -47,8 +51,8 @@ export const CURRENCIES = [
   imports: [
     ReactiveFormsModule,
     MatCardModule, MatFormFieldModule, MatInputModule, MatSelectModule,
-    MatButtonModule, MatIconModule, MatSlideToggleModule,
-    MatProgressSpinnerModule, MatDividerModule,
+    MatButtonModule, MatIconModule, MatSlideToggleModule, MatButtonToggleModule,
+    MatProgressSpinnerModule, MatDividerModule, MatTooltipModule,
   ],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss',
@@ -60,6 +64,10 @@ export class ProfileComponent implements OnInit, AfterViewInit {
   private mapsLoader    = inject(GoogleMapsLoaderService);
   private snackBar      = inject(MatSnackBar);
   private fb            = inject(FormBuilder);
+  readonly theme        = inject(ThemeService);
+  readonly prefs        = inject(UserPreferencesService);
+
+  readonly palettes = PALETTES;
 
   @ViewChild('homeCityInput') homeCityInputRef!: ElementRef<HTMLInputElement>;
 
@@ -148,5 +156,21 @@ export class ProfileComponent implements OnInit, AfterViewInit {
       'SorTrek Test',
       'Push notifications are working correctly 🎉',
     );
+  }
+
+  setMode(mode: ThemeMode) {
+    this.theme.setMode(mode);
+  }
+
+  setPalette(id: ThemePalette) {
+    this.theme.setPalette(id);
+  }
+
+  toggleAi(on: boolean) {
+    this.prefs.setAiEnabled(on);
+  }
+
+  toggleReminders(on: boolean) {
+    this.prefs.setRemindersEnabled(on);
   }
 }

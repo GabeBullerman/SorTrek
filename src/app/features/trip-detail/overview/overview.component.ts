@@ -19,6 +19,7 @@ import { GoogleMapsLoaderService } from '../../../core/services/google-maps-load
 import { TimezoneService } from '../../../core/services/timezone.service';
 import { WeatherService, WeatherDay } from '../../../core/services/weather.service';
 import { CardReminderService } from '../../../core/services/card-reminder.service';
+import { UserPreferencesService } from '../../../core/services/user-preferences.service';
 import { PushNotificationService } from '../../../core/services/push-notification.service';
 import { MoneyComponent } from '../../../shared/components/money/money.component';
 import { ItineraryItem } from '../../../core/models/itinerary-item.model';
@@ -61,6 +62,7 @@ export class OverviewComponent implements OnInit {
   private weatherService = inject(WeatherService);
   private cardReminderService = inject(CardReminderService);
   private pushNotificationService = inject(PushNotificationService);
+  private prefs = inject(UserPreferencesService);
   private icsExportService = inject(IcsExportService);
   private snackBar = inject(MatSnackBar);
   private tz = inject(TimezoneService);
@@ -200,6 +202,7 @@ export class OverviewComponent implements OnInit {
       .subscribe(days => this.weather.set(days));
 
     if (
+      this.prefs.remindersEnabled() &&
       this.cardReminderService.shouldRemind(this.trip) &&
       !this.cardReminderService.isDismissed(this.tripId)
     ) {
