@@ -2,12 +2,27 @@
 // Set FIREBASE_SERVICE_ACCOUNT in the environment to the service-account JSON
 // (raw JSON or base64). Returns null when not configured so callers can
 // degrade gracefully instead of crashing.
-const admin = require('firebase-admin');
+//
+// firebase-admin v13+ removed the legacy namespaced API (admin.credential.cert,
+// admin.firestore(), …) in favor of modular subpath imports. We use those and
+// expose a tiny shim so callers can keep using admin.firestore() /
+// admin.messaging() / admin.firestore.Timestamp.
+const { initializeApp, cert, getApps } = require('firebase-admin/app');
+const { getFirestore, Timestamp } = require('firebase-admin/firestore');
+const { getMessaging } = require('firebase-admin/messaging');
 
 let lastError = null;
 
+// Compatibility shim mirroring the old namespaced surface the callers use.
+const firestoreFn = () => getFirestore();
+firestoreFn.Timestamp = Timestamp;
+const adminShim = {
+  firestore: firestoreFn,
+  messaging: () => getMessaging(),
+};
+
 function getAdmin() {
-  if (admin.apps && admin.apps.length) return admin;
+  if (getApps().length) return adminShim;
 
   const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
   if (!raw) { lastError = 'env not set'; return null; }
@@ -28,8 +43,8 @@ function getAdmin() {
   if (creds.private_key) creds.private_key = creds.private_key.replace(/\\n/g, '\n');
 
   try {
-    admin.initializeApp({ credential: admin.credential.cert(creds) });
-    return admin;
+    initializeApp({ credential: cert(creds) });
+    return adminShim;
   } catch (e) {
     lastError = 'init failed: ' + (e?.message ?? e);
     return null;
