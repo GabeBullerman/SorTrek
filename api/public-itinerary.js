@@ -1,4 +1,4 @@
-const { getAdmin, toIso, getLastAdminError } = require('./_firebaseAdmin');
+const { getAdmin, toIso } = require('./_firebaseAdmin');
 
 /**
  * Read-only public itinerary for a share token. Returns a SANITIZED view of a
@@ -8,27 +8,6 @@ const { getAdmin, toIso, getLastAdminError } = require('./_firebaseAdmin');
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
-
-  // Temporary, non-secret diagnostic: reports only the SHAPE of the env value.
-  if (String(req.query.token ?? '') === '__diag__') {
-    const v = process.env.FIREBASE_SERVICE_ACCOUNT || '';
-    const out = {
-      present: !!v, length: v.length, lines: v.split('\n').length,
-      startsWithBrace: v.trimStart().startsWith('{'),
-      // Boundary chars only (private_key is in the middle, never shown):
-      first40: v.slice(0, 40), last20: v.slice(-20),
-    };
-    try { const p = JSON.parse(v); out.jsonParse = 'OK'; out.hasPrivateKey = !!p.private_key; out.projectId = p.project_id ?? null; }
-    catch (e) {
-      out.jsonParse = 'FAIL';
-      try { const p2 = JSON.parse(Buffer.from(v, 'base64').toString('utf8')); out.base64Parse = 'OK'; out.hasPrivateKey = !!p2.private_key; out.projectId = p2.project_id ?? null; }
-      catch (_) { out.base64Parse = 'FAIL'; }
-    }
-    // Report whether getAdmin() actually succeeds (this is what gates the 503).
-    out.getAdminOk = !!getAdmin();
-    out.adminError = getLastAdminError();
-    return res.status(200).json(out);
-  }
 
   const admin = getAdmin();
   if (!admin) {

@@ -11,8 +11,6 @@ const { initializeApp, cert, getApps } = require('firebase-admin/app');
 const { getFirestore, Timestamp } = require('firebase-admin/firestore');
 const { getMessaging } = require('firebase-admin/messaging');
 
-let lastError = null;
-
 // Compatibility shim mirroring the old namespaced surface the callers use.
 const firestoreFn = () => getFirestore();
 firestoreFn.Timestamp = Timestamp;
@@ -25,7 +23,7 @@ function getAdmin() {
   if (getApps().length) return adminShim;
 
   const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
-  if (!raw) { lastError = 'env not set'; return null; }
+  if (!raw) return null;
 
   let creds;
   try {
@@ -33,8 +31,7 @@ function getAdmin() {
   } catch (_) {
     try {
       creds = JSON.parse(Buffer.from(raw, 'base64').toString('utf8'));
-    } catch (e) {
-      lastError = 'parse failed: ' + (e?.message ?? e);
+    } catch (_) {
       return null;
     }
   }
@@ -45,13 +42,10 @@ function getAdmin() {
   try {
     initializeApp({ credential: cert(creds) });
     return adminShim;
-  } catch (e) {
-    lastError = 'init failed: ' + (e?.message ?? e);
+  } catch (_) {
     return null;
   }
 }
-
-function getLastAdminError() { return lastError; }
 
 /** Firestore Timestamp (admin or plain) → ISO string, or null. */
 function toIso(ts) {
@@ -61,4 +55,4 @@ function toIso(ts) {
   return null;
 }
 
-module.exports = { getAdmin, toIso, getLastAdminError };
+module.exports = { getAdmin, toIso };
