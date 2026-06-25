@@ -1,4 +1,4 @@
-const { getAdmin, toIso } = require('./_firebaseAdmin');
+const { getAdmin, toIso, getLastAdminError } = require('./_firebaseAdmin');
 
 /**
  * Read-only public itinerary for a share token. Returns a SANITIZED view of a
@@ -24,6 +24,9 @@ module.exports = async (req, res) => {
       try { const p2 = JSON.parse(Buffer.from(v, 'base64').toString('utf8')); out.base64Parse = 'OK'; out.hasPrivateKey = !!p2.private_key; out.projectId = p2.project_id ?? null; }
       catch (_) { out.base64Parse = 'FAIL'; }
     }
+    // Report whether getAdmin() actually succeeds (this is what gates the 503).
+    out.getAdminOk = !!getAdmin();
+    out.adminError = getLastAdminError();
     return res.status(200).json(out);
   }
 

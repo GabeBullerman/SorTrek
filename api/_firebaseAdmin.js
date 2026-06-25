@@ -4,11 +4,13 @@
 // degrade gracefully instead of crashing.
 const admin = require('firebase-admin');
 
+let lastError = null;
+
 function getAdmin() {
   if (admin.apps && admin.apps.length) return admin;
 
   const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
-  if (!raw) return null;
+  if (!raw) { lastError = 'env not set'; return null; }
 
   let creds;
   try {
@@ -16,7 +18,8 @@ function getAdmin() {
   } catch (_) {
     try {
       creds = JSON.parse(Buffer.from(raw, 'base64').toString('utf8'));
-    } catch (_) {
+    } catch (e) {
+      lastError = 'parse failed: ' + (e?.message ?? e);
       return null;
     }
   }
@@ -27,10 +30,13 @@ function getAdmin() {
   try {
     admin.initializeApp({ credential: admin.credential.cert(creds) });
     return admin;
-  } catch (_) {
+  } catch (e) {
+    lastError = 'init failed: ' + (e?.message ?? e);
     return null;
   }
 }
+
+function getLastAdminError() { return lastError; }
 
 /** Firestore Timestamp (admin or plain) → ISO string, or null. */
 function toIso(ts) {
@@ -40,4 +46,4 @@ function toIso(ts) {
   return null;
 }
 
-module.exports = { getAdmin, toIso };
+module.exports = { getAdmin, toIso, getLastAdminError };
