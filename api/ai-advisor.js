@@ -2,6 +2,7 @@ const { groqChat } = require('./_groq');
 
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -67,6 +68,10 @@ Important: your knowledge has a training cutoff and you do not have access to li
   } catch (err) {
     const detail = err?.message ?? String(err);
     console.error('[ai-advisor]', detail);
-    return res.status(500).json({ error: 'AI request failed.', detail });
+    // Don't leak upstream error details to clients in production.
+    const body = process.env.NODE_ENV === 'production'
+      ? { error: 'AI request failed.' }
+      : { error: 'AI request failed.', detail };
+    return res.status(500).json(body);
   }
 };
