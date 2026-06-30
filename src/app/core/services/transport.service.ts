@@ -64,7 +64,7 @@ export class TransportService {
       action: 'plan', tripName, destination, journeys, localSummary,
     }).pipe(
       map(r => r.plan),
-      catchError(() => of('Could not generate plan. Check that GROQ_API_KEY is configured.'))
+      catchError(() => of('Could not generate a plan right now. Please try again in a moment.'))
     );
   }
 

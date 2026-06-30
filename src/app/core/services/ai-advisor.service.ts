@@ -37,7 +37,7 @@ export class AiAdvisorService {
       messages,
     }).pipe(
       map(r => r.reply),
-      catchError(() => of('Sorry, the AI assistant is unavailable right now. Make sure GROQ_API_KEY is set in Vercel.'))
+      catchError(() => of('Sorry, the AI assistant is unavailable right now. Please try again in a moment.'))
     );
   }
 

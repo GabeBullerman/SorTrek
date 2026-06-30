@@ -48,3 +48,6 @@ src/environments/environment.ts
 .vercel
 .env*.local
 .claude/
+
+# Local one-click launchers (not part of the app)
+RUN-*.bat

@@ -67,7 +67,7 @@
           <p>Generating suggestions for {{ trip.destination }}…</p>
         </div>
       } @else if (aiSuggestions().length === 0) {
-        <p class="ai-empty">No suggestions returned. Make sure GROQ_API_KEY is set in Vercel.</p>
+        <p class="ai-empty">No suggestions right now — please try again in a moment.</p>
       } @else {
         <div class="ai-suggestions-list">
           @for (s of aiSuggestions(); track $index) {
