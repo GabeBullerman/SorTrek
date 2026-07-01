@@ -20,6 +20,7 @@ import { TimezoneService } from '../../../core/services/timezone.service';
 import { WeatherService, WeatherDay } from '../../../core/services/weather.service';
 import { CardReminderService } from '../../../core/services/card-reminder.service';
 import { UserPreferencesService } from '../../../core/services/user-preferences.service';
+import { calendarDate, localDayKey, utcDayKey, localDayNum, utcDayNum, daysUntilCalendar } from '../../../core/util/trip-date.util';
 import { PushNotificationService } from '../../../core/services/push-notification.service';
 import { MoneyComponent } from '../../../shared/components/money/money.component';
 import { ItineraryItem } from '../../../core/models/itinerary-item.model';
@@ -211,7 +212,7 @@ export class OverviewComponent implements OnInit {
   }
 
   get daysUntilTrip(): number {
-    return Math.ceil((this.trip.startDate.toDate().getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    return daysUntilCalendar(this.trip.startDate.toDate());
   }
 
   dismissReminder(): void {
@@ -231,28 +232,28 @@ export class OverviewComponent implements OnInit {
   }
 
   tripDayNumber(date: Date): number | null {
+    // `date` is a real (weather forecast) local day; trip bounds are calendar
+    // days stored at UTC midnight. Compare and count in calendar-day space.
+    const t = localDayNum(date);
     const start = this.trip.startDate.toDate();
     const end   = this.trip.endDate.toDate();
-    start.setHours(0, 0, 0, 0);
-    end.setHours(0, 0, 0, 0);
-    const d = new Date(date);
-    d.setHours(0, 0, 0, 0);
-    if (d < start || d > end) return null;
-    return Math.round((d.getTime() - start.getTime()) / 86400000) + 1;
+    if (t < utcDayNum(start) || t > utcDayNum(end)) return null;
+    const s = Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate());
+    const d = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+    return Math.round((d - s) / 86_400_000) + 1;
   }
 
   get tripDays(): TripDay[] {
     const days: TripDay[] = [];
-    const start = new Date(this.trip.startDate.toDate());
-    const end = new Date(this.trip.endDate.toDate());
-    start.setHours(0, 0, 0, 0);
-    end.setHours(0, 0, 0, 0);
+    // Local-midnight dates of the trip's calendar days (timezone-stable).
+    const start = calendarDate(this.trip.startDate);
+    const end = calendarDate(this.trip.endDate);
     const cur = new Date(start);
     let num = 1;
     while (cur <= end) {
       days.push({
         date: new Date(cur),
-        iso: cur.toISOString().split('T')[0],
+        iso: localDayKey(cur),
         label: `Day ${num} — ${cur.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}`,
         dayNum: num,
       });
@@ -265,7 +266,8 @@ export class OverviewComponent implements OnInit {
   getDayRoute(dayIso: string, items?: ItineraryItem[]): ItineraryItem[] {
     const src = items ?? this.allItems();
     return src
-      .filter(i => i.date?.toDate().toISOString().split('T')[0] === dayIso)
+      // Activity dates are calendar days (UTC midnight) → match on UTC day key.
+      .filter(i => i.date && utcDayKey(i.date.toDate()) === dayIso)
       .sort((a, b) => {
         if (a.startTime && b.startTime) return a.startTime.localeCompare(b.startTime);
         return (a.order ?? 0) - (b.order ?? 0);
@@ -412,13 +414,9 @@ export class OverviewComponent implements OnInit {
   // ── "Today" card ─────────────────────────────────────────────────
   /** True when today's local calendar day falls within [startDate, endDate]. */
   isOnTripNow(): boolean {
-    const start = this.trip.startDate.toDate();
-    const end = this.trip.endDate.toDate();
-    start.setHours(0, 0, 0, 0);
-    end.setHours(0, 0, 0, 0);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return today >= start && today <= end;
+    const today = localDayNum(new Date());
+    return today >= utcDayNum(this.trip.startDate.toDate())
+        && today <= utcDayNum(this.trip.endDate.toDate());
   }
 
   /** Today's date as a Date at local midnight (for the card heading). */
@@ -429,15 +427,9 @@ export class OverviewComponent implements OnInit {
   /** Itinerary items scheduled for today's local day, sorted by startTime
    *  (items without a time sink to the end). */
   todayItinerary(items: ItineraryItem[]): ItineraryItem[] {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const todayKey = localDayKey(new Date());
     return items
-      .filter(i => {
-        const d = i.date?.toDate();
-        if (!d) return false;
-        d.setHours(0, 0, 0, 0);
-        return d.getTime() === today.getTime();
-      })
+      .filter(i => i.date && utcDayKey(i.date.toDate()) === todayKey)
       .sort((a, b) => {
         if (a.startTime && b.startTime) return a.startTime.localeCompare(b.startTime);
         if (a.startTime) return -1;
@@ -483,7 +475,8 @@ export class OverviewComponent implements OnInit {
     }
 
     for (const i of items) {
-      const d = i.date?.toDate();
+      // Local-midnight of the activity's calendar day, then apply its local time.
+      const d = i.date ? calendarDate(i.date) : null;
       if (!d) continue;
       if (i.startTime) {
         const [h, m] = i.startTime.split(':').map(n => parseInt(n, 10));

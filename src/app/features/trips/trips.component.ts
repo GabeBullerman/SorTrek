@@ -18,6 +18,7 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
 import { DaysUntilPipe } from '../../shared/pipes/days-until.pipe';
 import { from, of } from 'rxjs';
 import { catchError, map, take } from 'rxjs/operators';
+import { localDayNum, utcDayNum, daysUntilCalendar } from '../../core/util/trip-date.util';
 
 @Component({
   selector: 'app-trips',
@@ -162,11 +163,13 @@ export class TripsComponent implements OnInit {
   }
 
   tripStatus(trip: Trip): 'upcoming' | 'ongoing' | 'past' {
-    const now = Date.now();
-    const start = trip.startDate.toDate().getTime();
-    const end = trip.endDate.toDate().getTime();
-    if (now < start) return 'upcoming';
-    if (now > end) return 'past';
+    // Compare calendar days (not instants) so a trip is "ongoing" for the whole
+    // of its first and last day in the viewer's timezone.
+    const today = localDayNum(new Date());
+    const start = utcDayNum(trip.startDate.toDate());
+    const end = utcDayNum(trip.endDate.toDate());
+    if (today < start) return 'upcoming';
+    if (today > end) return 'past';
     return 'ongoing';
   }
 
@@ -180,13 +183,7 @@ export class TripsComponent implements OnInit {
     // Only show for upcoming trips.
     if (this.tripStatus(trip) !== 'upcoming') return null;
 
-    const startOfDay = (d: Date) =>
-      new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-
-    const today = startOfDay(new Date());
-    const tripDay = startOfDay(trip.startDate.toDate());
-
-    const days = Math.round((tripDay - today) / (1000 * 60 * 60 * 24));
+    const days = daysUntilCalendar(trip.startDate.toDate());
 
     if (days <= 0) return 'Today';
     if (days === 1) return 'Tomorrow';

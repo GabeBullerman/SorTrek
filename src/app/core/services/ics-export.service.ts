@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Trip } from '../models/trip.model';
 import { Booking } from '../models/booking.model';
 import { ItineraryItem } from '../models/itinerary-item.model';
+import { calendarDate } from '../util/trip-date.util';
 
 /**
  * Builds a downloadable iCalendar (.ics) file from a trip's bookings and
@@ -82,7 +83,9 @@ export class IcsExportService {
   }
 
   private itineraryEvent(item: ItineraryItem): string | null {
-    const baseDate = item.date?.toDate();
+    // Local-midnight of the activity's calendar day, so all-day DATE values and
+    // applied times land on the correct day regardless of timezone.
+    const baseDate = item.date ? calendarDate(item.date) : null;
     if (!baseDate) return null;
 
     const summary = item.title || 'Activity';

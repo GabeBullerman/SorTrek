@@ -9,6 +9,7 @@ import { map, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { TripService } from '../../core/services/trip.service';
 import { Trip } from '../../core/models/trip.model';
+import { localDayNum, utcDayNum } from '../../core/util/trip-date.util';
 
 @Component({
   selector: 'app-past-trips',
@@ -22,7 +23,8 @@ export class PastTripsComponent {
   private router = inject(Router);
 
   readonly pastTrips$ = this.tripService.getTrips().pipe(
-    map(trips => trips.filter(t => t.endDate.toDate().getTime() < Date.now())),
+    // Past = the trip's end calendar day is before today (compare days, not instants).
+    map(trips => trips.filter(t => utcDayNum(t.endDate.toDate()) < localDayNum(new Date()))),
     catchError(() => of([] as Trip[]))
   );
 

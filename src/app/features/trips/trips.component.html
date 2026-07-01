@@ -82,8 +82,8 @@
                 <div class="meta-item">
                   <mat-icon>calendar_today</mat-icon>
                   <span>
-                    {{ trip.startDate.toDate() | date:'MMM d' }} –
-                    {{ trip.endDate.toDate() | date:'MMM d, y' }}
+                    {{ trip.startDate.toDate() | date:'MMM d':'UTC' }} –
+                    {{ trip.endDate.toDate() | date:'MMM d, y':'UTC' }}
                   </span>
                 </div>
                 <div class="meta-item">

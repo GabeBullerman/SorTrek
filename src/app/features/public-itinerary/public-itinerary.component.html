@@ -33,7 +33,7 @@
             </p>
             <p class="pub-dates">
               <mat-icon aria-hidden="true">calendar_today</mat-icon>
-              {{ t.startDate | date:'MMM d' }} – {{ t.endDate | date:'MMM d, y' }}
+              {{ t.startDate | date:'MMM d':'UTC' }} – {{ t.endDate | date:'MMM d, y':'UTC' }}
             </p>
           </div>
         </header>
@@ -46,8 +46,8 @@
               @for (day of days(); track day.date) {
                 <div class="pub-day">
                   <div class="pub-day-head">
-                    <span class="pub-weekday">{{ day.date | date:'EEEE' }}</span>
-                    <span class="pub-day-date">{{ day.date | date:'MMM d, y' }}</span>
+                    <span class="pub-weekday">{{ day.date | date:'EEEE':'UTC' }}</span>
+                    <span class="pub-day-date">{{ day.date | date:'MMM d, y':'UTC' }}</span>
                   </div>
                   <div class="pub-items">
                     @for (item of day.items; track $index) {

@@ -68,7 +68,7 @@
 
           <p class="reminder-body">
             Most cards get flagged for foreign transactions. Notify your card issuers before departing for
-            <strong>{{ trip.destination }}</strong> on <strong>{{ trip.startDate.toDate() | date:'MMM d' }}</strong>.
+            <strong>{{ trip.destination }}</strong> on <strong>{{ trip.startDate.toDate() | date:'MMM d':'UTC' }}</strong>.
           </p>
 
           <ul class="reminder-checklist">
@@ -134,7 +134,7 @@
           <mat-icon>photo_library</mat-icon>
           <div>
             <div class="stat-value accent">
-              {{ trip.startDate.toDate() | date:'MMM d' }} – {{ trip.endDate.toDate() | date:'MMM d' }}
+              {{ trip.startDate.toDate() | date:'MMM d':'UTC' }} – {{ trip.endDate.toDate() | date:'MMM d':'UTC' }}
             </div>
             <div class="stat-label">Travel Dates</div>
           </div>

@@ -20,8 +20,8 @@
             </p>
             <p class="hero-dates">
               <mat-icon aria-hidden="true">calendar_today</mat-icon>
-              {{ trip.startDate.toDate() | date:'MMM d' }} –
-              {{ trip.endDate.toDate() | date:'MMM d, y' }}
+              {{ trip.startDate.toDate() | date:'MMM d':'UTC' }} –
+              {{ trip.endDate.toDate() | date:'MMM d, y':'UTC' }}
               &nbsp;·&nbsp; {{ tripDuration(trip) }} days
             </p>
           </div>

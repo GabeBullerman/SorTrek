@@ -27,6 +27,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { UserPreferencesService } from '../../../core/services/user-preferences.service';
 import { ParticipantService } from '../../../core/services/participant.service';
 import { TripParticipant } from '../../../core/models/trip-participant.model';
+import { calendarDate, toCalendarTimestamp, localDayKey, utcDayKey, localDayNum } from '../../../core/util/trip-date.util';
 
 interface DayGroup {
   date: Date;
@@ -192,9 +193,11 @@ export class ScheduleComponent implements OnInit {
   /** True if the day falls within a booking's check-in → check-out span (inclusive). */
   private dayWithinBooking(day: Date, b: Booking): boolean {
     if (!b.checkIn) return false;
-    const d = day.getTime();
-    const start = startOfDay(b.checkIn.toDate());
-    const end = b.checkOut ? startOfDay(b.checkOut.toDate()) : start;
+    // Compare calendar days: `day` is a grid local-midnight date; booking times
+    // are real instants placed on their local calendar day.
+    const d = localDayNum(day);
+    const start = localDayNum(b.checkIn.toDate());
+    const end = b.checkOut ? localDayNum(b.checkOut.toDate()) : start;
     return d >= start && d <= end;
   }
 
@@ -215,29 +218,33 @@ export class ScheduleComponent implements OnInit {
   }
 
   private groupByDay(items: ItineraryItem[], bookings: Booking[]): DayGroup[] {
-    const start = this.trip.startDate.toDate();
-    const end   = this.trip.endDate.toDate();
+    // Trip bounds are calendar days (stored at UTC midnight). Turn them into
+    // local-midnight Dates of the same calendar day so the grid iterates and
+    // compares in a single, timezone-stable calendar space — no day shifting,
+    // and the last day is always included.
+    const start = calendarDate(this.trip.startDate);
+    const end   = calendarDate(this.trip.endDate);
     const bookingEntries = this.buildBookingEntries(bookings);
     const days: DayGroup[] = [];
     const cur = new Date(start);
-    cur.setHours(0, 0, 0, 0);
     let dayNum = 1;
 
     while (cur <= end) {
-      const dayStr = cur.toDateString();
+      const key = localDayKey(cur);
       days.push({
         date: new Date(cur),
         label:      cur.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
         shortLabel: cur.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
         dayNumber: dayNum,
         items: items
-          .filter(i => i.date.toDate().toDateString() === dayStr)
+          // Activity dates are calendar days (UTC midnight) → compare via UTC key.
+          .filter(i => utcDayKey(i.date.toDate()) === key)
           .sort((a, b) => {
             if (a.startTime && b.startTime) return a.startTime.localeCompare(b.startTime);
             return a.order - b.order;
           }),
         bookingEntries: bookingEntries
-          .filter(e => e.day === dayStr)
+          .filter(e => e.day === key)
           .sort((a, b) => a.entry.sortMinutes - b.entry.sortMinutes || a.entry.kindOrder - b.entry.kindOrder)
           .map(e => e.entry),
       });
@@ -277,7 +284,9 @@ export class ScheduleComponent implements OnInit {
       const hasTime = d.getHours() !== 0 || d.getMinutes() !== 0;
       const k = KIND[kind];
       out.push({
-        day: d.toDateString(),
+        // Bookings are real timed events → placed on their local calendar day,
+        // matching the grid's calendar key.
+        day: localDayKey(d),
         entry: {
           ...entry,
           timeLabel: hasTime ? fmt(ts) : undefined,
@@ -439,7 +448,9 @@ export class ScheduleComponent implements OnInit {
 
     this.http.post<{ suggestions: PlanSuggestion[] }>('/api/find-plans', {
       destination: this.trip.destination,
-      date: day.date.toISOString(),
+      // Send the calendar day as UTC-midnight ISO so the server reads the same
+      // day regardless of anyone's timezone.
+      date: toCalendarTimestamp(day.date).toDate().toISOString(),
       dayNumber: day.dayNumber,
       totalDays: this.allDays().length,
     }).pipe(catchError(() => of({ suggestions: [] })))
@@ -468,7 +479,7 @@ export class ScheduleComponent implements OnInit {
       title: s.title,
       category: (['transport','accommodation','activity','food','other'].includes(s.category)
         ? s.category : 'activity') as ItineraryItem['category'],
-      date: Timestamp.fromDate(day.date),
+      date: toCalendarTimestamp(day.date),
       order: day.items.length,
       ...(s.time       ? { startTime: s.time }         : {}),
       ...(s.location   ? { location: s.location }       : {}),
@@ -515,6 +526,3 @@ export class ScheduleComponent implements OnInit {
 }
 
 /** Local-midnight timestamp for a date, for day-range comparisons. */
-function startOfDay(d: Date): number {
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-}

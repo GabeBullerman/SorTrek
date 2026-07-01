@@ -33,7 +33,7 @@
         @if (loadingTransactions()) {
           <div class="tx-loading"><mat-spinner diameter="32"></mat-spinner><span>Loading transactions…</span></div>
         } @else if (plaidTransactions().length === 0) {
-          <p class="tx-empty">No transactions found for {{ trip.startDate.toDate() | date:'MMM d' }} – {{ trip.endDate.toDate() | date:'MMM d, y' }}.</p>
+          <p class="tx-empty">No transactions found for {{ trip.startDate.toDate() | date:'MMM d':'UTC' }} – {{ trip.endDate.toDate() | date:'MMM d, y':'UTC' }}.</p>
         } @else {
           <div class="tx-list">
             @for (tx of plaidTransactions(); track tx.id) {

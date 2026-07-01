@@ -14,6 +14,7 @@ import { ItineraryService } from '../../../../core/services/itinerary.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ItineraryItem, ItemCategory } from '../../../../core/models/itinerary-item.model';
 import { Timestamp } from '@angular/fire/firestore';
+import { calendarDate, toCalendarTimestamp } from '../../../../core/util/trip-date.util';
 import { from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -58,7 +59,7 @@ export class ItineraryItemDialogComponent {
 
   form = this.fb.group({
     title: [this.data.item?.title ?? '', Validators.required],
-    date: [this.data.item?.date?.toDate() ?? this.data.defaultDate ?? null, Validators.required],
+    date: [this.data.item?.date ? calendarDate(this.data.item.date) : (this.data.defaultDate ?? null), Validators.required],
     startTime: [this.data.item?.startTime ?? ''],
     endTime: [this.data.item?.endTime ?? ''],
     category: [this.data.item?.category ?? 'activity' as ItemCategory, Validators.required],
@@ -77,7 +78,7 @@ export class ItineraryItemDialogComponent {
     const payload: Omit<ItineraryItem, 'id'> = {
       tripId: this.data.tripId,
       title: v.title!,
-      date: Timestamp.fromDate(v.date!),
+      date: toCalendarTimestamp(v.date!),
       startTime: v.startTime ?? undefined,
       endTime: v.endTime ?? undefined,
       category: v.category!,

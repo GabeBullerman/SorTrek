@@ -16,6 +16,7 @@ import { CoverPhotoService } from '../../../core/services/cover-photo.service';
 import { GoogleMapsLoaderService } from '../../../core/services/google-maps-loader.service';
 import { Trip } from '../../../core/models/trip.model';
 import { Timestamp } from '@angular/fire/firestore';
+import { calendarDate, toCalendarTimestamp } from '../../../core/util/trip-date.util';
 import { from, Observable, Subject } from 'rxjs';
 import { map, debounceTime, distinctUntilChanged, filter, takeUntil } from 'rxjs/operators';
 
@@ -64,8 +65,8 @@ export class TripFormDialogComponent implements OnInit, OnDestroy {
     name: [this.data?.trip?.name ?? '', [Validators.required, Validators.maxLength(60)]],
     destination: [this.data?.trip?.destination ?? '', [Validators.required]],
     description: [this.data?.trip?.description ?? ''],
-    startDate: [this.data?.trip?.startDate?.toDate() ?? null, Validators.required],
-    endDate: [this.data?.trip?.endDate?.toDate() ?? null, Validators.required],
+    startDate: [this.data?.trip?.startDate ? calendarDate(this.data.trip.startDate) : null, Validators.required],
+    endDate: [this.data?.trip?.endDate ? calendarDate(this.data.trip.endDate) : null, Validators.required],
     currency: [this.data?.trip?.currency ?? 'USD', Validators.required],
   });
 
@@ -192,8 +193,8 @@ export class TripFormDialogComponent implements OnInit, OnDestroy {
         name: name!,
         destination: destination!,
         description: description ?? '',
-        startDate: Timestamp.fromDate(startDate!),
-        endDate: Timestamp.fromDate(endDate!),
+        startDate: toCalendarTimestamp(startDate!),
+        endDate: toCalendarTimestamp(endDate!),
         currency: currency!,
         coverPhotoUrl,
       };
