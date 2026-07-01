@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Auth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, user, updateProfile, signInWithPopup, GoogleAuthProvider, getAdditionalUserInfo } from '@angular/fire/auth';
-import { Firestore, doc, getDoc, setDoc } from '@angular/fire/firestore';
+import { Firestore, doc, getDoc, setDoc, terminate, clearIndexedDbPersistence } from '@angular/fire/firestore';
 import { Timestamp } from '@angular/fire/firestore';
 import { from, Observable } from 'rxjs';
 
@@ -48,8 +48,27 @@ export class AuthService {
     );
   }
 
-  logout() {
-    return from(signOut(this.auth));
+  /**
+   * Full logout: revoke the Firebase session (clears its IndexedDB auth token),
+   * wipe app-persisted state, and clear the offline Firestore cache so none of
+   * the previous user's data remains on the device. Best-effort on each step so
+   * a single failure can't block sign-out. The caller should do a FULL page
+   * reload afterwards (window.location) — Firestore is terminated here.
+   */
+  async logout(): Promise<void> {
+    try { await signOut(this.auth); } catch { /* ignore */ }
+
+    // App-persisted client state.
+    try {
+      localStorage.removeItem('pendingInviteToken');
+      sessionStorage.clear();
+    } catch { /* storage may be unavailable */ }
+
+    // Offline Firestore cache (device-level; not per-user) — terminate then clear.
+    try {
+      await terminate(this.firestore);
+      await clearIndexedDbPersistence(this.firestore);
+    } catch { /* multiple tabs / already cleared — best-effort */ }
   }
 
   get currentUser() {

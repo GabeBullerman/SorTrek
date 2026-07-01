@@ -77,7 +77,9 @@ export class ShellComponent implements OnInit {
   ];
 
   logout() {
-    this.auth.logout().subscribe(() => this.router.navigate(['/auth/login']));
+    // Full reload after logout: the offline Firestore cache is terminated during
+    // logout(), so a hard navigation reinitializes a clean app for the login page.
+    this.auth.logout().finally(() => { window.location.href = '/auth/login'; });
   }
 
   openGuide() {

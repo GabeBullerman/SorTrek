@@ -29,7 +29,8 @@ import { PackingComponent } from './packing/packing.component';
 import { AiAssistantComponent } from './ai-assistant/ai-assistant.component';
 import { TransportComponent } from './transport/transport.component';
 import { DocumentsComponent } from './documents/documents.component';
-import { from, take } from 'rxjs';
+import { from, take, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 export interface TabDef {
   label: string;
@@ -103,7 +104,16 @@ export class TripDetailComponent implements OnInit {
   ];
 
   ngOnInit() {
-    this.trip$ = this.tripService.getTrip(this.id);
+    // If the trip doesn't exist or the user isn't a member, the read is denied
+    // by Firestore rules (IDOR-safe). Redirect out instead of hanging, and never
+    // render another user's trip.
+    this.trip$ = this.tripService.getTrip(this.id).pipe(
+      catchError(() => {
+        this.snackBar.open('That trip is not available.', undefined, { duration: 3000 });
+        this.router.navigate(['/trips']);
+        return of(null as unknown as Trip);
+      })
+    );
 
     // Restore tab from URL query param (e.g. ?tab=people)
     const tabParam = this.route.snapshot.queryParamMap.get('tab');
