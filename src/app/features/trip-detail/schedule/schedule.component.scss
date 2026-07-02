@@ -390,7 +390,9 @@
   }
 }
 
-.timeline-content { flex: 1; padding-bottom: 20px; }
+// min-width: 0 lets this flex child actually shrink — without it, one long
+// unbroken word/URL in a note or description pushes past the card edge.
+.timeline-content { flex: 1; min-width: 0; padding-bottom: 20px; }
 
 .item-header {
   display: flex;
@@ -776,3 +778,10 @@
 
   &:hover { text-decoration: underline; }
 }
+
+// Long titles/notes/descriptions wrap instead of escaping their card
+.item-title,
+.item-description,
+.item-notes span,
+.plan-desc,
+.plan-title { overflow-wrap: anywhere; }

@@ -105,12 +105,17 @@ mat-accordion {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+  // Let the title column shrink and its text wrap, so the edit/delete buttons
+  // never get pushed off to a new line by a long booking name.
+  flex: 1;
+  min-width: 0;
 
   h3 {
     margin: 0;
     font-size: 1rem;
     font-weight: 600;
     color: var(--st-on-surface);
+    overflow-wrap: anywhere;
   }
 }
 
@@ -359,10 +364,8 @@ mat-accordion {
     padding: 12px;
   }
 
-  // Title + actions: let the actions wrap under a long title instead of squishing
-  .booking-card-header {
-    flex-wrap: wrap;
-  }
+  // Actions stay pinned top-right on phones; the title wraps instead
+  // (booking-title-row is min-width: 0 with overflow-wrap on the h3).
 
   // Larger touch targets for edit/delete on each booking card
   .booking-card-actions button {
