@@ -211,6 +211,11 @@ export class ScheduleComponent implements OnInit {
     return next?.id === item.id;
   }
 
+  /** Links saved without a protocol would resolve relative to the app — force https. */
+  safeUrl(url: string): string {
+    return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+  }
+
   // ── Voting on proposals ───────────────────────────────────
 
   myVote(item: ItineraryItem): 'up' | 'down' | null {

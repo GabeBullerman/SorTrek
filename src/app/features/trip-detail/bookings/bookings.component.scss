@@ -411,3 +411,17 @@ mat-accordion {
   gap: 10px;
   margin-top: 4px;
 }
+
+// "View booking" hyperlink in the details list
+.booking-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--st-primary);
+  font-weight: 600;
+  text-decoration: none;
+
+  .ext-icon { font-size: 14px; width: 14px; height: 14px; }
+
+  &:hover { text-decoration: underline; }
+}

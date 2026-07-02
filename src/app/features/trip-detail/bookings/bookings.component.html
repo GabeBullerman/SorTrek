@@ -106,13 +106,6 @@
                             }
                           </button>
                         }
-                        @if (booking.bookingUrl) {
-                          <button mat-icon-button matTooltip="Open booking link"
-                                  aria-label="Open booking link"
-                                  (click)="openBookingUrl(booking.bookingUrl)">
-                            <mat-icon>open_in_new</mat-icon>
-                          </button>
-                        }
                         <button mat-icon-button matTooltip="Edit" aria-label="Edit booking" (click)="openEditBooking(booking)">
                           <mat-icon>edit</mat-icon>
                         </button>
@@ -134,6 +127,16 @@
                         <div class="detail-item confirmation">
                           <mat-icon>tag</mat-icon>
                           <span>Confirmation: <strong>{{ booking.confirmationNumber }}</strong></span>
+                        </div>
+                      }
+
+                      @if (booking.bookingUrl) {
+                        <div class="detail-item">
+                          <mat-icon>link</mat-icon>
+                          <a class="booking-link" [href]="safeUrl(booking.bookingUrl)"
+                             target="_blank" rel="noopener noreferrer">
+                            View booking <mat-icon class="ext-icon">open_in_new</mat-icon>
+                          </a>
                         </div>
                       }
 

@@ -397,8 +397,10 @@ export class BookingsComponent implements OnInit {
     });
   }
 
-  openBookingUrl(url: string) {
-    window.open(url, '_blank', 'noopener');
+  /** Booking links pasted without a protocol ("delta.com/manage") would
+   *  otherwise resolve relative to the app — force https in that case. */
+  safeUrl(url: string): string {
+    return /^https?:\/\//i.test(url) ? url : `https://${url}`;
   }
 }
 
