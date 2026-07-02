@@ -202,11 +202,26 @@ export class PackingComponent implements OnInit {
           : [...(i.packedBy ?? []), uid],
       } : i)
     );
-    from(this.packingService.togglePacked(item.id!, uid, alreadyPacked)).subscribe();
+    from(this.packingService.togglePacked(item.id!, uid, alreadyPacked)).subscribe({
+      error: () => {
+        // Roll back the optimistic toggle and let the user know.
+        this.items.update(list =>
+          list.map(i => i.id === item.id ? {
+            ...i,
+            packedBy: alreadyPacked
+              ? [...(i.packedBy ?? []), uid]
+              : (i.packedBy ?? []).filter(id => id !== uid),
+          } : i)
+        );
+        this.snackBar.open('Could not save that change. Please try again.', undefined, { duration: 3000 });
+      },
+    });
   }
 
   deleteItem(item: PackingItem) {
-    from(this.packingService.deleteItem(item.id!)).subscribe();
+    from(this.packingService.deleteItem(item.id!)).subscribe({
+      error: () => this.snackBar.open('Could not remove the item. Please try again.', undefined, { duration: 3000 }),
+    });
   }
 
   startEdit(item: PackingItem) {
@@ -253,10 +268,16 @@ export class PackingComponent implements OnInit {
       packedBy: [],
       visibility: v.personal ? 'personal' : 'everyone',
       createdBy: this.currentUserId,
-    })).subscribe(() => {
-      this.saving.set(false);
-      this.addForm.reset({ name: '', category: 'other', quantity: 1, assignedTo: null, personal: false });
-      this.showAddForm.set(false);
+    })).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.addForm.reset({ name: '', category: 'other', quantity: 1, assignedTo: null, personal: false });
+        this.showAddForm.set(false);
+      },
+      error: () => {
+        this.saving.set(false);
+        this.snackBar.open('Could not add the item. Please try again.', undefined, { duration: 3000 });
+      },
     });
   }
 

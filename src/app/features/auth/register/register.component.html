@@ -63,7 +63,7 @@
           <input matInput formControlName="confirmPassword"
                  [type]="hidePassword() ? 'password' : 'text'"
                  autocomplete="new-password" />
-          <mat-icon matPrefix>lock_clock</mat-icon>
+          <mat-icon matPrefix>lock_reset</mat-icon>
           @if (form.hasError('passwordMismatch') && form.get('confirmPassword')?.dirty) {
             <mat-error>Passwords do not match</mat-error>
           }

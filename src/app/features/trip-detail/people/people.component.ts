@@ -263,9 +263,10 @@ export class PeopleComponent implements OnInit, OnChanges {
       },
     }).afterClosed().subscribe(confirmed => {
       if (confirmed) {
-        from(this.tripService.removeCollaborator(this.tripId, uid, email)).subscribe(() =>
-          this.snackBar.open('Collaborator removed', undefined, { duration: 2500 })
-        );
+        from(this.tripService.removeCollaborator(this.tripId, uid, email)).subscribe({
+          next: () => this.snackBar.open('Collaborator removed', undefined, { duration: 2500 }),
+          error: () => this.snackBar.open('Could not remove them. Please try again.', undefined, { duration: 3000 }),
+        });
       }
     });
   }

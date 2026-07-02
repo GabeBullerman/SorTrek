@@ -163,9 +163,10 @@ export class ScheduleComponent implements OnInit {
 
   /** Approve a proposed item (editors only) — clears the proposed flag. */
   approveItem(item: ItineraryItem) {
-    from(this.itineraryService.updateItem(item.id!, { proposed: false })).subscribe(() =>
-      this.snackBar.open(`"${item.title}" approved`, undefined, { duration: 2000 })
-    );
+    from(this.itineraryService.updateItem(item.id!, { proposed: false })).subscribe({
+      next: () => this.snackBar.open(`"${item.title}" approved`, undefined, { duration: 2000 }),
+      error: () => this.snackBar.open('Could not approve. Please try again.', undefined, { duration: 3000 }),
+    });
   }
 
   /** Reject a proposed item (editors only) — deletes it after confirmation. */
@@ -174,9 +175,10 @@ export class ScheduleComponent implements OnInit {
       data: { title: 'Reject Proposal', message: `Reject and remove "${item.title}"?` },
     }).afterClosed().subscribe(confirmed => {
       if (confirmed) {
-        from(this.itineraryService.deleteItem(item.id!)).subscribe(() =>
-          this.snackBar.open('Proposal rejected', undefined, { duration: 2000 })
-        );
+        from(this.itineraryService.deleteItem(item.id!)).subscribe({
+          next: () => this.snackBar.open('Proposal rejected', undefined, { duration: 2000 }),
+          error: () => this.snackBar.open('Could not reject. Please try again.', undefined, { duration: 3000 }),
+        });
       }
     });
   }
@@ -486,11 +488,17 @@ export class ScheduleComponent implements OnInit {
         : { proposed: true, proposedBy: this.auth.currentUser?.uid }),
     };
 
-    from(this.itineraryService.createItem(newItem)).subscribe(() => {
-      this.planSuggestions.update(list =>
-        list.map((item, i) => i === index ? { ...item, adding: false, selected: true } : item)
-      );
-      this.snackBar.open(`"${s.title}" added to Day ${day.dayNumber}`, undefined, { duration: 2000 });
+    from(this.itineraryService.createItem(newItem)).subscribe({
+      next: () => {
+        this.planSuggestions.update(list =>
+          list.map((item, i) => i === index ? { ...item, adding: false, selected: true } : item)
+        );
+        this.snackBar.open(`"${s.title}" added to Day ${day.dayNumber}`, undefined, { duration: 2000 });
+      },
+      error: () => {
+        this.planSuggestions.update(list => list.map((item, i) => i === index ? { ...item, adding: false } : item));
+        this.snackBar.open('Could not add that plan. Please try again.', undefined, { duration: 3000 });
+      },
     });
   }
 
@@ -513,9 +521,10 @@ export class ScheduleComponent implements OnInit {
       data: { title: 'Remove Activity', message: `Remove "${item.title}"?` },
     }).afterClosed().subscribe(confirmed => {
       if (confirmed) {
-        from(this.itineraryService.deleteItem(item.id!)).subscribe(() =>
-          this.snackBar.open('Activity removed', undefined, { duration: 2000 })
-        );
+        from(this.itineraryService.deleteItem(item.id!)).subscribe({
+          next: () => this.snackBar.open('Activity removed', undefined, { duration: 2000 }),
+          error: () => this.snackBar.open('Could not remove the activity. Please try again.', undefined, { duration: 3000 }),
+        });
       }
     });
   }

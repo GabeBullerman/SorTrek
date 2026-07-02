@@ -30,20 +30,56 @@ export class TimezoneService {
     return code ? (AIRPORT_TIMEZONES[code] ?? null) : null;
   }
 
-  /** Short zone label (e.g. "MST", "CEST") for an airport on a given date, or null. */
+  // Zones where Intl 'short' returns an ugly "GMT±N"; map to the usual
+  // abbreviation. Two entries = [standard, daylight]; one = no DST.
+  private static readonly ABBR: Record<string, string[]> = {
+    'Europe/London': ['GMT', 'BST'], 'Europe/Dublin': ['GMT', 'IST'],
+    'Europe/Lisbon': ['WET', 'WEST'], 'Atlantic/Canary': ['WET', 'WEST'],
+    'Europe/Madrid': ['CET', 'CEST'], 'Europe/Paris': ['CET', 'CEST'],
+    'Europe/Berlin': ['CET', 'CEST'], 'Europe/Rome': ['CET', 'CEST'],
+    'Europe/Amsterdam': ['CET', 'CEST'], 'Europe/Brussels': ['CET', 'CEST'],
+    'Europe/Zurich': ['CET', 'CEST'], 'Europe/Vienna': ['CET', 'CEST'],
+    'Europe/Prague': ['CET', 'CEST'], 'Europe/Warsaw': ['CET', 'CEST'],
+    'Europe/Copenhagen': ['CET', 'CEST'], 'Europe/Stockholm': ['CET', 'CEST'],
+    'Europe/Oslo': ['CET', 'CEST'], 'Europe/Budapest': ['CET', 'CEST'],
+    'Europe/Athens': ['EET', 'EEST'], 'Europe/Helsinki': ['EET', 'EEST'],
+    'Europe/Bucharest': ['EET', 'EEST'], 'Europe/Kyiv': ['EET', 'EEST'],
+    'Europe/Istanbul': ['TRT'], 'Europe/Moscow': ['MSK'],
+    'Asia/Tokyo': ['JST'], 'Asia/Shanghai': ['CST'], 'Asia/Hong_Kong': ['HKT'],
+    'Asia/Singapore': ['SGT'], 'Asia/Seoul': ['KST'], 'Asia/Kolkata': ['IST'],
+    'Asia/Dubai': ['GST'], 'Asia/Bangkok': ['ICT'],
+    'Australia/Sydney': ['AEST', 'AEDT'], 'Australia/Melbourne': ['AEST', 'AEDT'],
+    'Australia/Perth': ['AWST'], 'Pacific/Auckland': ['NZST', 'NZDT'],
+  };
+
+  /** Short zone label (e.g. "MDT", "CEST") for an airport on a given date, or null. */
   zoneLabel(airport?: string | null, onDate: Date = new Date()): string | null {
     const iana = this.ianaFor(airport);
     if (!iana) return null;
+    let intlLabel: string | null = null;
     try {
       const parts = new Intl.DateTimeFormat('en-US', {
-        timeZone: iana,
-        timeZoneName: 'short',
-        hour: 'numeric',
+        timeZone: iana, timeZoneName: 'short', hour: 'numeric',
       }).formatToParts(onDate);
-      return parts.find(p => p.type === 'timeZoneName')?.value ?? null;
-    } catch {
-      return null;
-    }
+      intlLabel = parts.find(p => p.type === 'timeZoneName')?.value ?? null;
+    } catch { /* fall through */ }
+    // US/Canada etc. give proper abbreviations (MDT, EST…) — keep them.
+    if (intlLabel && !/^GMT/i.test(intlLabel)) return intlLabel;
+    // Intl fell back to a "GMT±N" offset — use a friendlier abbreviation if known.
+    return this.friendlyAbbr(iana, onDate) ?? intlLabel;
+  }
+
+  private friendlyAbbr(iana: string, date: Date): string | null {
+    const entry = TimezoneService.ABBR[iana];
+    if (!entry) return null;
+    if (entry.length === 1) return entry[0];
+    const y = date.getUTCFullYear();
+    const offJan = this.offsetMinutes(iana, new Date(Date.UTC(y, 0, 15)));
+    const offJul = this.offsetMinutes(iana, new Date(Date.UTC(y, 6, 15)));
+    const offNow = this.offsetMinutes(iana, date);
+    if (offJan == null || offJul == null || offNow == null || offJan === offJul) return entry[0];
+    // Daylight offset is the larger of the two solstice offsets (both hemispheres).
+    return offNow === Math.max(offJan, offJul) ? entry[1] : entry[0];
   }
 
   /**

@@ -40,8 +40,10 @@
         <div class="message" [class.user]="msg.role === 'user'" [class.assistant]="msg.role === 'assistant'">
           @if (msg.role === 'assistant') {
             <div class="msg-avatar"><mat-icon>auto_awesome</mat-icon></div>
+            <div class="msg-bubble markdown" [innerHTML]="renderMarkdown(msg.content)"></div>
+          } @else {
+            <div class="msg-bubble">{{ msg.content }}</div>
           }
-          <div class="msg-bubble">{{ msg.content }}</div>
         </div>
       }
       @if (loading()) {

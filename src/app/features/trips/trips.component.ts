@@ -15,7 +15,6 @@ import { AuthService } from '../../core/services/auth.service';
 import { Trip } from '../../core/models/trip.model';
 import { TripFormDialogComponent } from './trip-form-dialog/trip-form-dialog.component';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
-import { DaysUntilPipe } from '../../shared/pipes/days-until.pipe';
 import { from, of } from 'rxjs';
 import { catchError, map, take } from 'rxjs/operators';
 import { localDayNum, utcDayNum, daysUntilCalendar } from '../../core/util/trip-date.util';
@@ -27,7 +26,6 @@ import { localDayNum, utcDayNum, daysUntilCalendar } from '../../core/util/trip-
     AsyncPipe, DatePipe, TitleCasePipe, CurrencyPipe,
     MatCardModule, MatButtonModule, MatIconModule,
     MatMenuModule, MatProgressSpinnerModule, MatTooltipModule,
-    DaysUntilPipe,
   ],
   templateUrl: './trips.component.html',
   styleUrl: './trips.component.scss',

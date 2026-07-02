@@ -30,6 +30,7 @@
     "firebase": "^11.10.0",
     "firebase-admin": "^12.7.0",
     "groq-sdk": "^0.15.0",
+    "marked": "^18.0.5",
     "plaid": "^42.2.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"

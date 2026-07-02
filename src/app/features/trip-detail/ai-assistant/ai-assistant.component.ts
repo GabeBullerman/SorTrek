@@ -6,6 +6,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
+import { marked } from 'marked';
 import { Trip } from '../../../core/models/trip.model';
 import { AiAdvisorService, AiMessage } from '../../../core/services/ai-advisor.service';
 
@@ -52,6 +53,21 @@ export class AiAssistantComponent {
       this.messages.update(m => [...m, { role: 'assistant' as const, content: reply }]);
       this.loading.set(false);
     });
+  }
+
+  private mdCache = new Map<string, string>();
+
+  /** Render assistant markdown → HTML. Angular's built-in sanitizer runs on the
+   *  [innerHTML] binding, so any script/handler an LLM (or a prompt injection)
+   *  might emit is stripped — this stays XSS-safe. Cached so it isn't reparsed
+   *  on every change-detection pass. */
+  renderMarkdown(text: string): string {
+    let html = this.mdCache.get(text);
+    if (html === undefined) {
+      html = marked.parse(text, { async: false, gfm: true, breaks: true }) as string;
+      this.mdCache.set(text, html);
+    }
+    return html;
   }
 
   onEnter(event: KeyboardEvent) {

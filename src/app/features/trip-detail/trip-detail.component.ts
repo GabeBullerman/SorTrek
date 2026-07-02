@@ -161,9 +161,12 @@ export class TripDetailComponent implements OnInit {
       data: { title: 'Delete Trip', message: `Delete "${trip.name}"? This cannot be undone.` },
     }).afterClosed().subscribe(confirmed => {
       if (confirmed) {
-        from(this.tripService.deleteTrip(trip.id!)).subscribe(() => {
-          this.snackBar.open('Trip deleted', undefined, { duration: 2500 });
-          this.router.navigate(['/trips']);
+        from(this.tripService.deleteTrip(trip.id!)).subscribe({
+          next: () => {
+            this.snackBar.open('Trip deleted', undefined, { duration: 2500 });
+            this.router.navigate(['/trips']);
+          },
+          error: () => this.snackBar.open('Could not delete the trip. Please try again.', undefined, { duration: 3500 }),
         });
       }
     });

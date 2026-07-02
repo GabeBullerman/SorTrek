@@ -336,9 +336,10 @@ export class BookingsComponent implements OnInit {
       data: { title: 'Remove Booking', message: `Remove "${booking.title}"?` },
     }).afterClosed().subscribe(confirmed => {
       if (confirmed) {
-        from(this.bookingService.deleteBooking(booking.id!)).subscribe(() =>
-          this.snackBar.open('Booking removed', undefined, { duration: 2000 })
-        );
+        from(this.bookingService.deleteBooking(booking.id!)).subscribe({
+          next: () => this.snackBar.open('Booking removed', undefined, { duration: 2000 }),
+          error: () => this.snackBar.open('Could not remove the booking. Please try again.', undefined, { duration: 3500 }),
+        });
       }
     });
   }
