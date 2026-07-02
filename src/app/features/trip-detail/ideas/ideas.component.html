@@ -64,12 +64,22 @@
             }
             <div class="idea-meta">
               <span class="idea-by">Added by {{ idea.createdBy === currentUserId ? 'you' : idea.creatorName }}</span>
-              @if (canDelete(idea)) {
-                <button mat-icon-button class="idea-delete" (click)="deleteIdea(idea)"
-                        matTooltip="Remove idea" aria-label="Remove idea">
-                  <mat-icon>close</mat-icon>
-                </button>
-              }
+              <span class="idea-actions">
+                @if (!idea.image) {
+                  <button mat-icon-button class="idea-refresh" (click)="refreshPreview(idea)"
+                          [disabled]="refreshing().has(idea.id!)"
+                          matTooltip="Try fetching the preview again" aria-label="Refresh preview">
+                    @if (refreshing().has(idea.id!)) { <mat-spinner diameter="14"></mat-spinner> }
+                    @else { <mat-icon>refresh</mat-icon> }
+                  </button>
+                }
+                @if (canDelete(idea)) {
+                  <button mat-icon-button class="idea-delete" (click)="deleteIdea(idea)"
+                          matTooltip="Remove idea" aria-label="Remove idea">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                }
+              </span>
             </div>
           </div>
         </div>

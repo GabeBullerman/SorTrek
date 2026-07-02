@@ -202,3 +202,16 @@
     &:hover { opacity: 1; }
   }
 }
+
+.idea-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.idea-refresh {
+  width: 28px; height: 28px; line-height: 28px;
+  opacity: 0.55;
+  mat-icon { font-size: 15px; width: 15px; height: 15px; }
+  &:hover { opacity: 1; }
+}

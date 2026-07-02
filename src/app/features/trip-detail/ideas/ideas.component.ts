@@ -99,6 +99,33 @@ export class IdeasComponent implements OnInit {
     });
   }
 
+  /** Ids currently re-fetching their preview. */
+  refreshing = signal<Set<string>>(new Set());
+
+  /** Re-fetch the preview for an idea that saved without one. */
+  refreshPreview(idea: TripIdea) {
+    if (!idea.id || this.refreshing().has(idea.id)) return;
+    this.refreshing.update(s => new Set([...s, idea.id!]));
+
+    this.ideaService.fetchPreview(idea.url).subscribe(preview => {
+      from(Promise.resolve(this.ideaService.updatePreview(idea.id!, preview))).subscribe({
+        next: () => {
+          this.refreshing.update(s => { const n = new Set(s); n.delete(idea.id!); return n; });
+          if (!preview.image && !preview.title) {
+            this.snackBar.open(
+              'That site doesn\'t share a preview (Instagram requires login) — the link still works.',
+              undefined, { duration: 4500 },
+            );
+          }
+        },
+        error: () => {
+          this.refreshing.update(s => { const n = new Set(s); n.delete(idea.id!); return n; });
+          this.snackBar.open('Could not update the preview.', undefined, { duration: 3000 });
+        },
+      });
+    });
+  }
+
   deleteIdea(idea: TripIdea) {
     from(this.ideaService.deleteIdea(idea.id!)).subscribe({
       error: () => this.snackBar.open('Could not remove the idea.', undefined, { duration: 3000 }),

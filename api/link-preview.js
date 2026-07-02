@@ -11,7 +11,10 @@
 const { guard } = require('./_auth');
 
 const FETCH_TIMEOUT_MS = 6000;
-const MAX_HTML_BYTES = 300_000;
+// Pinterest (and other SPA-ish sites) put their og: tags ~900KB into the
+// document, so we must be willing to read most of a page — with an early
+// exit as soon as the interesting tags have streamed in.
+const MAX_HTML_BYTES = 1_500_000;
 
 /** fetch with a hard timeout so a slow site can't hang the function. */
 async function fetchWithTimeout(url, options = {}) {
@@ -116,6 +119,10 @@ module.exports = async (req, res) => {
       const { done, value } = await reader.read();
       if (done) break;
       html += Buffer.from(value).toString('utf8');
+      // Stop as soon as both key tags have streamed in (plus a little slack
+      // so the current tag is complete).
+      if (html.includes('og:image') && html.includes('og:title')
+          && html.length > html.lastIndexOf('og:') + 2048) break;
     }
     reader.cancel().catch(() => {});
 

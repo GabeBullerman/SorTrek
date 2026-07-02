@@ -122,6 +122,11 @@ service cloud.firestore {
       allow read: if isTripMember(resource.data.tripId);
       allow create: if isTripMember(request.resource.data.tripId)
                     && request.resource.data.createdBy == request.auth.uid;
+      // Members may refresh the cached preview fields only — the link itself
+      // and its attribution are immutable.
+      allow update: if isTripMember(resource.data.tripId)
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['title', 'description', 'image', 'siteName']);
       // The person who pinned it, or any owner, can remove an idea.
       allow delete: if isTripMember(resource.data.tripId)
                     && (resource.data.createdBy == request.auth.uid

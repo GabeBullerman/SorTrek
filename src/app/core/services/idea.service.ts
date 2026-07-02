@@ -1,7 +1,7 @@
 import { Injectable, inject, Injector, runInInjectionContext } from '@angular/core';
 import {
   Firestore, collection, collectionData, doc,
-  addDoc, deleteDoc, query, where, serverTimestamp,
+  addDoc, updateDoc, deleteDoc, query, where, serverTimestamp,
 } from '@angular/fire/firestore';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
@@ -55,6 +55,18 @@ export class IdeaService {
       if (v !== undefined && v !== null && v !== '') data[k] = v;
     }
     return this.run(() => addDoc(collection(this.firestore, 'tripIdeas'), data));
+  }
+
+  /** Re-fetch and store the preview for an existing idea (e.g. it was added
+   *  while the preview fetch failed, or before previews worked for its site). */
+  updatePreview(id: string, preview: LinkPreview) {
+    const changes: Record<string, unknown> = {};
+    if (preview.title) changes['title'] = preview.title;
+    if (preview.description) changes['description'] = preview.description;
+    if (preview.image) changes['image'] = preview.image;
+    if (preview.siteName) changes['siteName'] = preview.siteName;
+    if (!Object.keys(changes).length) return Promise.resolve();
+    return this.run(() => updateDoc(doc(this.firestore, 'tripIdeas', id), changes));
   }
 
   deleteIdea(id: string) {
