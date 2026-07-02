@@ -343,6 +343,7 @@ export class OverviewComponent implements OnInit {
       item.category === 'activity'      ? ['🎟️', '#00897b'] :
       item.category === 'accommodation' ? ['🏠', '#5e35b1'] :
       item.category === 'transport'     ? ['🚗', '#1565c0'] :
+      item.category === 'drive'         ? ['🛣️', '#1565c0'] :
       item.category === 'food'          ? ['🍴', '#ef6c00'] : ['📍', '#546e7a'];
     return { title: item.title, icon: this.pinIcon(glyph, color) };
   }
@@ -444,6 +445,7 @@ export class OverviewComponent implements OnInit {
       case 'activity':      return 'local_activity';
       case 'accommodation': return 'hotel';
       case 'transport':     return 'directions_car';
+      case 'drive':         return 'route';
       case 'food':          return 'restaurant';
       default:              return 'place';
     }

@@ -198,10 +198,22 @@
                         </div>
                       }
 
-                      @if (booking.cost) {
+                      @if (booking.cost || booking.pointsCost) {
                         <div class="detail-item cost">
                           <mat-icon>payments</mat-icon>
-                          <strong>{{ booking.cost | currency: (booking.currency ?? 'USD') }}</strong>
+                          <div class="cost-stack">
+                            @if (booking.cost) {
+                              <strong>{{ booking.cost | currency: (booking.currency ?? 'USD') }}</strong>
+                            } @else {
+                              <strong>{{ 0 | currency: (booking.currency ?? 'USD') }}</strong>
+                            }
+                            @if (booking.pointsCost) {
+                              <span class="points-subtext">
+                                + {{ booking.pointsCost | number }} pts
+                                @if (booking.pointsProgram) { ({{ booking.pointsProgram }}) }
+                              </span>
+                            }
+                          </div>
                         </div>
                       }
                     </div>

@@ -44,11 +44,71 @@
       </mat-form-field>
     </div>
 
-    <mat-form-field appearance="outline" class="full-width mt-16">
-      <mat-label>Location</mat-label>
-      <input matInput formControlName="location" placeholder="Address or place name" />
-      <mat-icon matPrefix>place</mat-icon>
-    </mat-form-field>
+    @if (isDrive()) {
+      <!-- Drive leg: where you start, where you end, and stops on the way -->
+      <div class="two-col mt-16">
+        <mat-form-field appearance="outline">
+          <mat-label>From</mat-label>
+          <input matInput formControlName="fromLocation" placeholder="e.g. Lisbon"
+                 (blur)="suggestDriveTitle()" />
+          <mat-icon matPrefix>trip_origin</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>To</mat-label>
+          <input matInput formControlName="toLocation" placeholder="e.g. Porto"
+                 (blur)="suggestDriveTitle()" />
+          <mat-icon matPrefix>sports_score</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <div class="stops-block mt-16" formArrayName="stops">
+        <div class="stops-header">
+          <span class="stops-label"><mat-icon>pin_drop</mat-icon> Stops along the way</span>
+          <button mat-stroked-button type="button" (click)="addStop()">
+            <mat-icon>add</mat-icon> Add Stop
+          </button>
+        </div>
+
+        @for (stop of stops.controls; track stop; let i = $index) {
+          <div class="stop-row" [formGroupName]="i">
+            <mat-form-field appearance="outline" class="stop-name">
+              <mat-label>Stop</mat-label>
+              <input matInput formControlName="name" placeholder="e.g. Fátima — lunch & gas" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="stop-kind">
+              <mat-label>Type</mat-label>
+              <mat-select formControlName="kind">
+                @for (k of stopKinds; track k.value) {
+                  <mat-option [value]="k.value">
+                    <mat-icon>{{ k.icon }}</mat-icon> {{ k.label }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="stop-time">
+              <mat-label>Around</mat-label>
+              <input matInput type="time" formControlName="time" />
+            </mat-form-field>
+
+            <button mat-icon-button type="button" class="stop-remove"
+                    (click)="removeStop(i)" matTooltip="Remove stop" aria-label="Remove stop">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        } @empty {
+          <p class="stops-empty">No stops yet — add gas, food, or sightseeing breaks for the drive.</p>
+        }
+      </div>
+    } @else {
+      <mat-form-field appearance="outline" class="full-width mt-16">
+        <mat-label>Location</mat-label>
+        <input matInput formControlName="location" placeholder="Address or place name" />
+        <mat-icon matPrefix>place</mat-icon>
+      </mat-form-field>
+    }
 
     <div class="two-col mt-16">
       <mat-form-field appearance="outline">

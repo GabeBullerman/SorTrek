@@ -47,6 +47,11 @@ export interface Booking {
   bookingUrl?: string;
   cost?: number;
   currency?: string;
+  /** Reward points spent on this booking (e.g. 200000). Tracked alongside —
+   *  not instead of — the cash cost, so spending stays realistic. */
+  pointsCost?: number;
+  /** Where the points came from, e.g. "American Airlines AAdvantage". */
+  pointsProgram?: string;
   /** For flights this is the departure datetime; for stays, the check-in datetime. Includes time of day. */
   checkIn?: Timestamp;
   /** For flights this is the arrival datetime; for stays, the check-out datetime. Includes time of day. */

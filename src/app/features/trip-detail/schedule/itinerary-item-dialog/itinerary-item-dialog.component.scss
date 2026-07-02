@@ -20,3 +20,52 @@ mat-dialog-content {
   // Side-by-side rows (time fields, cost + type) stack on a narrow screen
   .two-col { grid-template-columns: 1fr; gap: 4px; }
 }
+
+// ── Drive stops editor ───────────────────────────────────────────────────────
+.stops-block {
+  border: 1px solid var(--st-border, #e0e0e0);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.stops-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+
+  .stops-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--st-on-surface-muted);
+    mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--st-primary-soft); }
+  }
+}
+
+.stop-row {
+  display: grid;
+  grid-template-columns: 1fr 130px 110px 40px;
+  gap: 8px;
+  align-items: center;
+
+  .stop-remove { margin-bottom: 18px; }
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr 40px;
+
+    .stop-name  { grid-column: 1; }
+    .stop-remove { grid-column: 2; }
+    .stop-kind  { grid-column: 1 / -1; }
+    .stop-time  { grid-column: 1 / -1; }
+  }
+}
+
+.stops-empty {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  color: var(--st-on-surface-faint, #999);
+}

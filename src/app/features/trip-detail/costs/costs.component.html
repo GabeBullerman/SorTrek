@@ -268,6 +268,16 @@
             <div class="total-amount">
               <app-money [amount]="data.total" [currency]="trip.currency" />
             </div>
+            @if (data.pointsByProgram.length > 0) {
+              <div class="total-points">
+                @for (p of data.pointsByProgram; track p.program) {
+                  <span class="total-points-line">
+                    <mat-icon>stars</mat-icon>
+                    + {{ p.points | number }} {{ p.program }} points
+                  </span>
+                }
+              </div>
+            }
           </div>
           <mat-icon class="total-icon">account_balance_wallet</mat-icon>
         </div>

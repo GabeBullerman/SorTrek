@@ -265,6 +265,21 @@
         </mat-form-field>
       </div>
 
+      <!-- Paid (partly) with reward points: tracked alongside the cash cost -->
+      <div class="two-col mt-16">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Points used (optional)</mat-label>
+          <input matInput type="number" formControlName="pointsCost" placeholder="e.g. 200000" />
+          <mat-icon matPrefix>stars</mat-icon>
+          <mat-hint>Reward miles/points spent on this</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Points program</mat-label>
+          <input matInput formControlName="pointsProgram" placeholder="e.g. AA AAdvantage" />
+        </mat-form-field>
+      </div>
+
       @if (participants().length > 0) {
         <div class="section-divider">
           <span>Group Details</span>

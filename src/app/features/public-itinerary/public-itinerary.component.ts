@@ -48,6 +48,7 @@ interface DayGroup {
 
 const CATEGORY_ICONS: Record<string, string> = {
   transport: 'directions_transit',
+  drive: 'route',
   accommodation: 'hotel',
   activity: 'local_activity',
   food: 'restaurant',

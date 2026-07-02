@@ -62,11 +62,18 @@ interface Settlement {
   amount: number;
 }
 
+interface PointsSpend {
+  program: string;
+  points: number;
+}
+
 interface CostsData {
   total: number;
   breakdown: CostBreakdown[];
   personShares: PersonShare[];
   settlements: Settlement[];
+  /** Reward points spent, grouped by program — shown under the cash total. */
+  pointsByProgram: PointsSpend[];
   participantCount: number;
   expenses: Expense[];
   participants: TripParticipant[];
@@ -344,11 +351,24 @@ export class CostsComponent implements OnInit {
     const personShares = this.buildPersonShares(bookings, items, participants, expenses);
     const settlements = this.buildSettlements(bookings, participants, expenses);
 
+    // Points are tracked alongside cash, never mixed into it: group the
+    // points spends by program so "200,000 AA + 60,000 Chase" reads clearly.
+    const byProgram = new Map<string, number>();
+    for (const b of bookings) {
+      if (!b.pointsCost || b.status === 'cancelled') continue;
+      const program = b.pointsProgram?.trim() || 'Points';
+      byProgram.set(program, (byProgram.get(program) ?? 0) + b.pointsCost);
+    }
+    const pointsByProgram: PointsSpend[] = [...byProgram.entries()]
+      .map(([program, points]) => ({ program, points }))
+      .sort((a, b) => b.points - a.points);
+
     return {
       total,
       breakdown: breakdown.filter(b => b.amount > 0 || b.items.length > 0),
       personShares,
       settlements,
+      pointsByProgram,
       participantCount: participants.length,
       expenses,
       participants,
@@ -430,7 +450,7 @@ export class CostsComponent implements OnInit {
         items: [
           ...bookings.filter(b => b.type === 'car-rental' && b.cost)
             .map(b => ({ name: b.title, cost: b.cost!, currency: b.currency ?? this.trip.currency })),
-          ...items.filter(i => i.category === 'transport' && i.cost)
+          ...items.filter(i => (i.category === 'transport' || i.category === 'drive') && i.cost)
             .map(i => ({ name: i.title, cost: i.cost!, currency: i.currency ?? this.trip.currency })),
           ...expenses.filter(e => e.category === 'transport')
             .map(e => this.expenseItem(e)),

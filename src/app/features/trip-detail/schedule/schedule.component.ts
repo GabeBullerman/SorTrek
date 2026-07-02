@@ -262,7 +262,7 @@ export class ScheduleComponent implements OnInit {
   hasTransport(day: DayGroup): boolean {
     // A transport activity, a flight/car-rental booking on this day, OR a
     // multi-day car rental whose period covers this day, all count.
-    return day.items.some(i => i.category === 'transport')
+    return day.items.some(i => i.category === 'transport' || i.category === 'drive')
       || day.bookingEntries.some(e => e.booking.type === 'flight' || e.booking.type === 'car-rental')
       || this.bookings().some(b => b.type === 'car-rental' && b.status !== 'cancelled'
             && this.dayWithinBooking(day.date, b));
@@ -289,10 +289,18 @@ export class ScheduleComponent implements OnInit {
 
   categoryIcon(cat: string): string {
     const icons: Record<string, string> = {
-      transport: 'directions_car', accommodation: 'hotel',
+      transport: 'directions_car', drive: 'route', accommodation: 'hotel',
       activity: 'local_activity', food: 'restaurant', other: 'more_horiz',
     };
     return icons[cat] ?? 'circle';
+  }
+
+  stopIcon(kind: string): string {
+    const icons: Record<string, string> = {
+      gas: 'local_gas_station', food: 'restaurant', sights: 'photo_camera',
+      rest: 'airline_seat_recline_normal', other: 'pin_drop',
+    };
+    return icons[kind] ?? 'pin_drop';
   }
 
   private groupByDay(items: ItineraryItem[], bookings: Booking[]): DayGroup[] {

@@ -785,3 +785,41 @@
 .item-notes span,
 .plan-desc,
 .plan-title { overflow-wrap: anywhere; }
+
+// ── Drive route + stops on the timeline ─────────────────────────────────────
+.drive-route {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 2px 0 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--st-on-surface);
+
+  mat-icon { font-size: 15px; width: 15px; height: 15px; color: var(--st-primary-soft); }
+  .route-arrow { color: var(--st-on-surface-faint); }
+  span { overflow-wrap: anywhere; }
+}
+
+.drive-stops {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.drive-stop-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: var(--st-surface-variant, rgba(0, 0, 0, 0.05));
+  border: 1px solid var(--st-border, #e0e0e0);
+  font-size: 0.78rem;
+  color: var(--st-on-surface-muted);
+
+  mat-icon { font-size: 14px; width: 14px; height: 14px; color: var(--st-primary-soft); }
+  .stop-time { color: var(--st-on-surface-faint); }
+}

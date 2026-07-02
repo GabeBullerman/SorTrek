@@ -207,6 +207,28 @@
 
                   <h3 class="item-title">{{ item.title }}</h3>
 
+                  @if (item.category === 'drive' && (item.fromLocation || item.toLocation)) {
+                    <div class="drive-route">
+                      <mat-icon>trip_origin</mat-icon>
+                      <span>{{ item.fromLocation || '?' }}</span>
+                      <mat-icon class="route-arrow">arrow_forward</mat-icon>
+                      <mat-icon>sports_score</mat-icon>
+                      <span>{{ item.toLocation || '?' }}</span>
+                    </div>
+                  }
+
+                  @if (item.stops?.length) {
+                    <div class="drive-stops">
+                      @for (stop of item.stops; track $index) {
+                        <span class="drive-stop-chip" [matTooltip]="stop.notes || ''">
+                          <mat-icon>{{ stopIcon(stop.kind) }}</mat-icon>
+                          {{ stop.name }}
+                          @if (stop.time) { <span class="stop-time">~{{ stop.time }}</span> }
+                        </span>
+                      }
+                    </div>
+                  }
+
                   <div class="item-meta">
                     @if (item.proposed) {
                       <mat-chip class="proposed-chip">

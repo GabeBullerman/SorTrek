@@ -428,3 +428,16 @@ mat-accordion {
 
   &:hover { text-decoration: underline; }
 }
+
+// Cash cost with reward-points subtext beneath it
+.cost-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.points-subtext {
+  font-size: 0.76rem;
+  color: var(--st-on-surface-muted);
+  font-weight: 500;
+}

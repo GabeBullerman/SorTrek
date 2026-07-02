@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, inject, signal, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AsyncPipe, DatePipe, CurrencyPipe, TitleCasePipe } from '@angular/common';
+import { AsyncPipe, DatePipe, CurrencyPipe, TitleCasePipe, DecimalPipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -47,7 +47,7 @@ interface BookingsData {
   selector: 'app-bookings',
   standalone: true,
   imports: [
-    AsyncPipe, DatePipe, CurrencyPipe, TitleCasePipe,
+    AsyncPipe, DatePipe, CurrencyPipe, TitleCasePipe, DecimalPipe,
     MatButtonModule, MatIconModule, MatMenuModule,
     MatTooltipModule, MatProgressSpinnerModule, MatExpansionModule, MatChipsModule,
     MatFormFieldModule, MatInputModule,
