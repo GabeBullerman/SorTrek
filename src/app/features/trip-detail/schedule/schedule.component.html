@@ -240,6 +240,11 @@
                     @if (item.cost) {
                       <span class="item-cost"><mat-icon>attach_money</mat-icon>{{ item.cost | number:'1.2-2' }} {{ item.currency }} <span class="cost-type">{{ item.costType === 'per-person' ? '/ person' : 'total' }}</span></span>
                     }
+                    @if (item.link) {
+                      <a class="item-link" [href]="item.link" target="_blank" rel="noopener noreferrer">
+                        <mat-icon>open_in_new</mat-icon>Link
+                      </a>
+                    }
                   </div>
 
                   @if (item.description) {

@@ -553,6 +553,7 @@ export class ScheduleComponent implements OnInit {
       ...(s.time       ? { startTime: s.time }         : {}),
       ...(s.location   ? { location: s.location }       : {}),
       ...(s.description ? { description: s.description } : {}),
+      ...(s.sourceUrl  ? { link: s.sourceUrl }          : {}),
       // Non-editors can only create proposed items (Firestore rules enforce this).
       ...(this.canEditSchedule()
         ? {}

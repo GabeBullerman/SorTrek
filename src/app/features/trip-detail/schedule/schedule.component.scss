@@ -761,3 +761,18 @@
     color: #fff;
   }
 }
+
+// Activity link chip in the timeline meta row
+.item-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--st-primary);
+  text-decoration: none;
+
+  mat-icon { font-size: 15px; width: 15px; height: 15px; }
+
+  &:hover { text-decoration: underline; }
+}

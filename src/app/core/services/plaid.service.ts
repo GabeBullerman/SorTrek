@@ -26,14 +26,15 @@ export class PlaidService {
 
   /** Create a Link token (used by Plaid Link SDK to open the bank connection UI). */
   createLinkToken(): Observable<string> {
-    return this.http.post<{ link_token: string }>('/api/plaid-link', {
+    return this.http.post<{ link_token: string }>('/api/plaid', {
+      action: 'link',
       userId: this.auth.currentUser?.uid ?? 'anonymous',
     }).pipe(map(r => r.link_token));
   }
 
   /** Exchange the public token Plaid Link returns for a persistent access token, save to Firestore. */
   exchangeAndSave(publicToken: string): Observable<string> {
-    return this.http.post<{ accessToken: string }>('/api/plaid-exchange', { publicToken }).pipe(
+    return this.http.post<{ accessToken: string }>('/api/plaid', { action: 'exchange', publicToken }).pipe(
       switchMap(({ accessToken }) => {
         const uid = this.auth.currentUser?.uid;
         if (!uid) return of(accessToken);
@@ -53,7 +54,8 @@ export class PlaidService {
       switchMap(snap => {
         const token = snap.data()?.['accessToken'];
         if (!token) return of([]);
-        return this.http.post<{ transactions: PlaidTransaction[] }>('/api/plaid-transactions', {
+        return this.http.post<{ transactions: PlaidTransaction[] }>('/api/plaid', {
+          action: 'transactions',
           accessToken: token,
           startDate,
           endDate,

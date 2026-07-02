@@ -85,6 +85,13 @@
       <textarea matInput formControlName="notes" rows="2"
                 placeholder="Tips, reminders, packing list..."></textarea>
     </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width mt-16">
+      <mat-label>Link (optional)</mat-label>
+      <input matInput formControlName="link" type="url" placeholder="https://..." />
+      <mat-icon matPrefix>link</mat-icon>
+      <mat-hint>Tickets, tour page, or reservation — shown on the activity</mat-hint>
+    </mat-form-field>
   </form>
 </mat-dialog-content>
 

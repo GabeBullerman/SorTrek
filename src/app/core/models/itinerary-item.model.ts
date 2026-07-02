@@ -19,6 +19,8 @@ export interface ItineraryItem {
   /** Whether `cost` is the total or a per-person amount. */
   costType?: 'total' | 'per-person';
   notes?: string;
+  /** Optional source/booking URL (tour page, tickets, reservation, AI source). */
+  link?: string;
   order: number;
   /** True while this item is awaiting owner approval — created by a member who
    *  doesn't have direct schedule-edit rights. Approved items omit this/false. */

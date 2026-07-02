@@ -69,6 +69,7 @@ export class ItineraryItemDialogComponent {
     costType: [this.data.item?.costType ?? 'total' as 'total' | 'per-person'],
     description: [this.data.item?.description ?? ''],
     notes: [this.data.item?.notes ?? ''],
+    link: [this.data.item?.link ?? ''],
   });
 
   submit() {
@@ -92,6 +93,7 @@ export class ItineraryItemDialogComponent {
       costType: v.cost ? (v.costType ?? 'total') : undefined,
       description: v.description ?? undefined,
       notes: v.notes ?? undefined,
+      link: v.link?.trim() || undefined,
       order: this.data.item?.order ?? this.data.existingCount,
       // Editing existing items is unaffected; only new items can be proposals.
       ...(!this.isEdit && this.data.propose
