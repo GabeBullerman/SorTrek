@@ -51,7 +51,7 @@
       <button mat-icon-button [matMenuTriggerFor]="converterMenu" matTooltip="Currency converter" aria-label="Currency converter">
         <mat-icon>currency_exchange</mat-icon>
       </button>
-      <mat-menu #converterMenu xPosition="before">
+      <mat-menu #converterMenu xPosition="before" class="converter-menu-panel">
         <div (click)="$event.stopPropagation()">
           <app-currency-converter />
         </div>
