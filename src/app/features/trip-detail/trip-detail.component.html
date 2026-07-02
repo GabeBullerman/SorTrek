@@ -151,6 +151,10 @@
           @defer (when true) { <app-ai-assistant [trip]="trip" /> }
           @placeholder { <div class="tab-loading"><mat-spinner diameter="32"></mat-spinner></div> }
         }
+        @case (10) {
+          @defer (when true) { <app-ideas [tripId]="id" [trip]="trip" /> }
+          @placeholder { <div class="tab-loading"><mat-spinner diameter="32"></mat-spinner></div> }
+        }
       }
     </div>
 

@@ -118,6 +118,16 @@ service cloud.firestore {
                     && isTripMember(request.resource.data.tripId);
     }
 
+    match /tripIdeas/{ideaId} {
+      allow read: if isTripMember(resource.data.tripId);
+      allow create: if isTripMember(request.resource.data.tripId)
+                    && request.resource.data.createdBy == request.auth.uid;
+      // The person who pinned it, or any owner, can remove an idea.
+      allow delete: if isTripMember(resource.data.tripId)
+                    && (resource.data.createdBy == request.auth.uid
+                        || isOwnerOfTrip(tripData(resource.data.tripId)));
+    }
+
     match /tripTodos/{todoId} {
       allow read, delete: if isTripMember(resource.data.tripId);
       allow create: if isTripMember(request.resource.data.tripId);

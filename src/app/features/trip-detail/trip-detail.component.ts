@@ -29,6 +29,7 @@ import { PackingComponent } from './packing/packing.component';
 import { AiAssistantComponent } from './ai-assistant/ai-assistant.component';
 import { TransportComponent } from './transport/transport.component';
 import { DocumentsComponent } from './documents/documents.component';
+import { IdeasComponent } from './ideas/ideas.component';
 import { from, take, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { localDayNum, utcDayNum } from '../../core/util/trip-date.util';
@@ -48,7 +49,7 @@ export interface TabDef {
     // so Angular code-splits each into its own lazy chunk automatically.
     ScheduleComponent, BookingsComponent, PhotosComponent, CostsComponent,
     OverviewComponent, PeopleComponent, PackingComponent, AiAssistantComponent,
-    TransportComponent, DocumentsComponent,
+    TransportComponent, DocumentsComponent, IdeasComponent,
   ],
   templateUrl: './trip-detail.component.html',
   styleUrl: './trip-detail.component.scss',
@@ -102,11 +103,12 @@ export class TripDetailComponent implements OnInit {
     { label: 'Packing',    icon: 'luggage' },
     { label: 'Documents',  icon: 'folder_open' },
     { label: 'AI',         icon: 'auto_awesome' },
+    { label: 'Ideas',      icon: 'lightbulb' },
   ];
 
   /** Tab indexes that fold into the "More" menu on narrow screens
-   *  (Transport, Photos, People, Documents, AI — the less-daily tabs). */
-  private readonly overflowTabIdx = new Set([2, 3, 6, 8, 9]);
+   *  (Transport, Photos, People, Documents, AI, Ideas — the less-daily tabs). */
+  private readonly overflowTabIdx = new Set([2, 3, 6, 8, 9, 10]);
 
   isOverflowTab(i: number): boolean {
     return this.overflowTabIdx.has(i);

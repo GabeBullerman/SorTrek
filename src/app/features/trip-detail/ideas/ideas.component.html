@@ -1,0 +1,80 @@
+<div class="ideas-container">
+
+  <div class="ideas-header">
+    <div>
+      <h2>Ideas &amp; Inspiration</h2>
+      <p class="ideas-sub">Drop links you find — TikToks, reels, Pinterest pins, articles — and plan from them together.</p>
+    </div>
+  </div>
+
+  <!-- Add form -->
+  <form class="idea-add" (submit)="$event.preventDefault(); add()">
+    <input class="idea-url" type="text" placeholder="Paste a link… (TikTok, Pinterest, YouTube, article)"
+           [value]="newUrl()" (input)="newUrl.set($any($event.target).value)" [disabled]="adding()">
+    <input class="idea-note" type="text" placeholder="Why it's cool (optional)"
+           [value]="newNote()" (input)="newNote.set($any($event.target).value)" [disabled]="adding()">
+    <button mat-flat-button color="primary" type="submit" [disabled]="!newUrl().trim() || adding()">
+      @if (adding()) { <mat-spinner diameter="18"></mat-spinner> }
+      @else { <mat-icon>add</mat-icon> }
+      Add Idea
+    </button>
+  </form>
+
+  @if (loading()) {
+    <div class="ideas-loading"><mat-spinner diameter="36"></mat-spinner></div>
+  } @else if (sortedIdeas().length === 0) {
+    <div class="ideas-empty">
+      <mat-icon>lightbulb</mat-icon>
+      <h3>No ideas yet</h3>
+      <p>Saw something perfect for {{ trip.destination }}? Paste the link above and everyone can see it.</p>
+    </div>
+  } @else {
+    <div class="ideas-grid">
+      @for (idea of sortedIdeas(); track idea.id) {
+        <div class="idea-card">
+          <a class="idea-link" [href]="idea.url" target="_blank" rel="noopener noreferrer">
+            @if (idea.image) {
+              <img class="idea-image" [src]="idea.image" alt="" loading="lazy"
+                   referrerpolicy="no-referrer" (error)="onImgError($event)">
+            }
+            <div class="idea-body">
+              <div class="idea-site">
+                <img class="idea-favicon" [src]="favicon(idea)" alt="" referrerpolicy="no-referrer"
+                     (error)="onImgError($event)">
+                <span>{{ idea.siteName || host(idea) }}</span>
+                <mat-icon class="idea-open">open_in_new</mat-icon>
+              </div>
+              @if (idea.title) {
+                <div class="idea-title">{{ idea.title }}</div>
+              } @else {
+                <div class="idea-title idea-title-url">{{ host(idea) }}</div>
+              }
+              @if (idea.description) {
+                <div class="idea-desc">{{ idea.description }}</div>
+              }
+            </div>
+          </a>
+
+          <div class="idea-footer">
+            @if (idea.note) {
+              <div class="idea-note-text">
+                <mat-icon>format_quote</mat-icon>
+                <span>{{ idea.note }}</span>
+              </div>
+            }
+            <div class="idea-meta">
+              <span class="idea-by">Added by {{ idea.createdBy === currentUserId ? 'you' : idea.creatorName }}</span>
+              @if (canDelete(idea)) {
+                <button mat-icon-button class="idea-delete" (click)="deleteIdea(idea)"
+                        matTooltip="Remove idea" aria-label="Remove idea">
+                  <mat-icon>close</mat-icon>
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+</div>

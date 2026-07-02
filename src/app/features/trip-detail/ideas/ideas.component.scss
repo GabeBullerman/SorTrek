@@ -1,0 +1,204 @@
+.ideas-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.ideas-header {
+  margin-bottom: 16px;
+
+  h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--st-primary);
+  }
+
+  .ideas-sub {
+    margin: 4px 0 0;
+    font-size: 0.85rem;
+    color: var(--st-on-surface-muted);
+  }
+}
+
+/* ── Add form ────────────────────────────────────────────────────────────── */
+.idea-add {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+
+  .idea-url  { flex: 2; }
+  .idea-note { flex: 1.4; }
+
+  input {
+    min-width: 0;
+    padding: 10px 14px;
+    border: 1px solid var(--st-border, #ddd);
+    border-radius: 10px;
+    background: var(--st-surface);
+    color: inherit;
+    font: inherit;
+    font-size: 0.88rem;
+
+    &:focus { outline: 2px solid var(--st-primary); outline-offset: -1px; border-color: transparent; }
+  }
+
+  button {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+
+    .idea-url, .idea-note { flex: none; width: 100%; box-sizing: border-box; }
+    button { align-self: stretch; min-height: 44px; }
+  }
+}
+
+.ideas-loading {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+}
+
+.ideas-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 48px 20px;
+  color: var(--st-on-surface-faint);
+  text-align: center;
+
+  mat-icon { font-size: 40px; width: 40px; height: 40px; }
+  h3 { margin: 4px 0 0; color: var(--st-on-surface-muted); }
+  p  { margin: 0; max-width: 420px; font-size: 0.88rem; }
+}
+
+/* ── Idea cards ──────────────────────────────────────────────────────────── */
+.ideas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 14px;
+}
+
+.idea-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--st-surface);
+  border: 1px solid var(--st-border, #e0e0e0);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: box-shadow 0.15s, transform 0.15s;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+  }
+}
+
+.idea-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.idea-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  background: var(--st-surface-variant, rgba(0, 0, 0, 0.05));
+}
+
+.idea-body {
+  padding: 10px 12px 8px;
+}
+
+.idea-site {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--st-on-surface-faint);
+  margin-bottom: 4px;
+
+  .idea-favicon { width: 14px; height: 14px; border-radius: 3px; }
+  .idea-open { font-size: 13px; width: 13px; height: 13px; margin-left: auto; }
+}
+
+.idea-title {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--st-on-surface);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.idea-title-url { color: var(--st-primary); }
+
+.idea-desc {
+  margin-top: 3px;
+  font-size: 0.78rem;
+  color: var(--st-on-surface-muted);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.idea-footer {
+  margin-top: auto;
+  padding: 0 12px 8px;
+}
+
+.idea-note-text {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 6px 8px;
+  margin-bottom: 4px;
+  background: var(--st-primary-tint-bg, rgba(63, 81, 181, 0.08));
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: var(--st-on-surface);
+  line-height: 1.4;
+
+  mat-icon {
+    font-size: 14px; width: 14px; height: 14px;
+    color: var(--st-primary-soft);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  span { overflow-wrap: anywhere; }
+}
+
+.idea-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  .idea-by {
+    font-size: 0.72rem;
+    color: var(--st-on-surface-faint);
+  }
+
+  .idea-delete {
+    width: 28px; height: 28px; line-height: 28px;
+    opacity: 0.55;
+    mat-icon { font-size: 15px; width: 15px; height: 15px; }
+    &:hover { opacity: 1; }
+  }
+}
