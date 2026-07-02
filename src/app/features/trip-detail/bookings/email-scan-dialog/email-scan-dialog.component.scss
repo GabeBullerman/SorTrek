@@ -204,3 +204,25 @@ mat-dialog-actions {
   padding: 12px 24px 16px !important;
   gap: 8px;
 }
+
+// ── Paste-in email box ───────────────────────────────────────────────────────
+.paste-box {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 4px;
+  padding: 12px;
+  border: 1px solid var(--st-border, #ddd);
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  resize: vertical;
+
+  &:focus {
+    outline: 2px solid var(--st-primary);
+    outline-offset: -1px;
+    border-color: transparent;
+  }
+}

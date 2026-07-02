@@ -119,6 +119,9 @@ export class ScheduleComponent implements OnInit {
 
   readonly selectedDay = computed(() => this.allDays()[this.selectedDayIndex()] ?? null);
 
+  /** One-shot: jump to today's tab the first time days load for an ongoing trip. */
+  private focusedToday = false;
+
   ngOnInit() {
     combineLatest([
       this.itineraryService.getItems(this.tripId).pipe(catchError(() => of([] as ItineraryItem[]))),
@@ -127,6 +130,7 @@ export class ScheduleComponent implements OnInit {
       .subscribe(([items, bookings]) => {
         this.bookings.set(bookings);
         this.allDays.set(this.groupByDay(items, bookings));
+        this.focusToday();
       });
 
     // Resolve proposer names for the "Proposed by …" chip.
@@ -161,9 +165,76 @@ export class ScheduleComponent implements OnInit {
     return name ? `Proposed by ${name}` : 'Proposed';
   }
 
+  /**
+   * When the trip is in progress, land on today's tab (once, on first load)
+   * so mid-trip the schedule opens where the family actually is.
+   */
+  private focusToday() {
+    if (this.focusedToday) return;
+    const days = this.allDays();
+    if (!days.length) return;
+    this.focusedToday = true;
+    const today = localDayNum(new Date());
+    const idx = days.findIndex(d => localDayNum(d.date) === today);
+    if (idx > 0) this.selectDay(idx);
+  }
+
+  /** True while this day is the real-world today (drives the "today" marker). */
+  isToday(day: DayGroup): boolean {
+    return localDayNum(day.date) === localDayNum(new Date());
+  }
+
+  /**
+   * Highlight the activity happening right now on today's timeline — or, if
+   * nothing is in progress, the next one coming up.
+   */
+  isCurrentItem(day: DayGroup, item: ItineraryItem): boolean {
+    if (!this.isToday(day) || item.proposed) return false;
+    const now = new Date();
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    const toMin = (t?: string) => {
+      if (!t) return null;
+      const [h, m] = t.split(':').map(Number);
+      return h * 60 + (m || 0);
+    };
+    const timed = day.items.filter(i => !i.proposed && toMin(i.startTime) !== null);
+    // In progress?
+    const current = timed.find(i => {
+      const s = toMin(i.startTime)!;
+      const e = toMin(i.endTime) ?? s + 60;
+      return nowMin >= s && nowMin < e;
+    });
+    if (current) return current.id === item.id;
+    // Otherwise the next upcoming timed item.
+    const next = timed.filter(i => toMin(i.startTime)! >= nowMin)
+      .sort((a, b) => toMin(a.startTime)! - toMin(b.startTime)!)[0];
+    return next?.id === item.id;
+  }
+
+  // ── Voting on proposals ───────────────────────────────────
+
+  myVote(item: ItineraryItem): 'up' | 'down' | null {
+    const uid = this.auth.currentUser?.uid;
+    return (uid && item.votes?.[uid]) || null;
+  }
+
+  voteCount(item: ItineraryItem, dir: 'up' | 'down'): number {
+    return Object.values(item.votes ?? {}).filter(v => v === dir).length;
+  }
+
+  /** Toggle the caller's vote: tapping the same direction again retracts it. */
+  vote(item: ItineraryItem, dir: 'up' | 'down') {
+    const uid = this.auth.currentUser?.uid;
+    if (!uid || !item.id) return;
+    const next = this.myVote(item) === dir ? null : dir;
+    from(this.itineraryService.setVote(item.id, uid, next)).subscribe({
+      error: () => this.snackBar.open('Could not save your vote. Please try again.', undefined, { duration: 3000 }),
+    });
+  }
+
   /** Approve a proposed item (editors only) — clears the proposed flag. */
   approveItem(item: ItineraryItem) {
-    from(this.itineraryService.updateItem(item.id!, { proposed: false })).subscribe({
+    from(this.itineraryService.approveItem(item.id!)).subscribe({
       next: () => this.snackBar.open(`"${item.title}" approved`, undefined, { duration: 2000 }),
       error: () => this.snackBar.open('Could not approve. Please try again.', undefined, { duration: 3000 }),
     });

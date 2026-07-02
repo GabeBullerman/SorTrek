@@ -31,9 +31,14 @@
         <mat-icon>confirmation_number</mat-icon>
         <h3>No bookings yet</h3>
         <p>Add flights, hotels, Airbnbs, and other bookings here</p>
-        <button mat-flat-button color="primary" (click)="openAddBooking()">
-          <mat-icon>add</mat-icon> Add Booking
-        </button>
+        <div class="empty-actions">
+          <button mat-flat-button color="primary" (click)="openAddBooking()">
+            <mat-icon>add</mat-icon> Add Booking
+          </button>
+          <button mat-stroked-button (click)="openEmailScan()">
+            <mat-icon>mark_email_read</mat-icon> Paste a confirmation email
+          </button>
+        </div>
       </div>
     } @else {
       <div class="search-field-wrap">

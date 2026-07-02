@@ -177,6 +177,31 @@
   }
 }
 
+// The "More" trigger only exists on phones — desktop shows every tab.
+.tab-link.more-tab {
+  display: none;
+}
+
+@media (max-width: 639px) {
+  // Fold the secondary tabs into the More menu; 5 primary + More = 6 buttons,
+  // which fit a phone width with no horizontal scrolling at all.
+  .tab-link.overflow-tab { display: none; }
+  .tab-link.more-tab     { display: flex; }
+
+  .trip-tab-nav .tab-link { flex: 1 1 0; }
+
+  // No scrolling left to hint at — hide the right-edge fade.
+  .trip-tab-nav-wrapper::after { display: none; }
+}
+
+// Highlight the currently-open tab inside the More menu.
+::ng-deep .more-item-active {
+  color: var(--st-primary) !important;
+  font-weight: 600;
+
+  mat-icon { color: var(--st-primary) !important; }
+}
+
 .tab-body {
   padding: 24px;
   background: var(--st-bg);

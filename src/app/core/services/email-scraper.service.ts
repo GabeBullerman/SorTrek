@@ -37,6 +37,21 @@ export class EmailScraperService {
     );
   }
 
+  /**
+   * Parses a confirmation email the user pasted in. No Gmail access needed —
+   * this is the primary import path until Google verifies the gmail.readonly
+   * scope for this app.
+   */
+  parsePastedEmail(emailText: string, trip: Trip): Observable<ScannedBooking[]> {
+    return this.http.post<{ bookings: ScannedBooking[] }>('/api/email-scraper', {
+      emailText,
+      tripDestination: trip.destination,
+    }).pipe(
+      map(r => r.bookings ?? []),
+      catchError(() => of([] as ScannedBooking[]))
+    );
+  }
+
   /** Fetches Gmail messages matching booking senders and parses them with AI. */
   scanEmails(accessToken: string, trip: Trip): Observable<ScannedBooking[]> {
     return this.http.post<{ bookings: ScannedBooking[] }>('/api/email-scraper', {

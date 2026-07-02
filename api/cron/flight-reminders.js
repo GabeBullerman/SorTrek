@@ -39,6 +39,37 @@ module.exports = async (req, res) => {
     });
 
     const tokenCache = new Map(); // uid -> token|null
+
+    /** FCM token for a member, or null if they have none / turned reminders off. */
+    async function tokenFor(uid) {
+      if (tokenCache.has(uid)) return tokenCache.get(uid);
+      let token = null;
+      const profile = await db.collection('users').doc(uid).get();
+      if (profile.exists && profile.data().remindersEnabled !== false) {
+        const u = await db.collection('users').doc(uid).collection('private').doc('push').get();
+        token = u.exists ? (u.data().fcmToken ?? null) : null;
+      }
+      tokenCache.set(uid, token);
+      return token;
+    }
+
+    function memberUidsOf(trip) {
+      return new Set([
+        trip.userId,
+        ...(trip.ownerIds ?? []),
+        ...(trip.collaboratorIds ?? []),
+      ].filter(Boolean));
+    }
+
+    async function tokensFor(trip) {
+      const tokens = [];
+      for (const uid of memberUidsOf(trip)) {
+        const t = await tokenFor(uid);
+        if (t) tokens.push(t);
+      }
+      return tokens;
+    }
+
     let sent = 0;
 
     for (const docSnap of flights) {
@@ -48,21 +79,7 @@ module.exports = async (req, res) => {
       if (!tripSnap.exists) continue;
       const trip = tripSnap.data();
 
-      const memberUids = new Set([
-        trip.userId,
-        ...(trip.ownerIds ?? []),
-        ...(trip.collaboratorIds ?? []),
-      ].filter(Boolean));
-
-      const tokens = [];
-      for (const uid of memberUids) {
-        if (!tokenCache.has(uid)) {
-          const u = await db.collection('users').doc(uid).collection('private').doc('push').get();
-          tokenCache.set(uid, u.exists ? (u.data().fcmToken ?? null) : null);
-        }
-        const t = tokenCache.get(uid);
-        if (t) tokens.push(t);
-      }
+      const tokens = await tokensFor(trip);
 
       // No one has notifications on — leave it unmarked so it can fire on a
       // later run (still within the window) once someone enables them.
@@ -87,7 +104,45 @@ module.exports = async (req, res) => {
       await docSnap.ref.update({ checkInReminderSent: true });
     }
 
-    return res.status(200).json({ ok: true, flightsConsidered: flights.length, notificationsSent: sent });
+    // ── Trip-start reminders ("starts tomorrow — time to pack!") ──────────────
+    // Covers trips with no flights booked, which the block above never touches.
+    const tripSnapshots = await db.collection('trips')
+      .where('startDate', '>=', admin.firestore.Timestamp.fromMillis(now))
+      .where('startDate', '<=', admin.firestore.Timestamp.fromMillis(windowEnd))
+      .get();
+
+    let tripReminders = 0;
+    for (const tripDoc of tripSnapshots.docs) {
+      const trip = tripDoc.data();
+      if (trip.startReminderSent) continue;
+
+      const tokens = await tokensFor(trip);
+      if (tokens.length === 0) continue;
+
+      const start = typeof trip.startDate?.toDate === 'function' ? trip.startDate.toDate() : null;
+      const when = start ? start.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' }) : 'soon';
+      const resp = await messaging.sendEachForMulticast({
+        tokens,
+        notification: {
+          title: `${trip.name ?? 'Your trip'} starts ${when}! 🧳`,
+          body: `${trip.destination ? trip.destination + ' — ' : ''}check the schedule and finish packing.`,
+        },
+        webpush: {
+          notification: { icon: '/ClearLogoWhiteCircle.png', badge: '/ClearLogoWhiteCircle.png' },
+          fcmOptions: { link: 'https://sortrek.vercel.app/' },
+        },
+      });
+      tripReminders += resp.successCount;
+
+      await tripDoc.ref.update({ startReminderSent: true });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      flightsConsidered: flights.length,
+      notificationsSent: sent,
+      tripStartReminders: tripReminders,
+    });
   } catch (err) {
     console.error('[flight-reminders]', err?.message ?? err);
     return res.status(500).json({ error: err?.message ?? 'Failed' });

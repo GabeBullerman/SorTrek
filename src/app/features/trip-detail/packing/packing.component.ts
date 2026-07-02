@@ -16,6 +16,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { from, forkJoin } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { PackingService } from '../../../core/services/packing.service';
+import { TodoService } from '../../../core/services/todo.service';
+import { TripTodo } from '../../../core/models/trip-todo.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { UserService } from '../../../core/services/user.service';
 import { UserPreferencesService } from '../../../core/services/user-preferences.service';
@@ -55,6 +57,7 @@ export class PackingComponent implements OnInit {
   @Input() trip!: Trip;
 
   private packingService = inject(PackingService);
+  private todoService = inject(TodoService);
   private auth = inject(AuthService);
   private userService = inject(UserService);
   private participantService = inject(ParticipantService);
@@ -92,6 +95,11 @@ export class PackingComponent implements OnInit {
   };
 
   items = signal<PackingItem[]>([]);
+  todos = signal<TripTodo[]>([]);
+  /** Expanded by default on wide screens where the panel sits alongside the list. */
+  todosExpanded = signal(typeof window !== 'undefined' && window.innerWidth > 900);
+  newTodoTitle = signal('');
+  newTodoAssignee = signal<string | null>(null);
   participants = signal<TripParticipant[]>([]);
   memberNames = signal<Record<string, string>>({});
   showAddForm = signal(false);
@@ -167,10 +175,22 @@ export class PackingComponent implements OnInit {
     this.totalItems() > 0 ? Math.round((this.totalPacked() / this.totalItems()) * 100) : 0
   );
 
+  /** Open items first (oldest first), finished ones at the bottom. */
+  readonly sortedTodos = computed(() =>
+    [...this.todos()].sort((a, b) =>
+      Number(a.done) - Number(b.done)
+      || (a.createdAt?.seconds ?? 0) - (b.createdAt?.seconds ?? 0)
+    )
+  );
+  readonly openTodoCount = computed(() => this.todos().filter(t => !t.done).length);
+
   ngOnInit() {
     this.packingService.getItems(this.tripId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(items => this.items.set(items));
+    this.todoService.getTodos(this.tripId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(todos => this.todos.set(todos));
     this.participantService.getParticipants(this.tripId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(p => this.participants.set(p));
@@ -390,6 +410,44 @@ export class PackingComponent implements OnInit {
   participantName(id: string | null | undefined): string {
     if (!id) return 'Everyone';
     return this.participants().find(p => p.id === id)?.name ?? 'Unknown';
+  }
+
+  // ── Trip to-dos ───────────────────────────────────────────
+
+  addTodo() {
+    const title = this.newTodoTitle().trim();
+    if (!title) return;
+    from(this.todoService.createTodo({
+      tripId: this.tripId,
+      title,
+      assignedTo: this.newTodoAssignee(),
+      done: false,
+      createdBy: this.currentUserId,
+    })).subscribe({
+      next: () => {
+        this.newTodoTitle.set('');
+        this.newTodoAssignee.set(null);
+      },
+      error: () => this.snackBar.open('Could not add the to-do. Please try again.', undefined, { duration: 3000 }),
+    });
+  }
+
+  toggleTodo(todo: TripTodo) {
+    const next = !todo.done;
+    // Optimistic flip so the row responds instantly.
+    this.todos.update(list => list.map(t => t.id === todo.id ? { ...t, done: next } : t));
+    from(this.todoService.setDone(todo.id!, next)).subscribe({
+      error: () => {
+        this.todos.update(list => list.map(t => t.id === todo.id ? { ...t, done: !next } : t));
+        this.snackBar.open('Could not save that change. Please try again.', undefined, { duration: 3000 });
+      },
+    });
+  }
+
+  deleteTodo(todo: TripTodo) {
+    from(this.todoService.deleteTodo(todo.id!)).subscribe({
+      error: () => this.snackBar.open('Could not remove the to-do. Please try again.', undefined, { duration: 3000 }),
+    });
   }
 
   categoryMeta(value: PackingCategory): CategoryMeta {

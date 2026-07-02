@@ -195,3 +195,82 @@
   color: var(--st-on-surface-muted);
   line-height: 1.45;
 }
+
+/* ── Avatar upload ────────────────────────────────────────────────────────── */
+.avatar-btn {
+  position: relative;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &:disabled { cursor: default; opacity: 0.7; }
+}
+
+.avatar-img {
+  object-fit: cover;
+  display: block;
+}
+
+.avatar-edit {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--st-surface);
+  border: 1px solid var(--st-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+
+  mat-icon { font-size: 15px; width: 15px; height: 15px; color: var(--st-on-surface-muted); }
+}
+
+/* ── Security / danger zone ──────────────────────────────────────────────── */
+.pw-error {
+  color: #c62828;
+  font-size: 0.85rem;
+  margin: 0 0 4px;
+}
+
+.danger-divider { margin: 18px 0 4px; }
+
+.danger-zone {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 12px;
+}
+
+.danger-name {
+  color: #c62828;
+  mat-icon { color: #c62828; }
+}
+
+.danger-btn {
+  color: #c62828;
+  border-color: rgba(198, 40, 40, 0.5);
+  flex-shrink: 0;
+}
+
+/* ── Legal footer ─────────────────────────────────────────────────────────── */
+.legal-links {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 8px 0 24px;
+  font-size: 0.8rem;
+  color: var(--st-on-surface-faint);
+
+  a {
+    color: var(--st-on-surface-muted);
+    text-decoration: none;
+    &:hover { text-decoration: underline; }
+  }
+}

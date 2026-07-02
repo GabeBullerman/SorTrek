@@ -317,6 +317,34 @@
         </mat-card>
       }
 
+      <!-- Settle Up: fewest transfers to make everyone even -->
+      @if (data.settlements.length > 0) {
+        <mat-card class="settle-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>swap_horiz</mat-icon>
+              Settle Up
+            </mat-card-title>
+            <mat-card-subtitle>The fewest payments that make everyone even</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="settle-rows">
+              @for (s of data.settlements; track $index) {
+                <div class="settle-row">
+                  <span class="settle-from">{{ s.fromName }}</span>
+                  <span class="settle-arrow">
+                    <mat-icon>arrow_forward</mat-icon>
+                    <app-money class="settle-amount" [amount]="s.amount" [currency]="trip.currency" />
+                  </span>
+                  <span class="settle-to">{{ s.toName }}</span>
+                </div>
+              }
+            </div>
+            <p class="settle-note">Based on costs with a recorded payer, split among the people they cover.</p>
+          </mat-card-content>
+        </mat-card>
+      }
+
       <!-- Visual Bar Chart -->
       @if (data.total > 0) {
         <mat-card class="chart-card">

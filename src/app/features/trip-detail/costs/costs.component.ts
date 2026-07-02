@@ -56,10 +56,17 @@ interface GlanceRate {
   loading: boolean;
 }
 
+interface Settlement {
+  fromName: string;
+  toName: string;
+  amount: number;
+}
+
 interface CostsData {
   total: number;
   breakdown: CostBreakdown[];
   personShares: PersonShare[];
+  settlements: Settlement[];
   participantCount: number;
   expenses: Expense[];
   participants: TripParticipant[];
@@ -335,15 +342,67 @@ export class CostsComponent implements OnInit {
     const breakdown = this.buildBreakdown(bookings, items, expenses);
     const total = breakdown.reduce((s, b) => s + b.amount, 0);
     const personShares = this.buildPersonShares(bookings, items, participants, expenses);
+    const settlements = this.buildSettlements(bookings, participants, expenses);
 
     return {
       total,
       breakdown: breakdown.filter(b => b.amount > 0 || b.items.length > 0),
       personShares,
+      settlements,
       participantCount: participants.length,
       expenses,
       participants,
     };
+  }
+
+  /**
+   * "Who owes whom" — nets everyone's paid-vs-share balance over costs that
+   * have a known payer, then greedily matches the biggest debtor with the
+   * biggest creditor so the group settles in the fewest transfers.
+   * (Costs without a payer can't move money, so they're excluded here even
+   * though they still count toward each person's total share above.)
+   */
+  private buildSettlements(
+    bookings: Booking[],
+    participants: TripParticipant[],
+    expenses: Expense[]
+  ): Settlement[] {
+    if (participants.length < 2) return [];
+
+    const balance = new Map<string, number>(); // +ve = is owed, -ve = owes
+    participants.forEach(p => balance.set(p.id!, 0));
+
+    const apply = (cost: number, paidById: string | null | undefined, splitIds: string[] | undefined) => {
+      if (!cost || !paidById || !balance.has(paidById)) return;
+      const ids = splitIds?.length
+        ? splitIds.filter(id => balance.has(id))
+        : [...balance.keys()];
+      if (!ids.length) return;
+      const per = cost / ids.length;
+      ids.forEach(id => balance.set(id, balance.get(id)! - per));
+      balance.set(paidById, balance.get(paidById)! + cost);
+    };
+
+    bookings.forEach(b => apply(b.cost ?? 0, b.paidById, b.passengerIds));
+    expenses.forEach(e => apply(e.amountInTripCurrency ?? e.amount, e.paidById, e.participantIds));
+
+    const name = (id: string) => participants.find(p => p.id === id)?.name ?? 'Unknown';
+    const creditors = [...balance.entries()].filter(([, v]) => v > 0.01)
+      .map(([id, v]) => ({ id, amt: v })).sort((a, b) => b.amt - a.amt);
+    const debtors = [...balance.entries()].filter(([, v]) => v < -0.01)
+      .map(([id, v]) => ({ id, amt: -v })).sort((a, b) => b.amt - a.amt);
+
+    const settlements: Settlement[] = [];
+    let i = 0, j = 0;
+    while (i < debtors.length && j < creditors.length) {
+      const pay = Math.min(debtors[i].amt, creditors[j].amt);
+      settlements.push({ fromName: name(debtors[i].id), toName: name(creditors[j].id), amount: pay });
+      debtors[i].amt -= pay;
+      creditors[j].amt -= pay;
+      if (debtors[i].amt < 0.01) i++;
+      if (creditors[j].amt < 0.01) j++;
+    }
+    return settlements;
   }
 
   private buildBreakdown(

@@ -6,7 +6,20 @@
   } @else {
     <!-- Avatar -->
     <div class="avatar-row">
-      <div class="avatar">{{ initial }}</div>
+      <button type="button" class="avatar-btn" (click)="avatarInput.click()"
+              matTooltip="Change profile photo" aria-label="Change profile photo"
+              [disabled]="avatarUploading()">
+        @if (avatarUrl()) {
+          <img class="avatar avatar-img" [src]="avatarUrl()" alt="Profile photo" referrerpolicy="no-referrer">
+        } @else {
+          <div class="avatar">{{ initial }}</div>
+        }
+        <span class="avatar-edit">
+          @if (avatarUploading()) { <mat-spinner diameter="16"></mat-spinner> }
+          @else { <mat-icon>photo_camera</mat-icon> }
+        </span>
+      </button>
+      <input #avatarInput type="file" accept="image/*" hidden (change)="onAvatarSelected($event)">
       <div class="avatar-info">
         <div class="avatar-name">{{ user?.displayName || 'Traveler' }}</div>
         <div class="avatar-email">{{ user?.email }}</div>
@@ -146,5 +159,62 @@
         }
       </mat-card-content>
     </mat-card>
+
+    <!-- Security -->
+    <mat-card class="profile-card">
+      <mat-card-header>
+        <mat-card-title><mat-icon>security</mat-icon> Security</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (isPasswordAccount) {
+          <form [formGroup]="pwForm" (ngSubmit)="changePassword()" class="profile-form">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Current password</mat-label>
+              <input matInput type="password" formControlName="current" autocomplete="current-password">
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>New password</mat-label>
+              <input matInput type="password" formControlName="next" autocomplete="new-password">
+              <mat-hint>At least 8 characters</mat-hint>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Confirm new password</mat-label>
+              <input matInput type="password" formControlName="confirm" autocomplete="new-password">
+            </mat-form-field>
+            @if (pwError()) { <p class="pw-error">{{ pwError() }}</p> }
+            <button mat-stroked-button type="submit" [disabled]="pwForm.invalid || changingPw()">
+              @if (changingPw()) { <mat-spinner diameter="18"></mat-spinner> }
+              @else               { <mat-icon>key</mat-icon> }
+              Change Password
+            </button>
+          </form>
+        } @else {
+          <p class="notif-note">
+            <mat-icon>info</mat-icon>
+            You sign in with Google, so your password is managed by your Google account.
+          </p>
+        }
+
+        <mat-divider class="danger-divider"></mat-divider>
+
+        <div class="danger-zone">
+          <div class="feature-text">
+            <span class="feature-name danger-name"><mat-icon>delete_forever</mat-icon> Delete account</span>
+            <span class="feature-desc">
+              Permanently erases your profile, trips you own, uploaded photos and documents,
+              and any connected bank access. This cannot be undone.
+            </span>
+          </div>
+          <button mat-stroked-button class="danger-btn" (click)="openDeleteAccount()">Delete…</button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Legal -->
+    <div class="legal-links">
+      <a routerLink="/privacy">Privacy Policy</a>
+      <span aria-hidden="true">·</span>
+      <a routerLink="/terms">Terms of Use</a>
+    </div>
   }
 </div>

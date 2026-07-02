@@ -16,7 +16,7 @@ import { EmailScraperService, ScannedBooking } from '../../../../core/services/e
 import { BookingType } from '../../../../core/models/booking.model';
 import { ExpenseCategory } from '../../../../core/models/expense.model';
 
-type ScanState = 'idle' | 'connecting' | 'scanning' | 'results' | 'empty' | 'error';
+type ScanState = 'idle' | 'connecting' | 'scanning' | 'parsing' | 'results' | 'empty' | 'error';
 
 function toBookingType(t: string): BookingType {
   if (['flight', 'hotel', 'airbnb', 'car-rental'].includes(t)) return t as BookingType;
@@ -61,6 +61,7 @@ export class EmailScanDialogComponent {
   bookings = signal<ScannedBooking[]>([]);
   errorMsg = signal('');
   saving   = signal(false);
+  pastedText = signal('');
 
   readonly typeIcons: Record<string, string> = {
     flight:     'flight',
@@ -82,6 +83,26 @@ export class EmailScanDialogComponent {
 
   get selectedCount(): number {
     return this.bookings().filter(b => b.selected).length;
+  }
+
+  /** Parse a confirmation email the user pasted in (no Gmail access needed). */
+  parsePasted() {
+    const text = this.pastedText().trim();
+    if (!text || this.state() === 'parsing') return;
+    this.state.set('parsing');
+
+    this.emailScraper.parsePastedEmail(text, this.trip).subscribe(results => {
+      if (results.length === 0) {
+        this.state.set('idle');
+        this.snackBar.open(
+          "Couldn't find booking details in that text — make sure it's a confirmation email.",
+          undefined, { duration: 4000 },
+        );
+      } else {
+        this.bookings.set(results);
+        this.state.set('results');
+      }
+    });
   }
 
   startScan() {

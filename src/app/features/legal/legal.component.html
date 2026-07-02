@@ -1,0 +1,104 @@
+<div class="legal-page">
+  <a routerLink="/" class="back-link"><mat-icon>arrow_back</mat-icon> Back to SorTrek</a>
+
+  @if (page === 'privacy') {
+    <h1>Privacy Policy</h1>
+    <p class="updated">Last updated: {{ updated }}</p>
+
+    <p>
+      SorTrek is a small, invite-based travel planner used by families and friends to organize
+      trips together. This policy explains, in plain language, what data the app stores and why.
+    </p>
+
+    <h2>What we store</h2>
+    <ul>
+      <li><strong>Account details</strong> — your email address, display name, and (optionally) a
+        profile photo and home city/currency. If you sign in with Google, we receive your name,
+        email, and Google profile picture.</li>
+      <li><strong>Trip content</strong> — trips, schedules, bookings, packing lists, expenses,
+        photos, and documents you or your trip members add. This content is shared with the other
+        members of that trip — that is the point of the app.</li>
+      <li><strong>Bank connection (optional)</strong> — if you connect a bank through Plaid to
+        import expenses, we store only the Plaid access token needed to fetch your transactions.
+        We never see or store your bank username or password; that is handled entirely by Plaid.
+        You can disconnect at any time from the Costs tab, which deletes the token.</li>
+      <li><strong>Notification tokens</strong> — if you enable push notifications, a device token
+        is stored so we can send trip reminders. Disabling notifications removes it.</li>
+    </ul>
+
+    <h2>What we don't do</h2>
+    <ul>
+      <li>No advertising, no analytics trackers, no selling or sharing of data with third parties.</li>
+      <li>No cookies beyond the essential sign-in session.</li>
+      <li>Gmail import (if used) requests read access through a Google popup for one scan; the
+        access token is never stored on our servers.</li>
+    </ul>
+
+    <h2>Where data lives</h2>
+    <p>
+      Data is stored in Google Firebase (Firestore, Storage, Authentication) and processed by
+      serverless functions on Vercel. AI features send only the trip context you're asking about
+      to the AI provider to generate a response; conversations are not used to train models.
+    </p>
+
+    <h2>Sharing &amp; visibility</h2>
+    <p>
+      Trip content is visible to the members of that trip. If a trip owner turns on a public
+      itinerary link, the schedule and bookings on that page are visible to anyone with the link
+      until sharing is turned off.
+    </p>
+
+    <h2>Deleting your data</h2>
+    <p>
+      Profile → Security → Delete account permanently erases your profile, trips you own (and
+      their contents), photos and documents you uploaded anywhere, your Plaid connection, and
+      notification tokens. This is immediate and irreversible.
+    </p>
+
+    <h2>Contact</h2>
+    <p>Questions? Contact the person who invited you, or the app operator.</p>
+  } @else {
+    <h1>Terms of Use</h1>
+    <p class="updated">Last updated: {{ updated }}</p>
+
+    <p>
+      SorTrek is provided as-is, free of charge, for personal trip planning among people you
+      know. By using it you agree to the following common-sense terms.
+    </p>
+
+    <h2>Your account</h2>
+    <ul>
+      <li>You're responsible for what you upload and share. Only invite people you trust — trip
+        members can see everything in a shared trip.</li>
+      <li>Don't upload content that is illegal, or that you don't have the right to share.</li>
+    </ul>
+
+    <h2>The service</h2>
+    <ul>
+      <li>SorTrek is a hobby-scale service with no uptime guarantee. Back up anything critical
+        (passports, tickets) somewhere else too.</li>
+      <li>AI suggestions, weather, flight status, and currency rates are best-effort information
+        from third parties — always verify times, visas, and prices with the official source
+        before you travel.</li>
+      <li>Expense figures and settlements are calculated for convenience and are not financial
+        advice or an accounting record.</li>
+    </ul>
+
+    <h2>Liability</h2>
+    <p>
+      To the maximum extent permitted by law, SorTrek and its operator are not liable for missed
+      flights, booking errors, data loss, or any damages arising from use of the app.
+    </p>
+
+    <h2>Changes</h2>
+    <p>
+      These terms may be updated as the app evolves; continued use after a change means you
+      accept the updated terms.
+    </p>
+  }
+
+  <div class="cross-link">
+    @if (page === 'privacy') { <a routerLink="/terms">Terms of Use →</a> }
+    @else { <a routerLink="/privacy">Privacy Policy →</a> }
+  </div>
+</div>

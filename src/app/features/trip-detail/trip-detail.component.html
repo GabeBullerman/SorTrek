@@ -73,20 +73,40 @@
       </div>
     </div>
 
-    <!-- Tab navigation — plain div, no Angular Material wrapper -->
+    <!-- Tab navigation — plain div, no Angular Material wrapper.
+         On phones the less-used tabs collapse into a "More" menu instead of
+         a long horizontal scroll. -->
     <div class="trip-tab-nav-wrapper">
       <div class="trip-tab-nav" #tabNav>
         @for (tab of tabs; track tab.label; let i = $index) {
           @if (tab.label !== 'AI' || prefs.aiEnabled()) {
-            <button class="tab-link" [class.active]="selectedTab() === i" (click)="selectTab(i)"
+            <button class="tab-link" [class.overflow-tab]="isOverflowTab(i)"
+                    [class.active]="selectedTab() === i" (click)="selectTab(i)"
                     [attr.aria-label]="tab.label">
               <mat-icon>{{ tab.icon }}</mat-icon>
               <span class="tab-label">{{ tab.label }}</span>
             </button>
           }
         }
+        <button class="tab-link more-tab" [class.active]="overflowActive()"
+                [matMenuTriggerFor]="moreTabsMenu" aria-label="More tabs">
+          <mat-icon>{{ overflowActive() ? tabs[selectedTab()].icon : 'more_horiz' }}</mat-icon>
+          <span class="tab-label">{{ overflowActive() ? tabs[selectedTab()].label : 'More' }}</span>
+        </button>
       </div>
     </div>
+
+    <mat-menu #moreTabsMenu="matMenu">
+      @for (tab of tabs; track tab.label; let i = $index) {
+        @if (isOverflowTab(i) && (tab.label !== 'AI' || prefs.aiEnabled())) {
+          <button mat-menu-item (click)="selectTab(i)"
+                  [class.more-item-active]="selectedTab() === i">
+            <mat-icon>{{ tab.icon }}</mat-icon>
+            <span>{{ tab.label }}</span>
+          </button>
+        }
+      }
+    </mat-menu>
 
     <!-- Tab content -->
     <div class="tab-body">

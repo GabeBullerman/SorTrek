@@ -1,5 +1,9 @@
 import { Injectable, inject } from '@angular/core';
-import { Auth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, user, updateProfile, signInWithPopup, GoogleAuthProvider, getAdditionalUserInfo } from '@angular/fire/auth';
+import {
+  Auth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, user,
+  updateProfile, signInWithPopup, GoogleAuthProvider, getAdditionalUserInfo,
+  EmailAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, updatePassword,
+} from '@angular/fire/auth';
 import { Firestore, doc, getDoc, setDoc, terminate, clearIndexedDbPersistence } from '@angular/fire/firestore';
 import { Timestamp } from '@angular/fire/firestore';
 import { from, Observable } from 'rxjs';
@@ -73,5 +77,34 @@ export class AuthService {
 
   get currentUser() {
     return this.auth.currentUser;
+  }
+
+  /** 'password' for email/password accounts, 'google.com' for Google sign-in. */
+  get primaryProvider(): string | null {
+    return this.auth.currentUser?.providerData[0]?.providerId ?? null;
+  }
+
+  /**
+   * Prove the user is really present before a sensitive action (password
+   * change, account deletion). Email accounts re-enter their password;
+   * Google accounts confirm through the Google popup. Refreshes auth_time,
+   * which the delete-account endpoint checks server-side.
+   */
+  async reauthenticate(password?: string): Promise<void> {
+    const u = this.auth.currentUser;
+    if (!u) throw new Error('Not signed in');
+    if (this.primaryProvider === 'password') {
+      if (!password) throw new Error('Password required');
+      const cred = EmailAuthProvider.credential(u.email!, password);
+      await reauthenticateWithCredential(u, cred);
+    } else {
+      await reauthenticateWithPopup(u, new GoogleAuthProvider());
+    }
+  }
+
+  /** Change password (email/password accounts only). Verifies the current one first. */
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    await this.reauthenticate(currentPassword);
+    await updatePassword(this.auth.currentUser!, newPassword);
   }
 }

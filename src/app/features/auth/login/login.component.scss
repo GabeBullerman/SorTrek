@@ -114,3 +114,17 @@ mat-card-content {
     &:hover { text-decoration: underline; }
   }
 }
+
+.auth-legal-links {
+  text-align: center;
+  padding: 0 16px 14px;
+  margin: -6px 0 0;
+  font-size: 0.78rem;
+  color: var(--st-on-surface-faint);
+
+  a {
+    color: var(--st-on-surface-muted);
+    text-decoration: none;
+    &:hover { text-decoration: underline; }
+  }
+}

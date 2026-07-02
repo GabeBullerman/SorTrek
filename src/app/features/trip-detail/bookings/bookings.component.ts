@@ -1,4 +1,5 @@
-import { Component, Input, OnInit, inject, signal } from '@angular/core';
+import { Component, Input, OnInit, inject, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AsyncPipe, DatePipe, CurrencyPipe, TitleCasePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -22,7 +23,7 @@ import { BookingDialogComponent } from './booking-dialog/booking-dialog.componen
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { EmailScanDialogComponent } from './email-scan-dialog/email-scan-dialog.component';
 import { map, catchError } from 'rxjs/operators';
-import { Observable, of, from, combineLatest } from 'rxjs';
+import { Observable, of, from, combineLatest, timer } from 'rxjs';
 import { Trip } from '../../../core/models/trip.model';
 
 interface BookingGroup {
@@ -64,6 +65,7 @@ export class BookingsComponent implements OnInit {
   private tz = inject(TimezoneService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
+  private destroyRef = inject(DestroyRef);
 
   data$!: Observable<BookingsData>;
 
@@ -102,17 +104,68 @@ export class BookingsComponent implements OnInit {
     return fields.some(f => f?.toLowerCase().includes(term));
   }
 
+  /** Latest booking list, kept for the background flight-status poller. */
+  private latestBookings: Booking[] = [];
+
   ngOnInit() {
     this.data$ = combineLatest([
       this.bookingService.getBookings(this.tripId),
       this.participantService.getParticipants(this.tripId),
     ]).pipe(
-      map(([bookings, participants]) => ({
-        groups: this.groupBookings(bookings),
-        participants,
-      })),
+      map(([bookings, participants]) => {
+        this.latestBookings = bookings;
+        return {
+          groups: this.groupBookings(bookings),
+          participants,
+        };
+      }),
       catchError(() => of({ groups: [], participants: [] }))
     );
+
+    // Live flight tracking: check every 60s, but only actually hit the API for
+    // flights inside their "interesting" window (48h before departure until
+    // shortly after arrival) that haven't landed. Far-future flights cost
+    // nothing, and nothing runs while the tab is hidden.
+    timer(5_000, 60_000)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.autoPollFlights());
+  }
+
+  private autoPollFlights() {
+    if (typeof document !== 'undefined' && document.hidden) return;
+    const now = Date.now();
+    const H = 3_600_000;
+
+    for (const b of this.latestBookings) {
+      if (b.type !== 'flight' || !b.flightNumber || !b.id || b.status === 'cancelled') continue;
+      if (this.refreshing.has(b.id)) continue;
+
+      const dep = b.checkIn?.toDate().getTime();
+      if (!dep) continue;
+      const arr = b.checkOut?.toDate().getTime() ?? dep + 6 * H;
+      if (now < dep - 48 * H || now > arr + 2 * H) continue;               // outside window
+      if ((b.flightStatus?.flightStatus ?? '').toLowerCase() === 'landed') continue; // done
+      const lastUpdate = b.flightStatus?.updatedAt?.toDate().getTime() ?? 0;
+      if (now - lastUpdate < 55_000) continue;                              // recently refreshed
+
+      this.silentRefreshFlight(b);
+    }
+  }
+
+  /** Background variant of refreshFlightStatus: writes updates, never toasts. */
+  private silentRefreshFlight(booking: Booking) {
+    const date = booking.checkIn ? this.toDateStr(booking.checkIn.toDate()) : undefined;
+    this.flightService.getStatus(booking.flightNumber!, date).subscribe(res => {
+      if (res.error || res.configured === false || !res.found || !res.status) return;
+      const s = res.status;
+      const changes: Partial<Booking> = { flightStatus: { ...s, updatedAt: Timestamp.now() } };
+      const bestDep = s.actualDeparture ?? s.estimatedDeparture ?? s.scheduledDeparture;
+      const bestArr = s.actualArrival ?? s.estimatedArrival ?? s.scheduledArrival;
+      if (bestDep) changes.checkIn = Timestamp.fromDate(new Date(bestDep));
+      if (bestArr) changes.checkOut = Timestamp.fromDate(new Date(bestArr));
+      from(this.bookingService.updateBooking(booking.id!, changes))
+        .subscribe({ error: () => { /* silent — next tick retries */ } });
+    });
   }
 
   typeConfig: Record<BookingType, { label: string; icon: string }> = {

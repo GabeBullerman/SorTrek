@@ -31,6 +31,7 @@ import { TransportComponent } from './transport/transport.component';
 import { DocumentsComponent } from './documents/documents.component';
 import { from, take, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { localDayNum, utcDayNum } from '../../core/util/trip-date.util';
 
 export interface TabDef {
   label: string;
@@ -103,6 +104,19 @@ export class TripDetailComponent implements OnInit {
     { label: 'AI',         icon: 'auto_awesome' },
   ];
 
+  /** Tab indexes that fold into the "More" menu on narrow screens
+   *  (Transport, Photos, People, Documents, AI — the less-daily tabs). */
+  private readonly overflowTabIdx = new Set([2, 3, 6, 8, 9]);
+
+  isOverflowTab(i: number): boolean {
+    return this.overflowTabIdx.has(i);
+  }
+
+  /** True when the active tab lives in the More menu (so More shows as active). */
+  overflowActive(): boolean {
+    return this.overflowTabIdx.has(this.selectedTab());
+  }
+
   ngOnInit() {
     // If the trip doesn't exist or the user isn't a member, the read is denied
     // by Firestore rules (IDOR-safe). Redirect out instead of hanging, and never
@@ -122,10 +136,18 @@ export class TripDetailComponent implements OnInit {
       if (idx !== -1) this.selectedTab.set(idx);
     }
 
-    // Schedule a departure-reminder notification on first load (no-op if timing is outside window).
-    // Skipped entirely when the user has turned reminders off in their profile.
     this.trip$.pipe(take(1)).subscribe(trip => {
-      if (trip && this.prefs.remindersEnabled()) {
+      if (!trip) return;
+
+      // Mid-trip, open straight onto today's schedule (unless a specific tab
+      // was linked). The schedule itself then focuses today's day.
+      if (!tabParam && this.isOngoing(trip)) {
+        this.selectedTab.set(1);
+      }
+
+      // Schedule a departure-reminder notification on first load (no-op if timing
+      // is outside window). Skipped when reminders are off in the profile.
+      if (this.prefs.remindersEnabled()) {
         this.cardReminderService.scheduleNotification(trip, this.pushNotificationService);
       }
     });
@@ -221,6 +243,13 @@ export class TripDetailComponent implements OnInit {
         this.snackBar.open('Could not regenerate link', undefined, { duration: 3000 });
       },
     });
+  }
+
+  /** Calendar-day "trip is happening right now" check (same math as trip cards). */
+  private isOngoing(trip: Trip): boolean {
+    const today = localDayNum(new Date());
+    return today >= utcDayNum(trip.startDate.toDate())
+        && today <= utcDayNum(trip.endDate.toDate());
   }
 
   tripDuration(trip: Trip): number {

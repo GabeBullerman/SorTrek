@@ -1,29 +1,32 @@
 <h2 mat-dialog-title>
   <mat-icon>mark_email_read</mat-icon>
-  Scan Emails for Bookings
+  Import Booking from Email
 </h2>
 
 <mat-dialog-content>
 
-  <!-- Idle — initial prompt -->
+  <!-- Idle — paste-in import (primary) -->
   @if (state() === 'idle') {
     <div class="state-panel">
-      <div class="scan-icon-wrap">
-        <mat-icon class="big-icon">email</mat-icon>
-      </div>
-      <h3>Find bookings in your Gmail</h3>
-      <p>SorTrek will search your inbox for confirmation emails from airlines, hotels, Airbnb, car rental companies, and more — then import them directly into your trip.</p>
-      <ul class="source-list">
-        <li><mat-icon>flight</mat-icon> Airlines (United, Delta, AA, Southwest…)</li>
-        <li><mat-icon>hotel</mat-icon> Hotels (Marriott, Hilton, Booking.com…)</li>
-        <li><mat-icon>home</mat-icon> Airbnb, VRBO &amp; vacation rentals</li>
-        <li><mat-icon>directions_car</mat-icon> Car rentals (Hertz, Avis, Enterprise…)</li>
-        <li><mat-icon>restaurant</mat-icon> Restaurant reservations (OpenTable, Resy…)</li>
-      </ul>
+      <h3>Paste a confirmation email</h3>
+      <p>Copy the text of a booking confirmation — flight, hotel, Airbnb, car rental, restaurant —
+         and paste it below. SorTrek reads it and fills in the booking for you.</p>
+      <textarea class="paste-box" rows="8"
+                placeholder="Paste the full email text here…"
+                [value]="pastedText()"
+                (input)="pastedText.set($any($event.target).value)"></textarea>
       <p class="note">
         <mat-icon>lock</mat-icon>
-        A read-only Gmail permission is requested. No emails are stored — they're only scanned in the moment.
+        The pasted text is used once to extract booking details and is never stored.
       </p>
+    </div>
+  }
+
+  <!-- Parsing pasted email -->
+  @if (state() === 'parsing') {
+    <div class="state-panel centered">
+      <mat-spinner diameter="48"></mat-spinner>
+      <p>Reading the email for booking details…</p>
     </div>
   }
 
@@ -126,10 +129,18 @@
 <mat-dialog-actions align="end">
   <button mat-button mat-dialog-close>Cancel</button>
 
-  @if (state() === 'idle' || state() === 'error') {
-    <button mat-flat-button color="primary" (click)="startScan()">
-      <mat-icon>{{ state() === 'error' ? 'refresh' : 'search' }}</mat-icon>
-      {{ state() === 'error' ? 'Try Again' : 'Connect Gmail & Scan' }}
+  @if (state() === 'idle') {
+    <button mat-flat-button color="primary" (click)="parsePasted()"
+            [disabled]="!pastedText().trim()">
+      <mat-icon>auto_awesome</mat-icon>
+      Read Email
+    </button>
+  }
+
+  @if (state() === 'error') {
+    <button mat-flat-button color="primary" (click)="state.set('idle')">
+      <mat-icon>refresh</mat-icon>
+      Try Again
     </button>
   }
 

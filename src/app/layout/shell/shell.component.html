@@ -80,6 +80,18 @@
       }
     </mat-toolbar>
 
+    @if (offline()) {
+      <div class="net-banner offline-banner" role="status">
+        <mat-icon>cloud_off</mat-icon>
+        Offline — showing saved data. Changes will sync when you're back online.
+      </div>
+    } @else if (backOnline()) {
+      <div class="net-banner online-banner" role="status">
+        <mat-icon>cloud_done</mat-icon>
+        Back online — everything's synced.
+      </div>
+    }
+
     <div class="page-content">
       <router-outlet />
     </div>

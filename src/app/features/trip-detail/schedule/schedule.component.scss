@@ -700,3 +700,64 @@
 .approve-btn {
   color: var(--st-success, #16a34a);
 }
+
+// ── Today marker + current activity ─────────────────────────────────────────
+.day-chip.is-today {
+  border-color: var(--st-primary);
+}
+
+.today-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: var(--st-primary);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  vertical-align: middle;
+}
+
+.timeline-item.is-current .timeline-content {
+  border: 1.5px solid var(--st-primary);
+  border-radius: 12px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--st-primary) 14%, transparent);
+}
+
+.timeline-item.is-current .timeline-dot {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--st-primary) 25%, transparent);
+}
+
+// ── Proposal voting ──────────────────────────────────────────────────────────
+.vote-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.vote-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 14px;
+  border: 1px solid var(--st-border, #ddd);
+  background: transparent;
+  color: var(--st-on-surface-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+
+  mat-icon { font-size: 15px; width: 15px; height: 15px; }
+
+  &:hover { background: var(--st-surface-variant, rgba(0, 0, 0, 0.05)); }
+
+  &.voted {
+    background: var(--st-primary);
+    border-color: var(--st-primary);
+    color: #fff;
+  }
+}

@@ -91,11 +91,17 @@ service cloud.firestore {
 
       // Editors update anything (incl. approving: proposed -> false). A proposer
       // may edit their own proposal but cannot approve it (must stay proposed).
+      // Any member may cast/change ONLY their own vote on a proposed item.
       allow update: if isTripMember(resource.data.tripId)
                     && isTripMember(request.resource.data.tripId) && (
         tripCanEditSchedule(resource.data.tripId) ||
         ( resource.data.proposedBy == request.auth.uid
-          && request.resource.data.proposed == true )
+          && request.resource.data.proposed == true ) ||
+        ( resource.data.proposed == true
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['votes'])
+          && request.resource.data.get('votes', {})
+               .diff(resource.data.get('votes', {}))
+               .affectedKeys().hasOnly([request.auth.uid]) )
       );
 
       // Editors delete anything (reject); a proposer may withdraw their own proposal.
@@ -106,6 +112,13 @@ service cloud.firestore {
     }
 
     match /expenses/{expenseId} {
+      allow read, delete: if isTripMember(resource.data.tripId);
+      allow create: if isTripMember(request.resource.data.tripId);
+      allow update: if isTripMember(resource.data.tripId)
+                    && isTripMember(request.resource.data.tripId);
+    }
+
+    match /tripTodos/{todoId} {
       allow read, delete: if isTripMember(resource.data.tripId);
       allow create: if isTripMember(request.resource.data.tripId);
       allow update: if isTripMember(resource.data.tripId)
@@ -155,6 +168,13 @@ service cloud.firestore {
             && request.resource.data.tripId == resource.data.tripId);
       allow delete: if isTripMember(resource.data.tripId)
         || (resource.data.userId != null && resource.data.userId == request.auth.uid);
+    }
+
+    // ── Plaid tokens ──────────────────────────────────────────────────────────
+    // Strictly owner-only: the saved bank access token is the most sensitive
+    // credential in the app.
+    match /plaid_tokens/{uid} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
     }
 
     // ── User profiles ─────────────────────────────────────────────────────────

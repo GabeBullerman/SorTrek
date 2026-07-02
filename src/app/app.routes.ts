@@ -47,5 +47,17 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/public-itinerary/public-itinerary.component').then(m => m.PublicItineraryComponent),
   },
+  {
+    path: 'privacy',
+    title: 'Privacy Policy',
+    data: { page: 'privacy' },
+    loadComponent: () => import('./features/legal/legal.component').then(m => m.LegalComponent),
+  },
+  {
+    path: 'terms',
+    title: 'Terms of Use',
+    data: { page: 'terms' },
+    loadComponent: () => import('./features/legal/legal.component').then(m => m.LegalComponent),
+  },
   { path: '**', redirectTo: 'trips' },
 ];

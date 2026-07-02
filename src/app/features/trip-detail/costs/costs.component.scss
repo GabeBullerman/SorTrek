@@ -237,6 +237,65 @@
   }
 }
 
+/* ── Settle Up ────────────────────────────────────────────────────────────── */
+.settle-card {
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
+  margin-bottom: 20px;
+
+  mat-card-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 1rem !important;
+    mat-icon { font-size: 20px; width: 20px; height: 20px; color: var(--st-primary-soft); }
+  }
+}
+
+.settle-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.settle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--st-surface-variant, rgba(0, 0, 0, 0.04));
+
+  .settle-from,
+  .settle-to {
+    font-weight: 600;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .settle-to { text-align: right; }
+
+  .settle-arrow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    color: var(--st-primary);
+
+    mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    .settle-amount { font-weight: 700; }
+  }
+}
+
+.settle-note {
+  margin: 12px 0 0;
+  font-size: 0.78rem;
+  color: var(--st-on-surface-faint, #999);
+}
+
 .person-rows {
   display: flex;
   flex-direction: column;

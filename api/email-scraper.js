@@ -109,11 +109,26 @@ module.exports = async (req, res) => {
   const user = await guard(req, res);
   if (!user) return;
 
-  const { accessToken, tripDestination } = req.body ?? {};
-  if (!accessToken) return res.status(400).json({ error: 'Missing accessToken' });
+  const { accessToken, emailText, tripDestination } = req.body ?? {};
 
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'GROQ_API_KEY not configured' });
+
+  // Paste-in mode: the user pastes a confirmation email's text directly.
+  // (The Gmail path below needs Google's restricted-scope verification, so
+  // this is the primary import route for now.)
+  if (emailText) {
+    try {
+      const parsed = await parseEmailWithGroq(apiKey, String(emailText).slice(0, 12_000), tripDestination);
+      const bookings = parsed?.relevant ? [{ ...parsed, selected: true }] : [];
+      return res.status(200).json({ bookings });
+    } catch (err) {
+      console.error('[email-scraper:paste]', err?.message ?? err);
+      return res.status(500).json({ error: 'Could not parse that email. Please try again.' });
+    }
+  }
+
+  if (!accessToken) return res.status(400).json({ error: 'Missing accessToken or emailText' });
 
   try {
     // Search Gmail for booking-related emails

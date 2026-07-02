@@ -25,4 +25,6 @@ export interface ItineraryItem {
   proposed?: boolean;
   /** UID of the member who proposed this item (for attribution + rules). */
   proposedBy?: string;
+  /** Member votes on a proposed item: uid → up/down. Cleared on approval. */
+  votes?: Record<string, 'up' | 'down'>;
 }

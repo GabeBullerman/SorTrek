@@ -14,13 +14,17 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { updateProfile } from '@angular/fire/auth';
 import { Auth } from '@angular/fire/auth';
-import { Timestamp } from '@angular/fire/firestore';
-import { from } from 'rxjs';
+import { Storage, ref, uploadBytes, getDownloadURL } from '@angular/fire/storage';
+import { MatDialog } from '@angular/material/dialog';
+import { RouterLink } from '@angular/router';
+import imageCompression from 'browser-image-compression';
 import { UserService } from '../../core/services/user.service';
 import { PushNotificationService } from '../../core/services/push-notification.service';
 import { GoogleMapsLoaderService } from '../../core/services/google-maps-loader.service';
 import { ThemeService, PALETTES, ThemePalette, ThemeMode } from '../../core/services/theme.service';
 import { UserPreferencesService } from '../../core/services/user-preferences.service';
+import { AuthService } from '../../core/services/auth.service';
+import { DeleteAccountDialogComponent } from './delete-account-dialog/delete-account-dialog.component';
 
 export const CURRENCIES = [
   { code: 'USD', label: 'USD — US Dollar' },
@@ -49,7 +53,7 @@ export const CURRENCIES = [
   selector: 'app-profile',
   standalone: true,
   imports: [
-    ReactiveFormsModule,
+    ReactiveFormsModule, RouterLink,
     MatCardModule, MatFormFieldModule, MatInputModule, MatSelectModule,
     MatButtonModule, MatIconModule, MatSlideToggleModule, MatButtonToggleModule,
     MatProgressSpinnerModule, MatDividerModule, MatTooltipModule,
@@ -59,11 +63,14 @@ export const CURRENCIES = [
 })
 export class ProfileComponent implements OnInit, AfterViewInit {
   private auth          = inject(Auth);
+  private storage       = inject(Storage);
+  private authService   = inject(AuthService);
   private userService   = inject(UserService);
   readonly pushService  = inject(PushNotificationService);
   private mapsLoader    = inject(GoogleMapsLoaderService);
   private snackBar      = inject(MatSnackBar);
   private fb            = inject(FormBuilder);
+  private dialog        = inject(MatDialog);
   readonly theme        = inject(ThemeService);
   readonly prefs        = inject(UserPreferencesService);
 
@@ -75,6 +82,10 @@ export class ProfileComponent implements OnInit, AfterViewInit {
   saving     = signal(false);
   loading    = signal(true);
   notifPerm  = signal<NotificationPermission>('default');
+  avatarUploading = signal(false);
+  avatarUrl  = signal<string | null>(null);
+  changingPw = signal(false);
+  pwError    = signal('');
 
   form = this.fb.group({
     displayName:  ['', Validators.required],
@@ -82,17 +93,28 @@ export class ProfileComponent implements OnInit, AfterViewInit {
     homeCurrency: ['USD', Validators.required],
   });
 
+  pwForm = this.fb.group({
+    current: ['', Validators.required],
+    next:    ['', [Validators.required, Validators.minLength(8)]],
+    confirm: ['', Validators.required],
+  });
+
+  /** Email/password accounts can change their password; Google accounts can't. */
+  readonly isPasswordAccount = this.authService.primaryProvider === 'password';
+
   ngOnInit() {
     this.notifPerm.set(this.pushService.permission);
     const user = this.auth.currentUser;
     if (!user) { this.loading.set(false); return; }
 
+    this.avatarUrl.set(user.photoURL);
     this.userService.getProfile(user.uid).subscribe(profile => {
       this.form.patchValue({
         displayName:  profile?.displayName ?? user.displayName ?? '',
         homeCity:     profile?.homeCity    ?? '',
         homeCurrency: profile?.homeCurrency ?? 'USD',
       });
+      if (profile?.photoURL) this.avatarUrl.set(profile.photoURL);
       this.loading.set(false);
     });
   }
@@ -172,5 +194,74 @@ export class ProfileComponent implements OnInit, AfterViewInit {
 
   toggleReminders(on: boolean) {
     this.prefs.setRemindersEnabled(on);
+  }
+
+  /**
+   * Avatar upload. Compressed hard client-side (256px, ~20-40KB JPEG) so a
+   * whole family of avatars costs a fraction of one trip photo in Storage.
+   */
+  async onAvatarSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file || !this.user) return;
+    if (!file.type.startsWith('image/')) {
+      this.snackBar.open('Please choose an image file', undefined, { duration: 3000 });
+      return;
+    }
+
+    this.avatarUploading.set(true);
+    try {
+      const compressed = await imageCompression(file, {
+        maxSizeMB: 0.05,
+        maxWidthOrHeight: 256,
+        useWebWorker: true,
+        fileType: 'image/jpeg',
+        initialQuality: 0.85,
+      });
+      const storageRef = ref(this.storage, `avatars/${this.user.uid}/avatar.jpg`);
+      await uploadBytes(storageRef, compressed, { contentType: 'image/jpeg' });
+      const url = await getDownloadURL(storageRef);
+
+      await updateProfile(this.user, { photoURL: url });
+      await this.userService.updateProfile(this.user.uid, { photoURL: url });
+      this.avatarUrl.set(url);
+      this.snackBar.open('Profile photo updated', undefined, { duration: 2500 });
+    } catch {
+      this.snackBar.open('Failed to upload photo', undefined, { duration: 3000 });
+    } finally {
+      this.avatarUploading.set(false);
+    }
+  }
+
+  async changePassword() {
+    if (this.pwForm.invalid) return;
+    const v = this.pwForm.getRawValue();
+    if (v.next !== v.confirm) {
+      this.pwError.set('New passwords do not match.');
+      return;
+    }
+    this.changingPw.set(true);
+    this.pwError.set('');
+    try {
+      await this.authService.changePassword(v.current!, v.next!);
+      this.pwForm.reset();
+      this.snackBar.open('Password changed', undefined, { duration: 2500 });
+    } catch (err: unknown) {
+      const code = (err as { code?: string })?.code ?? '';
+      if (code.includes('wrong-password') || code.includes('invalid-credential')) {
+        this.pwError.set('Current password is incorrect.');
+      } else if (code.includes('weak-password')) {
+        this.pwError.set('New password is too weak (minimum 8 characters).');
+      } else {
+        this.pwError.set('Could not change password. Please try again.');
+      }
+    } finally {
+      this.changingPw.set(false);
+    }
+  }
+
+  openDeleteAccount() {
+    this.dialog.open(DeleteAccountDialogComponent, { maxWidth: '480px' });
   }
 }

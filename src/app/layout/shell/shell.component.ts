@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ViewChild } from '@angular/core';
+import { Component, inject, OnInit, ViewChild, signal } from '@angular/core';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -43,7 +43,22 @@ export class ShellComponent implements OnInit {
 
   currentUser$ = this.auth.currentUser$;
 
+  /**
+   * Connectivity banner. Firestore's offline cache keeps trips, schedules and
+   * packing lists readable without a connection — this just tells the user
+   * they're looking at saved data and edits will sync later.
+   */
+  readonly offline = signal(typeof navigator !== 'undefined' && !navigator.onLine);
+  /** Briefly true right after the connection returns. */
+  readonly backOnline = signal(false);
+
   ngOnInit() {
+    window.addEventListener('offline', () => this.offline.set(true));
+    window.addEventListener('online', () => {
+      this.offline.set(false);
+      this.backOnline.set(true);
+      setTimeout(() => this.backOnline.set(false), 3000);
+    });
     // Ensure every logged-in user has a Firestore profile.
     // Covers accounts created before profile-creation was added and Google sign-ins that failed to write.
     this.auth.currentUser$.pipe(

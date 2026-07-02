@@ -36,6 +36,9 @@
     </div>
   </div>
 
+  <div class="packing-body">
+  <div class="packing-main">
+
   <!-- Templates -->
   <div class="templates-row">
     <span class="templates-label">Start from a template:</span>
@@ -166,9 +169,16 @@
       <mat-icon>luggage</mat-icon>
       <h3>Nothing packed yet</h3>
       <p>Start adding items to your packing list</p>
-      <button mat-flat-button color="primary" (click)="showAddForm.set(true)">
-        <mat-icon>add</mat-icon> Add Item
-      </button>
+      <div class="empty-actions">
+        <button mat-flat-button color="primary" (click)="showAddForm.set(true)">
+          <mat-icon>add</mat-icon> Add Item
+        </button>
+        @if (prefs.aiEnabled()) {
+          <button mat-stroked-button (click)="fetchAiSuggestions()" [disabled]="loadingAi()">
+            <mat-icon>auto_awesome</mat-icon> Generate a list with AI
+          </button>
+        }
+      </div>
     </div>
   }
 
@@ -277,5 +287,63 @@
       </div>
     </div>
   }
+
+  </div><!-- /packing-main -->
+
+  <!-- Trip to-dos: the small "before we go" checklist next to the packing list -->
+  <aside class="todo-panel" [class.collapsed]="!todosExpanded()">
+    <button type="button" class="todo-panel-header" (click)="todosExpanded.set(!todosExpanded())">
+      <mat-icon class="todo-title-icon">checklist</mat-icon>
+      <span class="todo-title">To-Dos</span>
+      @if (openTodoCount() > 0) {
+        <span class="todo-open-count">{{ openTodoCount() }} open</span>
+      } @else if (todos().length > 0) {
+        <mat-icon class="todo-done-icon" matTooltip="All done!">check_circle</mat-icon>
+      }
+      <mat-icon class="todo-chevron">{{ todosExpanded() ? 'expand_less' : 'expand_more' }}</mat-icon>
+    </button>
+
+    @if (todosExpanded()) {
+      <div class="todo-list">
+        @for (todo of sortedTodos(); track todo.id) {
+          <div class="todo-row" [class.done]="todo.done">
+            <mat-checkbox [checked]="todo.done" (change)="toggleTodo(todo)" color="primary"></mat-checkbox>
+            <div class="todo-text">
+              <span class="todo-name">{{ todo.title }}</span>
+              @if (todo.assignedTo) {
+                <span class="todo-assignee">{{ participantName(todo.assignedTo) }}</span>
+              }
+            </div>
+            <button mat-icon-button class="todo-delete" (click)="deleteTodo(todo)" matTooltip="Remove">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        } @empty {
+          <p class="todo-empty">Things to do before the trip — book the car, print passes, renew passports…</p>
+        }
+
+        <form class="todo-add" (submit)="$event.preventDefault(); addTodo()">
+          <input class="todo-input" type="text" placeholder="Add a to-do…"
+                 [value]="newTodoTitle()"
+                 (input)="newTodoTitle.set($any($event.target).value)">
+          @if (participants().length > 0) {
+            <select class="todo-assign" [value]="newTodoAssignee() ?? ''"
+                    (change)="newTodoAssignee.set($any($event.target).value || null)"
+                    aria-label="Assign to">
+              <option value="">Anyone</option>
+              @for (p of participants(); track p.id) {
+                <option [value]="p.id">{{ p.name }}</option>
+              }
+            </select>
+          }
+          <button mat-icon-button type="submit" [disabled]="!newTodoTitle().trim()" matTooltip="Add to-do">
+            <mat-icon>add</mat-icon>
+          </button>
+        </form>
+      </div>
+    }
+  </aside>
+
+  </div><!-- /packing-body -->
 
 </div>
