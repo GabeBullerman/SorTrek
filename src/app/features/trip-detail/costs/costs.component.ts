@@ -346,9 +346,27 @@ export class CostsComponent implements OnInit {
     participants: TripParticipant[],
     expenses: Expense[]
   ): CostsData {
-    const breakdown = this.buildBreakdown(bookings, items, expenses);
+    // Proposed (not yet approved) activities don't count toward the total or
+    // anyone's share — but they're shown as their own breakdown section below
+    // so the group can see what's pending.
+    const confirmedItems = items.filter(i => i.proposed !== true);
+    const proposedItems = items.filter(i => i.proposed === true && i.cost);
+
+    const breakdown = this.buildBreakdown(bookings, confirmedItems, expenses);
     const total = breakdown.reduce((s, b) => s + b.amount, 0);
-    const personShares = this.buildPersonShares(bookings, items, participants, expenses);
+    if (proposedItems.length) {
+      breakdown.push({
+        category: 'proposed',
+        label: 'Proposed (not in total)',
+        icon: 'pending_actions',
+        color: '#f9a825',
+        amount: proposedItems.reduce((s, i) => s + (i.cost ?? 0), 0),
+        items: proposedItems.map(i => ({
+          name: i.title, cost: i.cost!, currency: i.currency ?? this.trip.currency,
+        })),
+      });
+    }
+    const personShares = this.buildPersonShares(bookings, confirmedItems, participants, expenses);
     const settlements = this.buildSettlements(bookings, participants, expenses);
 
     // Points are tracked alongside cash, never mixed into it: group the
@@ -618,7 +636,9 @@ export class CostsComponent implements OnInit {
   }
 
   pct(amount: number, total: number): number {
-    return total > 0 ? Math.round((amount / total) * 100) : 0;
+    // Capped at 100 — the "Proposed" section isn't part of the total, so its
+    // bar could otherwise overflow the chart when proposals exceed spend.
+    return total > 0 ? Math.min(100, Math.round((amount / total) * 100)) : 0;
   }
 
   /** Build a breakdown item from an expense, using its trip-currency converted

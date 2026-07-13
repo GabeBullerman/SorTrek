@@ -408,7 +408,8 @@ export class OverviewComponent implements OnInit {
 
   totalCost(bookings: Booking[], items: ItineraryItem[]): number {
     const b = bookings.reduce((s, b) => s + (b.cost ?? 0), 0);
-    const i = items.reduce((s, i) => s + (i.cost ?? 0), 0);
+    // Proposed (unapproved) activities don't count toward the trip total.
+    const i = items.reduce((s, i) => s + (i.proposed === true ? 0 : (i.cost ?? 0)), 0);
     return b + i;
   }
 
