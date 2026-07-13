@@ -693,10 +693,8 @@
 }
 
 // Proposed (awaiting approval) itinerary items
-// Proposed items: dashed amber card with breathing room so chips/buttons
-// never touch the border. (Uses real theme tokens — the old --st-warn /
-// --st-text-muted / --st-success names don't exist, so their hardcoded
-// fallbacks broke dark mode.)
+// Proposed items: dashed amber card, padded so chips/buttons don't touch
+// the border. Uses real theme tokens (old names didn't exist → broke dark).
 .timeline-item.is-proposed .timeline-content {
   border: 1px dashed var(--st-warn-border);
   border-radius: 12px;
@@ -734,8 +732,7 @@
   mat-icon { font-size: 14px; width: 14px; height: 14px; }
 }
 
-// Compact Approve: fits its text (the generic 28px icon-button sizing no
-// longer applies to it) and uses the theme success tokens.
+// Compact Approve button that fits its icon + label.
 .approve-btn {
   --mdc-outlined-button-container-height: 28px;
   min-width: 0;
