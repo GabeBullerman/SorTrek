@@ -732,9 +732,12 @@
   mat-icon { font-size: 14px; width: 14px; height: 14px; }
 }
 
-// Compact Approve button that fits its icon + label.
+// Compact Approve button that fits its icon + label. Explicit height plus a
+// shrunken touch target — the MDC height token alone doesn't shrink it here.
 .approve-btn {
   --mdc-outlined-button-container-height: 28px;
+  height: 28px !important;
+  line-height: 26px;
   min-width: 0;
   padding: 0 10px;
   font-size: 0.76rem;
@@ -742,6 +745,7 @@
   border-color: var(--st-success-border);
 
   mat-icon { font-size: 15px; width: 15px; height: 15px; }
+  ::ng-deep .mat-mdc-button-touch-target { height: 28px; }
 }
 
 // ── Today marker + current activity ─────────────────────────────────────────
