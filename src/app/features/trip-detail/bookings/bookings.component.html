@@ -60,7 +60,10 @@
       } @else {
       <mat-accordion multi>
         @for (group of filteredGroups; track group.type) {
-          <mat-expansion-panel [expanded]="true" class="booking-group">
+          <mat-expansion-panel [expanded]="isGroupExpanded(group)"
+                               (opened)="onGroupToggle(group.type, true)"
+                               (closed)="onGroupToggle(group.type, false)"
+                               class="booking-group">
             <mat-expansion-panel-header>
               <mat-panel-title class="group-title">
                 <mat-icon>{{ group.icon }}</mat-icon>

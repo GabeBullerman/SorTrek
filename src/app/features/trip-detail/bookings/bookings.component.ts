@@ -184,6 +184,16 @@ export class BookingsComponent implements OnInit {
     const flights = bookings.filter(b => b.type === 'flight' && b.departureAirport);
     this.homeAirport = [...flights].sort(byDate)[0]?.departureAirport ?? null;
 
+    // Default-expanded group: the one holding the NEXT upcoming booking, so the
+    // first visit shows what matters without a wall of open panels. Falls back
+    // to the soonest booking overall (all-past trips).
+    const now = Date.now();
+    const upcoming = bookings
+      .filter(b => b.checkIn && b.status !== 'cancelled')
+      .sort(byDate);
+    const next = upcoming.find(b => b.checkIn!.toMillis() >= now) ?? upcoming[0];
+    this.defaultExpandedType = next?.type ?? 'flight';
+
     const types: BookingType[] = ['flight', 'hotel', 'airbnb', 'car-rental', 'other'];
     return types
       .map(type => ({
@@ -195,6 +205,44 @@ export class BookingsComponent implements OnInit {
           .sort(type === 'flight' ? (a, b) => this.compareFlights(a, b) : byDate),
       }))
       .filter(g => g.bookings.length > 0);
+  }
+
+  // ── Group expand/collapse: relevant-by-default, remembered per trip ──────
+  private defaultExpandedType: BookingType = 'flight';
+  /** User's saved toggles for this trip (null until they touch a panel). */
+  private expandedState: Record<string, boolean> | null = null;
+  private expandedStateLoaded = false;
+
+  private expandedStorageKey(): string {
+    return `sortrek_bookings_expanded_${this.tripId}`;
+  }
+
+  isGroupExpanded(group: BookingGroup): boolean {
+    // While searching, always expand — a match hidden in a collapsed panel
+    // would look like no result.
+    if (this.searchTerm().trim()) return true;
+    if (!this.expandedStateLoaded) {
+      this.expandedStateLoaded = true;
+      try {
+        const raw = localStorage.getItem(this.expandedStorageKey());
+        this.expandedState = raw ? JSON.parse(raw) : null;
+      } catch { this.expandedState = null; }
+    }
+    if (this.expandedState && group.type in this.expandedState) {
+      return this.expandedState[group.type];
+    }
+    return group.type === this.defaultExpandedType;
+  }
+
+  onGroupToggle(type: BookingType, open: boolean) {
+    // Search forces panels open — don't let that overwrite saved preferences.
+    if (this.searchTerm().trim()) return;
+    // No-op writes (initial render emits opened for the default panel) are
+    // harmless — they just persist the same effective state.
+    this.expandedState = { ...(this.expandedState ?? {}), [type]: open };
+    try {
+      localStorage.setItem(this.expandedStorageKey(), JSON.stringify(this.expandedState));
+    } catch { /* storage unavailable — session-only behavior */ }
   }
 
   /** 'arrival' = heading to the destination (departs home); 'departure' =
