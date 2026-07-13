@@ -20,14 +20,6 @@
       }
     </mat-nav-list>
 
-    <div class="sidenav-footer">
-      @if (currentUser$ | async; as user) {
-        <div class="user-chip">
-          <mat-icon>account_circle</mat-icon>
-          <span class="user-name">{{ user.displayName || user.email }}</span>
-        </div>
-      }
-    </div>
   </mat-sidenav>
 
   <mat-sidenav-content class="shell-content">
@@ -59,7 +51,12 @@
 
       @if (currentUser$ | async; as user) {
         <button mat-icon-button [routerLink]="'/profile'" matTooltip="Profile" aria-label="Profile">
-          <mat-icon>account_circle</mat-icon>
+          @if (user.photoURL && !avatarFailed()) {
+            <img class="toolbar-avatar" [src]="user.photoURL" alt=""
+                 referrerpolicy="no-referrer" (error)="avatarFailed.set(true)" />
+          } @else {
+            <mat-icon>account_circle</mat-icon>
+          }
         </button>
         <button mat-icon-button [matMenuTriggerFor]="userMenu" matTooltip="Account" aria-label="Account menu">
           <mat-icon>more_vert</mat-icon>

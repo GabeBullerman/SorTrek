@@ -15,7 +15,9 @@
 // deliberately distinct from the brand-colored toolbar. Uses --st-sidenav-*
 // tokens so themes/palettes flow through.
 .shell-sidenav {
-  width: 240px;
+  // Scale down with the viewport so squat/irregular laptop ratios don't lose
+  // ~a quarter of the screen to navigation (240px only on roomy displays).
+  width: clamp(184px, 16vw, 240px);
   background: var(--st-sidenav-bg);
   border-radius: 0 !important;
   border-right: 1px solid var(--st-sidenav-divider);
@@ -67,22 +69,6 @@
     }
   }
 
-  .sidenav-footer {
-    padding: 16px;
-    border-top: 1px solid var(--st-sidenav-divider);
-
-    .user-chip {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--st-sidenav-fg-faint);
-      font-size: 0.85rem;
-      overflow: hidden;
-
-      mat-icon { font-size: 20px; width: 20px; height: 20px; flex-shrink: 0; }
-      .user-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    }
-  }
 }
 
 .shell-toolbar {
@@ -97,6 +83,18 @@
   button[mat-icon-button] {
     color: var(--st-brand-fg);
     mat-icon { color: var(--st-brand-fg); }
+  }
+
+  // Profile picture in the toolbar button (falls back to the icon when absent
+  // or on load error).
+  .toolbar-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    object-fit: cover;
+    display: block;
+    box-sizing: border-box;
   }
 }
 

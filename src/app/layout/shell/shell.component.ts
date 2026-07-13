@@ -85,11 +85,15 @@ export class ShellComponent implements OnInit {
   }
   isMobile$ = this.breakpointObserver.observe([Breakpoints.Handset]).pipe(map(r => r.matches));
 
+  // Profile deliberately lives ONLY in the toolbar (avatar button) — a sidenav
+  // entry duplicated it.
   navItems = [
     { label: 'My Trips',   icon: 'flight_takeoff', route: '/trips' },
     { label: 'Past Trips', icon: 'history',         route: '/past-trips' },
-    { label: 'Profile',    icon: 'account_circle',  route: '/profile' },
   ];
+
+  /** True when the toolbar avatar image failed to load — fall back to the icon. */
+  readonly avatarFailed = signal(false);
 
   logout() {
     // Full reload after logout: the offline Firestore cache is terminated during
