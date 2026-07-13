@@ -116,6 +116,12 @@ body {
 html.dark .auth-logo--light { display: none; } /* hide dark logo in dark theme */
 html.dark .auth-logo--dark { display: block; }
 
+/* Short screens: shrink the auth logo so the card fits low viewports.
+   (The rest of the auth compaction lives in login/register component styles.) */
+@media (max-height: 860px) {
+  .auth-logo { height: 48px; }
+}
+
 /* Timezone label pill — annotates flight times that cross time zones */
 .tz-label {
   display: inline-block;

@@ -114,3 +114,24 @@ mat-card-content {
     &:hover { text-decoration: underline; }
   }
 }
+
+/* ── Short screens (small laptops / squat aspect ratios) ────────────────────
+   Same treatment as the login screen: top-align + margin:auto so the card
+   re-centers when it fits and scrolls sanely when it doesn't, plus compaction.
+   (Register has more fields, so scrolling may remain — but nothing is clipped.) */
+@media (max-height: 860px) {
+  .auth-container {
+    align-items: flex-start;
+    padding: 12px;
+  }
+  .auth-card { margin: auto; }
+  .auth-card .auth-brand {
+    padding: 6px 0 2px;
+    h1 { font-size: 1.2rem; }
+    p  { font-size: 0.8rem; }
+  }
+  mat-card-content { padding-top: 8px !important; }
+  .submit-btn, .google-btn { height: 42px; }
+  .auth-divider { margin: 12px 0 10px; }
+  .auth-footer-text { padding: 8px 16px; }
+}
