@@ -324,6 +324,14 @@
     color: var(--st-on-surface-muted);
     margin-top: 2px;
   }
+
+  .stat-sub {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--st-warn-accent);
+    margin-top: 1px;
+    white-space: nowrap;
+  }
 }
 
 .map-card, .description-card, .upcoming-card {

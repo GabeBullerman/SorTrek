@@ -42,6 +42,19 @@
   --st-brand-active-fg:   #82b1ff;
   --st-brand-divider:     rgba(255, 255, 255, 0.12);
 
+  // Sidenav — a NEUTRAL surface distinct from the brand toolbar (white in
+  // light mode, dark in dark mode). Defined via references to the surface/
+  // text tokens, so dark mode and color palettes flow through automatically
+  // without per-theme overrides.
+  --st-sidenav-bg:        var(--st-surface);
+  --st-sidenav-fg:        var(--st-on-surface);
+  --st-sidenav-fg-muted:  var(--st-on-surface-muted);
+  --st-sidenav-fg-faint:  var(--st-on-surface-faint);
+  --st-sidenav-hover:     var(--st-surface-hover);
+  --st-sidenav-active-bg: var(--st-primary-tint-bg);
+  --st-sidenav-active-fg: var(--st-primary);
+  --st-sidenav-divider:   var(--st-border);
+
   // Elevation
   --st-shadow:            rgba(0, 0, 0, 0.15);
   --st-shadow-soft:       rgba(0, 0, 0, 0.08);

@@ -406,6 +406,16 @@ export class OverviewComponent implements OnInit {
     infoWindow.open(marker);
   }
 
+  /** Approved activities only — proposed ones don't count toward the stat. */
+  confirmedCount(items: ItineraryItem[]): number {
+    return items.filter(i => i.proposed !== true).length;
+  }
+
+  /** Pending (proposed) activities, shown as a subtext under the stat. */
+  proposedCount(items: ItineraryItem[]): number {
+    return items.filter(i => i.proposed === true).length;
+  }
+
   totalCost(bookings: Booking[], items: ItineraryItem[]): number {
     const b = bookings.reduce((s, b) => s + (b.cost ?? 0), 0);
     // Proposed (unapproved) activities don't count toward the trip total.

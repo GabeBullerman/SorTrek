@@ -2,20 +2,24 @@
   height: 100vh;
 }
 
-// Logo variants: white logo by default (dark brand bar), dark logo hidden.
-.brand-logo--dark { display: none; }
-
-// Pastel-pink light mode has a LIGHT brand bar → swap to the dark logo.
-:host-context(html[data-theme="pink"]:not(.dark)) {
-  .brand-logo--light { display: none; }
-  .brand-logo--dark  { display: block; }
+// Logo variants on the NEUTRAL sidenav: black logo on the light surface,
+// white-circle logo on the dark surface.
+.brand-logo--light { display: none; }
+.brand-logo--dark  { display: block; }
+:host-context(html.dark) {
+  .brand-logo--light { display: block; }
+  .brand-logo--dark  { display: none; }
 }
 
+// The sidenav is a neutral surface (white in light mode, dark in dark mode) —
+// deliberately distinct from the brand-colored toolbar. Uses --st-sidenav-*
+// tokens so themes/palettes flow through.
 .shell-sidenav {
   width: 240px;
-  background: var(--st-brand);
+  background: var(--st-sidenav-bg);
   border-radius: 0 !important;
-  color: var(--st-brand-fg);
+  border-right: 1px solid var(--st-sidenav-divider);
+  color: var(--st-sidenav-fg);
   display: flex;
   flex-direction: column;
 
@@ -24,7 +28,7 @@
     align-items: center;
     gap: 12px;
     padding: 20px 16px;
-    border-bottom: 1px solid var(--st-brand-divider);
+    border-bottom: 1px solid var(--st-sidenav-divider);
 
     .brand-logo {
       height: 40px;
@@ -38,40 +42,40 @@
     padding-top: 8px;
 
     a[mat-list-item] {
-      color: var(--st-brand-fg);
+      color: var(--st-sidenav-fg);
       border-radius: 0 24px 24px 0;
       margin-right: 12px;
       margin-bottom: 2px;
 
-      mat-icon { color: var(--st-brand-fg-muted); }
+      mat-icon { color: var(--st-sidenav-fg-muted); }
 
-      // Material renders title inside a shadow-piercing span — force brand fg
+      // Material renders title inside a shadow-piercing span — force sidenav fg
       ::ng-deep .mdc-list-item__primary-text,
-      ::ng-deep .mat-mdc-list-item-title { color: var(--st-brand-fg) !important; }
+      ::ng-deep .mat-mdc-list-item-title { color: var(--st-sidenav-fg) !important; }
 
       &:hover {
-        background: var(--st-brand-hover);
-        mat-icon { color: var(--st-brand-fg); }
+        background: var(--st-sidenav-hover);
+        mat-icon { color: var(--st-sidenav-fg); }
       }
 
       &.active-link {
-        background: var(--st-brand-active-bg);
-        mat-icon { color: var(--st-brand-active-fg); }
+        background: var(--st-sidenav-active-bg);
+        mat-icon { color: var(--st-sidenav-active-fg); }
         ::ng-deep .mdc-list-item__primary-text,
-        ::ng-deep .mat-mdc-list-item-title { color: var(--st-brand-active-fg) !important; }
+        ::ng-deep .mat-mdc-list-item-title { color: var(--st-sidenav-active-fg) !important; }
       }
     }
   }
 
   .sidenav-footer {
     padding: 16px;
-    border-top: 1px solid var(--st-brand-divider);
+    border-top: 1px solid var(--st-sidenav-divider);
 
     .user-chip {
       display: flex;
       align-items: center;
       gap: 8px;
-      color: var(--st-brand-fg-faint);
+      color: var(--st-sidenav-fg-faint);
       font-size: 0.85rem;
       overflow: hidden;
 

@@ -129,8 +129,11 @@
         <mat-card class="stat-card">
           <mat-icon>event</mat-icon>
           <div>
-            <div class="stat-value">{{ items.length }}</div>
+            <div class="stat-value">{{ confirmedCount(items) }}</div>
             <div class="stat-label">Activities</div>
+            @if (proposedCount(items) > 0) {
+              <div class="stat-sub">+{{ proposedCount(items) }} proposed</div>
+            }
           </div>
         </mat-card>
         <mat-card class="stat-card">
