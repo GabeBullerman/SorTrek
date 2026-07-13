@@ -404,12 +404,27 @@
     font-size: 0.8rem;
     font-weight: 600;
     color: var(--st-primary);
-    .no-time { color: var(--st-on-surface-faint); font-weight: 400; }
+
+    // Quiet but readable placeholder when no time is set (muted, not faint —
+    // faint was near-invisible in dark mode).
+    .no-time {
+      display: inline-block;
+      padding: 1px 8px;
+      border-radius: 999px;
+      background: var(--st-surface-2);
+      color: var(--st-on-surface-muted);
+      font-weight: 500;
+      font-size: 0.72rem;
+      font-style: italic;
+    }
   }
 
   .item-actions {
     display: flex;
-    button { width: 28px; height: 28px; line-height: 28px; }
+    align-items: center;
+    gap: 4px;
+    // Size only ICON buttons — the Approve button has text and needs its width.
+    button[mat-icon-button] { width: 28px; height: 28px; line-height: 28px; }
     mat-icon { font-size: 16px; width: 16px; height: 16px; }
   }
 }
@@ -678,29 +693,58 @@
 }
 
 // Proposed (awaiting approval) itinerary items
+// Proposed items: dashed amber card with breathing room so chips/buttons
+// never touch the border. (Uses real theme tokens — the old --st-warn /
+// --st-text-muted / --st-success names don't exist, so their hardcoded
+// fallbacks broke dark mode.)
 .timeline-item.is-proposed .timeline-content {
-  border: 1px dashed var(--st-warn, #d97706);
+  border: 1px dashed var(--st-warn-border);
   border-radius: 12px;
-  background: var(--st-warn-bg, rgba(217, 119, 6, 0.06));
+  background: var(--st-warn-bg);
+  padding: 10px 12px;
+  margin-bottom: 12px;
 }
 
+// Compact pill (plain span, not a 32px mat-chip).
 .proposed-chip {
-  background: var(--st-warn-bg, rgba(217, 119, 6, 0.12)) !important;
-  color: var(--st-warn, #b45309) !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px dashed var(--st-warn-border);
+  background: var(--st-warn-bg);
+  color: var(--st-warn-strong);
+  font-size: 0.72rem;
   font-weight: 600;
+  white-space: nowrap;
+
+  mat-icon { font-size: 14px; width: 14px; height: 14px; }
 }
 
 .pending-label {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.78rem;
-  color: var(--st-text-muted, #64748b);
+  font-size: 0.75rem;
+  color: var(--st-on-surface-muted);
   font-style: italic;
+  white-space: nowrap;
+
+  mat-icon { font-size: 14px; width: 14px; height: 14px; }
 }
 
+// Compact Approve: fits its text (the generic 28px icon-button sizing no
+// longer applies to it) and uses the theme success tokens.
 .approve-btn {
-  color: var(--st-success, #16a34a);
+  --mdc-outlined-button-container-height: 28px;
+  min-width: 0;
+  padding: 0 10px;
+  font-size: 0.76rem;
+  color: var(--st-success-fg);
+  border-color: var(--st-success-border);
+
+  mat-icon { font-size: 15px; width: 15px; height: 15px; }
 }
 
 // ── Today marker + current activity ─────────────────────────────────────────

@@ -231,10 +231,10 @@
 
                   <div class="item-meta">
                     @if (item.proposed) {
-                      <mat-chip class="proposed-chip">
+                      <span class="proposed-chip">
                         <mat-icon>schedule_send</mat-icon>
                         {{ proposerLabel(item) }}
-                      </mat-chip>
+                      </span>
                       <span class="vote-group">
                         <button type="button" class="vote-btn"
                                 [class.voted]="myVote(item) === 'up'"
