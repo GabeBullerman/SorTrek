@@ -2,9 +2,12 @@
 // with fetch — the groq-sdk client throws "Connection error" in the Vercel
 // runtime, but a raw fetch to the same endpoint works reliably.
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
-// Groq production model (replaced llama-3.3-70b-versatile). All AI endpoints
-// use this via the default, so change it here to switch them all at once.
-const DEFAULT_MODEL = 'openai/gpt-oss-120b';
+// Groq production instruct model. NOTE: a reasoning model (e.g. openai/gpt-oss-*)
+// breaks these endpoints — it spends the token budget "thinking" and returns
+// empty/wrapped output, so the strict-JSON extraction (Find Plans, email scraper)
+// yields nothing. This non-reasoning model is what those prompts expect.
+// All AI endpoints use it via the default; change here to switch them all.
+const DEFAULT_MODEL = 'llama-3.3-70b-versatile';
 
 /**
  * Send a chat completion to Groq and return the assistant's text content.
