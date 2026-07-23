@@ -31,11 +31,16 @@ export class CurrencyConverterComponent {
   result    = signal<number | null>(null);
   loading   = signal(false);
   rateInfo  = signal<string>('');
+  error     = signal<string>('');
 
   convert() {
-    const a = this.amount();
-    if (!a || a <= 0) return;
+    const a = Number(this.amount());
+    if (!a || a <= 0) {
+      this.error.set('Enter an amount greater than zero.');
+      return;
+    }
     this.loading.set(true);
+    this.error.set('');
     this.result.set(null);
 
     this.currencyService.getRate(this.fromCode(), this.toCode()).subscribe(r => {
@@ -43,6 +48,9 @@ export class CurrencyConverterComponent {
       if (r) {
         this.result.set(a * r.rate);
         this.rateInfo.set(`1 ${r.from} = ${r.rate.toFixed(4)} ${r.to}`);
+      } else {
+        // Never fail silently — the user pressed a button and deserves an answer.
+        this.error.set("Couldn't fetch today's rate. Check your connection and try again.");
       }
     });
   }
@@ -52,6 +60,7 @@ export class CurrencyConverterComponent {
     this.fromCode.set(this.toCode());
     this.toCode.set(tmp);
     this.result.set(null);
+    this.error.set('');
   }
 
   formatResult(n: number): string {

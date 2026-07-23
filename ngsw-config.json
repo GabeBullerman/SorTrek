@@ -34,7 +34,7 @@
     },
     {
       "name": "exchange-rates",
-      "urls": ["https://api.frankfurter.app/**"],
+      "urls": ["https://api.frankfurter.dev/**"],
       "cacheConfig": {
         "maxSize": 30,
         "maxAge": "12h",

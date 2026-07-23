@@ -42,7 +42,12 @@
     <div class="result">
       <div class="result-amount">{{ formatResult(result()!) }} <span class="result-code">{{ toCode() }}</span></div>
       <div class="result-rate">{{ rateInfo() }}</div>
-      <div class="result-note">ECB rates via frankfurter.app</div>
+      <div class="result-note">ECB rates via frankfurter.dev</div>
+    </div>
+  } @else if (error()) {
+    <div class="convert-error">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ error() }}</span>
     </div>
   }
 </div>

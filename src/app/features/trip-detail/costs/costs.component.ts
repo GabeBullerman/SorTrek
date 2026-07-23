@@ -129,6 +129,7 @@ export class CostsComponent implements OnInit {
   converterTo = signal<string>('USD');
   converterResult = signal<RateResult | null>(null);
   converterLoading = signal(false);
+  converterError = signal<string>('');
   glanceRates = signal<GlanceRate[]>([]);
   glanceLoading = signal(false);
 
@@ -254,10 +255,13 @@ export class CostsComponent implements OnInit {
     const to = this.converterTo();
     if (!from || !to) return;
     this.converterLoading.set(true);
+    this.converterError.set('');
     this.converterResult.set(null);
     this.currencyService.getRate(from, to).subscribe(r => {
       this.converterResult.set(r);
       this.converterLoading.set(false);
+      // A null rate means the lookup failed — say so rather than showing nothing.
+      if (!r) this.converterError.set("Couldn't fetch today's rate. Please try again.");
     });
   }
 
