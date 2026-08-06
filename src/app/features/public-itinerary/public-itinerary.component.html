@@ -35,6 +35,23 @@
               <mat-icon aria-hidden="true">calendar_today</mat-icon>
               {{ t.startDate | date:'MMM d':'UTC' }} – {{ t.endDate | date:'MMM d, y':'UTC' }}
             </p>
+
+            <div class="pub-hero-meta">
+              @if (countdown(); as c) {
+                <span class="pub-countdown"><mat-icon aria-hidden="true">flight_takeoff</mat-icon>{{ c }}</span>
+              }
+              <span class="pub-stats">
+                <span class="pub-stat">{{ tripDays() }} {{ tripDays() === 1 ? 'day' : 'days' }}</span>
+                @if (cityCount() > 0) {
+                  <span class="pub-stat-sep">·</span>
+                  <span class="pub-stat">{{ cityCount() }} {{ cityCount() === 1 ? 'city' : 'cities' }}</span>
+                }
+                @if (activityCount() > 0) {
+                  <span class="pub-stat-sep">·</span>
+                  <span class="pub-stat">{{ activityCount() }} planned</span>
+                }
+              </span>
+            </div>
           </div>
         </header>
 
@@ -125,6 +142,31 @@
               <p class="pub-empty">No itinerary items yet.</p>
             }
           </section>
+
+          <!-- Inspiration: links the group has collected for the trip -->
+          @if (hasIdeas()) {
+            <section class="pub-section">
+              <h2 class="pub-section-title">Inspiration</h2>
+              <div class="pub-insp-grid">
+                @for (idea of ideas(); track $index) {
+                  <a class="pub-insp-card" [href]="idea.url" target="_blank" rel="noopener noreferrer">
+                    @if (idea.image) {
+                      <img class="pub-insp-img" [src]="idea.image" alt="" loading="lazy"
+                           referrerpolicy="no-referrer"
+                           (error)="$any($event.target).style.display='none'" />
+                    }
+                    <div class="pub-insp-body">
+                      <div class="pub-insp-site">{{ idea.siteName || ideaHost(idea) }}</div>
+                      <div class="pub-insp-title">{{ idea.title || ideaHost(idea) }}</div>
+                      @if (idea.note) {
+                        <div class="pub-insp-note">{{ idea.note }}</div>
+                      }
+                    </div>
+                  </a>
+                }
+              </div>
+            </section>
+          }
 
         </main>
 

@@ -34,12 +34,22 @@ interface PublicStay {
   checkOut?: string;
 }
 
+interface PublicIdea {
+  url: string;
+  title?: string;
+  image?: string;
+  siteName?: string;
+  note?: string;
+}
+
 interface PublicItineraryResponse {
   trip?: PublicTrip;
   itinerary?: PublicItineraryItem[];
   stays?: PublicStay[];
   mapPlaces?: string[];
   mapArea?: string;
+  cityCount?: number;
+  ideas?: PublicIdea[];
   error?: string;
   configured?: boolean;
 }
@@ -79,8 +89,44 @@ export class PublicItineraryComponent implements OnInit {
   /** 'js' = interactive multi-pin map; 'embed' = keyless single-area fallback. */
   readonly mapMode = signal<'js' | 'embed' | 'hidden'>('hidden');
 
+  readonly cityCount = signal<number>(0);
+  readonly ideas = signal<PublicIdea[]>([]);
+
   readonly days = signal<DayGroup[]>([]);
   readonly hasStays = computed(() => this.stays().length > 0);
+  readonly hasIdeas = computed(() => this.ideas().length > 0);
+
+  /** Total planned activities across all days (approved + proposed). */
+  readonly activityCount = computed(() =>
+    this.days().reduce((n, d) => n + d.items.length, 0)
+  );
+
+  /** Whole-day trip length, inclusive of both endpoints. */
+  readonly tripDays = computed(() => {
+    const t = this.trip();
+    if (!t) return 0;
+    const s = utcDayMs(t.startDate);
+    const e = utcDayMs(t.endDate);
+    if (s === null || e === null) return 0;
+    return Math.round((e - s) / 86_400_000) + 1;
+  });
+
+  /** "Departs in 12 days" / "Happening now" / null once the trip has ended. */
+  readonly countdown = computed<string | null>(() => {
+    const t = this.trip();
+    if (!t) return null;
+    const start = utcDayMs(t.startDate);
+    if (start === null) return null;
+    const now = new Date();
+    const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+    const days = Math.round((start - today) / 86_400_000);
+    if (days > 1) return `Departs in ${days} days`;
+    if (days === 1) return 'Departs tomorrow';
+    if (days === 0) return 'Departs today!';
+    const end = utcDayMs(t.endDate);
+    if (end !== null && today <= end) return 'Happening now';
+    return null; // past trip — no countdown
+  });
 
   private mapInitStarted = false;
 
@@ -119,6 +165,8 @@ export class PublicItineraryComponent implements OnInit {
         }
         this.trip.set(res.trip);
         this.stays.set(res.stays ?? []);
+        this.cityCount.set(res.cityCount ?? 0);
+        this.ideas.set(res.ideas ?? []);
         this.mapPlaces.set(res.mapPlaces ?? []);
         this.mapArea.set(res.mapArea ?? res.trip.destination ?? '');
         this.days.set(this.groupByDate(res.itinerary ?? []));
@@ -214,4 +262,16 @@ export class PublicItineraryComponent implements OnInit {
     if (t.includes('airbnb') || t.includes('rental') || t.includes('home')) return 'home';
     return 'hotel';
   }
+
+  ideaHost(idea: PublicIdea): string {
+    try { return new URL(idea.url).hostname.replace(/^www\./, ''); }
+    catch { return idea.url; }
+  }
+}
+
+/** UTC-midnight epoch-ms for a date-only ISO string, or null if unparseable. */
+function utcDayMs(iso: string): number | null {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return null;
+  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
 }

@@ -64,9 +64,10 @@ module.exports = async (req, res) => {
       return res.status(404).json({ error: 'This itinerary link is not available.' });
     }
 
-    const [itinSnap, bookSnap] = await Promise.all([
+    const [itinSnap, bookSnap, ideaSnap] = await Promise.all([
       db.collection('itinerary').where('tripId', '==', tripId).get(),
       db.collection('bookings').where('tripId', '==', tripId).get(),
+      db.collection('tripIdeas').where('tripId', '==', tripId).get(),
     ]);
 
     const itinerary = itinSnap.docs
@@ -109,6 +110,31 @@ module.exports = async (req, res) => {
     // Single-string fallback for the keyless iframe (used only if Maps JS fails).
     const mapArea = mapPlaces.length ? mapPlaces.slice(0, 3).join(' · ') : (trip.destination ?? '');
 
+    // Distinct "cities" for the at-a-glance stat = where you actually stay
+    // (accommodation areas), which is more meaningful than every plan pin.
+    const cityCount = [...new Set([
+      ...itinSnap.docs.map(d => d.data())
+        .filter(i => (i.category ?? '').toLowerCase() === 'accommodation' && i.location)
+        .map(i => generalArea(i.location)),
+      ...stays.map(s => s.area),
+    ].filter(Boolean))].length;
+
+    // Inspiration links from the trip's Ideas board (newest first).
+    const ideas = ideaSnap.docs
+      .map(d => d.data())
+      .map(i => ({
+        url: i.url ?? '',
+        title: i.title ?? null,
+        image: i.image ?? null,
+        siteName: i.siteName ?? null,
+        note: i.note ?? null,
+        _ts: i.createdAt?._seconds ?? 0,
+      }))
+      .filter(i => i.url)
+      .sort((a, b) => b._ts - a._ts)
+      .slice(0, 12)
+      .map(({ _ts, ...rest }) => rest);
+
     // Cache at the edge briefly to soften refreshes.
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
     return res.status(200).json({
@@ -123,6 +149,8 @@ module.exports = async (req, res) => {
       stays,
       mapPlaces,
       mapArea,
+      cityCount,
+      ideas,
     });
   } catch (err) {
     console.error('[public-itinerary]', err?.message ?? err);
