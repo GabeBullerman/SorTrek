@@ -51,3 +51,6 @@ src/environments/environment.ts
 
 # Local one-click launchers (not part of the app)
 RUN-*.bat
+
+# Unrelated sibling folder, not part of the app
+/Projects/
