@@ -98,17 +98,16 @@ module.exports = async (req, res) => {
       }))
       .sort((a, b) => (a.checkIn ?? '').localeCompare(b.checkIn ?? ''));
 
-    // A general map area: prefer the towns where they're staying (accommodation
-    // itinerary locations + stay areas), else fall back to the destination.
-    const stayLocations = [
-      ...itinSnap.docs.map(d => d.data())
-        .filter(i => (i.category ?? '').toLowerCase() === 'accommodation' && i.location)
-        .map(i => generalArea(i.location)),
-      ...stays.map(s => s.area),
-    ].filter(Boolean);
-    const mapArea = stayLocations.length
-      ? [...new Set(stayLocations)].slice(0, 3).join(', ')
-      : (trip.destination ?? '');
+    // Distinct general areas for the map — one pin per place. Pulls locations
+    // from ALL visible plans (not just accommodation) plus the stays, so a trip
+    // spread across several cities shows a pin in each. Transport legs excluded.
+    const planLocations = itinSnap.docs.map(d => d.data())
+      .filter(i => !TRANSPORT_CATEGORIES.has((i.category ?? 'other').toLowerCase()) && i.location)
+      .map(i => generalArea(i.location));
+    const mapPlaces = [...new Set([...planLocations, ...stays.map(s => s.area)].filter(Boolean))]
+      .slice(0, 15);
+    // Single-string fallback for the keyless iframe (used only if Maps JS fails).
+    const mapArea = mapPlaces.length ? mapPlaces.slice(0, 3).join(' · ') : (trip.destination ?? '');
 
     // Cache at the edge briefly to soften refreshes.
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
@@ -122,6 +121,7 @@ module.exports = async (req, res) => {
       },
       itinerary,
       stays,
+      mapPlaces,
       mapArea,
     });
   } catch (err) {

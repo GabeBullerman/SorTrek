@@ -41,10 +41,13 @@
         <main class="pub-content">
 
           <!-- Where we're staying: general-area map + stay list -->
-          @if (mapUrl() || hasStays()) {
+          @if (mapMode() !== 'hidden' || hasStays()) {
             <section class="pub-section">
               <h2 class="pub-section-title">Where we're staying</h2>
-              @if (mapUrl(); as m) {
+              @if (mapMode() === 'js') {
+                <div #mapEl class="pub-map pub-map-js"></div>
+                <p class="pub-map-note">General areas only — exact addresses aren't shared.</p>
+              } @else if (mapMode() === 'embed' && mapUrl(); as m) {
                 <div class="pub-map">
                   <iframe [src]="m" title="Map of the general area"
                           loading="lazy" referrerpolicy="no-referrer-when-downgrade"

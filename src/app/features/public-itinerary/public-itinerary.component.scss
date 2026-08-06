@@ -229,6 +229,17 @@
   }
 }
 
+/* Interactive JS map needs an explicit height, not just aspect-ratio, or
+   Google Maps renders 0px tall. */
+.pub-map-js {
+  width: 100%;
+  height: 320px;
+  aspect-ratio: auto;
+  background: var(--st-surface-variant, rgba(0, 0, 0, 0.05));
+
+  @media (max-width: 480px) { height: 260px; }
+}
+
 .pub-map-note {
   margin: 8px 0 14px;
   font-size: 0.78rem;
