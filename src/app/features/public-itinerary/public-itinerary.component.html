@@ -40,6 +40,42 @@
 
         <main class="pub-content">
 
+          <!-- Where we're staying: general-area map + stay list -->
+          @if (mapUrl() || hasStays()) {
+            <section class="pub-section">
+              <h2 class="pub-section-title">Where we're staying</h2>
+              @if (mapUrl(); as m) {
+                <div class="pub-map">
+                  <iframe [src]="m" title="Map of the general area"
+                          loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+                          allowfullscreen></iframe>
+                </div>
+                <p class="pub-map-note">General area only — exact addresses aren't shared.</p>
+              }
+              @if (hasStays()) {
+                <div class="pub-stays">
+                  @for (s of stays(); track $index) {
+                    <div class="pub-stay">
+                      <div class="pub-stay-icon"><mat-icon>{{ stayIcon(s.type) }}</mat-icon></div>
+                      <div class="pub-stay-body">
+                        <p class="pub-stay-title">{{ s.title }}</p>
+                        @if (s.area) {
+                          <p class="pub-stay-area"><mat-icon aria-hidden="true">place</mat-icon>{{ s.area }}</p>
+                        }
+                        @if (s.checkIn) {
+                          <p class="pub-stay-dates">
+                            {{ s.checkIn | date:'MMM d':'UTC' }}
+                            @if (s.checkOut) { – {{ s.checkOut | date:'MMM d, y':'UTC' }} }
+                          </p>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </section>
+          }
+
           <section class="pub-section">
             <h2 class="pub-section-title">Itinerary</h2>
             @if (days().length) {
@@ -51,7 +87,7 @@
                   </div>
                   <div class="pub-items">
                     @for (item of day.items; track $index) {
-                      <div class="pub-item">
+                      <div class="pub-item" [class.pub-item-proposed]="item.proposed">
                         <div class="pub-item-time">
                           @if (item.startTime) {
                             <span>{{ item.startTime }}</span>
@@ -64,7 +100,10 @@
                           <mat-icon>{{ categoryIcon(item.category) }}</mat-icon>
                         </div>
                         <div class="pub-item-body">
-                          <p class="pub-item-title">{{ item.title }}</p>
+                          <p class="pub-item-title">
+                            {{ item.title }}
+                            @if (item.proposed) { <span class="pub-idea-badge">Idea</span> }
+                          </p>
                           @if (item.location) {
                             <p class="pub-item-loc">
                               <mat-icon aria-hidden="true">place</mat-icon>{{ item.location }}
@@ -83,36 +122,6 @@
               <p class="pub-empty">No itinerary items yet.</p>
             }
           </section>
-
-          @if (hasBookings()) {
-            <section class="pub-section">
-              <h2 class="pub-section-title">Bookings</h2>
-              <div class="pub-bookings">
-                @for (b of bookings(); track $index) {
-                  <div class="pub-booking">
-                    <div class="pub-booking-icon">
-                      <mat-icon>{{ bookingIcon(b.type) }}</mat-icon>
-                    </div>
-                    <div class="pub-booking-body">
-                      <p class="pub-booking-title">{{ b.title }}</p>
-                      @if (b.departureAirport && b.arrivalAirport) {
-                        <p class="pub-booking-route">
-                          {{ b.departureAirport }} → {{ b.arrivalAirport }}
-                          @if (b.flightNumber) { <span class="pub-flight-no">· {{ b.flightNumber }}</span> }
-                        </p>
-                      }
-                      @if (b.checkIn) {
-                        <p class="pub-booking-dates">
-                          {{ b.checkIn | date:'MMM d, y' }}
-                          @if (b.checkOut) { – {{ b.checkOut | date:'MMM d, y' }} }
-                        </p>
-                      }
-                    </div>
-                  </div>
-                }
-              </div>
-            </section>
-          }
 
         </main>
 

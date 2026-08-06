@@ -4,8 +4,34 @@ const { setSecurityHeaders } = require('./_auth');
 /**
  * Read-only public itinerary for a share token. Returns a SANITIZED view of a
  * trip whose owner has enabled public sharing — no costs, confirmation numbers,
- * ticket numbers, passengers, collaborators, or proposed (unapproved) items.
+ * ticket numbers, passengers, or collaborators.
+ *
+ * Public view shows: approved AND proposed plans (proposed flagged as "idea"),
+ * plus a general "where we're staying" area for a map. It HIDES transportation
+ * entirely — no flights, car rentals, trains, transport/drive itinerary items,
+ * airports, or flight numbers.
  */
+const TRANSPORT_CATEGORIES = new Set(['transport', 'drive']);
+const TRANSPORT_BOOKING_TYPES = new Set(['flight', 'car-rental', 'train', 'transport']);
+const STAY_BOOKING_TYPES = new Set(['hotel', 'airbnb']);
+/**
+ * Reduce a possibly-exact address to a GENERAL area for a public map — we don't
+ * want to broadcast the exact door of someone's rental. Drops a leading street
+ * number + street, keeping the city/region tail. "Rua Augusta 100, Lisbon,
+ * Portugal" -> "Lisbon, Portugal"; a bare "Lisbon" is returned unchanged.
+ */
+function generalArea(raw) {
+  const s = String(raw ?? '').trim();
+  if (!s) return null;
+  const parts = s.split(',').map(p => p.trim()).filter(Boolean);
+  if (parts.length <= 1) return s;
+  // If the first segment looks like a street address (has digits), drop it.
+  const first = parts[0];
+  const looksLikeStreet = /\d/.test(first);
+  const kept = looksLikeStreet ? parts.slice(1) : parts;
+  return kept.join(', ');
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   setSecurityHeaders(res);
@@ -45,7 +71,8 @@ module.exports = async (req, res) => {
 
     const itinerary = itinSnap.docs
       .map(d => d.data())
-      .filter(i => i.proposed !== true) // only approved items
+      // Show approved AND proposed plans, but hide transportation legs.
+      .filter(i => !TRANSPORT_CATEGORIES.has((i.category ?? 'other').toLowerCase()))
       .map(i => ({
         date: toIso(i.date),
         startTime: i.startTime ?? null,
@@ -54,22 +81,34 @@ module.exports = async (req, res) => {
         description: i.description ?? null,
         location: i.location ?? null,
         category: i.category ?? 'other',
+        proposed: i.proposed === true,
       }))
       .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? '') || (a.startTime ?? '').localeCompare(b.startTime ?? ''));
 
-    const bookings = bookSnap.docs
+    // Accommodation ("stays") only — transportation bookings are hidden.
+    const stays = bookSnap.docs
       .map(d => d.data())
-      .filter(b => b.status !== 'suggested')
+      .filter(b => b.status !== 'suggested' && STAY_BOOKING_TYPES.has((b.type ?? '').toLowerCase()))
       .map(b => ({
-        type: b.type ?? 'other',
+        type: b.type ?? 'hotel',
         title: b.title ?? '',
+        area: generalArea(b.address),
         checkIn: toIso(b.checkIn),
         checkOut: toIso(b.checkOut),
-        departureAirport: b.departureAirport ?? null,
-        arrivalAirport: b.arrivalAirport ?? null,
-        flightNumber: b.flightNumber ?? null,
       }))
       .sort((a, b) => (a.checkIn ?? '').localeCompare(b.checkIn ?? ''));
+
+    // A general map area: prefer the towns where they're staying (accommodation
+    // itinerary locations + stay areas), else fall back to the destination.
+    const stayLocations = [
+      ...itinSnap.docs.map(d => d.data())
+        .filter(i => (i.category ?? '').toLowerCase() === 'accommodation' && i.location)
+        .map(i => generalArea(i.location)),
+      ...stays.map(s => s.area),
+    ].filter(Boolean);
+    const mapArea = stayLocations.length
+      ? [...new Set(stayLocations)].slice(0, 3).join(', ')
+      : (trip.destination ?? '');
 
     // Cache at the edge briefly to soften refreshes.
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
@@ -82,7 +121,8 @@ module.exports = async (req, res) => {
         coverPhotoUrl: trip.coverPhotoUrl ?? null,
       },
       itinerary,
-      bookings,
+      stays,
+      mapArea,
     });
   } catch (err) {
     console.error('[public-itinerary]', err?.message ?? err);

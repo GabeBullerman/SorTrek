@@ -2,6 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { DatePipe } from '@angular/common';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
@@ -21,22 +22,22 @@ interface PublicItineraryItem {
   description?: string;
   location?: string;
   category?: string;
+  proposed?: boolean;
 }
 
-interface PublicBooking {
+interface PublicStay {
   type?: string;
   title: string;
+  area?: string;
   checkIn?: string;
   checkOut?: string;
-  departureAirport?: string;
-  arrivalAirport?: string;
-  flightNumber?: string;
 }
 
 interface PublicItineraryResponse {
   trip?: PublicTrip;
   itinerary?: PublicItineraryItem[];
-  bookings?: PublicBooking[];
+  stays?: PublicStay[];
+  mapArea?: string;
   error?: string;
   configured?: boolean;
 }
@@ -65,13 +66,27 @@ const CATEGORY_ICONS: Record<string, string> = {
 export class PublicItineraryComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private http = inject(HttpClient);
+  private sanitizer = inject(DomSanitizer);
 
   readonly state = signal<'loading' | 'error' | 'loaded'>('loading');
   readonly trip = signal<PublicTrip | null>(null);
-  readonly bookings = signal<PublicBooking[]>([]);
+  readonly stays = signal<PublicStay[]>([]);
+  readonly mapArea = signal<string>('');
 
   readonly days = signal<DayGroup[]>([]);
-  readonly hasBookings = computed(() => this.bookings().length > 0);
+  readonly hasStays = computed(() => this.stays().length > 0);
+
+  /**
+   * Google Maps embed for the general stay area. Uses the keyless `?output=embed`
+   * form so no API key is exposed on this public page; the URL is trusted only
+   * after we build it from an encoded, server-provided place string.
+   */
+  readonly mapUrl = computed<SafeResourceUrl | null>(() => {
+    const q = this.mapArea().trim();
+    if (!q) return null;
+    const url = `https://www.google.com/maps?q=${encodeURIComponent(q)}&z=11&output=embed`;
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  });
 
   ngOnInit() {
     const token = this.route.snapshot.paramMap.get('token') ?? '';
@@ -87,7 +102,8 @@ export class PublicItineraryComponent implements OnInit {
           return;
         }
         this.trip.set(res.trip);
-        this.bookings.set(res.bookings ?? []);
+        this.stays.set(res.stays ?? []);
+        this.mapArea.set(res.mapArea ?? res.trip.destination ?? '');
         this.days.set(this.groupByDate(res.itinerary ?? []));
         this.state.set('loaded');
       },
@@ -118,12 +134,9 @@ export class PublicItineraryComponent implements OnInit {
     return `category-${(category ?? 'other').toLowerCase()}`;
   }
 
-  bookingIcon(type?: string): string {
+  stayIcon(type?: string): string {
     const t = (type ?? '').toLowerCase();
-    if (t.includes('flight')) return 'flight';
-    if (t.includes('stay') || t.includes('hotel') || t.includes('accommodation') || t.includes('lodging')) return 'hotel';
-    if (t.includes('car') || t.includes('rental')) return 'directions_car';
-    if (t.includes('train')) return 'train';
-    return 'confirmation_number';
+    if (t.includes('airbnb') || t.includes('rental') || t.includes('home')) return 'home';
+    return 'hotel';
   }
 }
