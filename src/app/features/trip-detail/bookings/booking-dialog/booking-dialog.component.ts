@@ -268,16 +268,16 @@ export class BookingDialogComponent implements OnInit {
       const s = res.status;
       this.statusResult.set(s);
 
-      // Fold the best-known times into the form so the booking reflects reality.
-      const bestDep = s.actualDeparture ?? s.estimatedDeparture ?? s.scheduledDeparture;
-      const bestArr = s.actualArrival ?? s.estimatedArrival ?? s.scheduledArrival;
+      // Autofill only the RELIABLE fields (airports, airline) and only when
+      // empty. We deliberately do NOT write the departure/arrival TIMES: flight
+      // APIs return unreliable timezone offsets, which was shifting correct
+      // times by hours. The looked-up scheduled/estimated times are shown in the
+      // status card for reference, but the times you enter stay yours.
       const patch: Record<string, unknown> = {};
-      if (bestDep) { patch['checkIn'] = new Date(bestDep); patch['checkInTime'] = toTimeStr(new Date(bestDep)); }
-      if (bestArr) { patch['checkOut'] = new Date(bestArr); patch['checkOutTime'] = toTimeStr(new Date(bestArr)); }
       if (s.departureAirport && !this.form.value.departureAirport) patch['departureAirport'] = s.departureAirport;
       if (s.arrivalAirport && !this.form.value.arrivalAirport) patch['arrivalAirport'] = s.arrivalAirport;
       if (s.airline && !this.form.value.provider) patch['provider'] = s.airline;
-      this.form.patchValue(patch);
+      if (Object.keys(patch).length) this.form.patchValue(patch);
     });
   }
 

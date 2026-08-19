@@ -152,17 +152,15 @@ export class BookingsComponent implements OnInit {
     }
   }
 
-  /** Background variant of refreshFlightStatus: writes updates, never toasts. */
+  /** Background variant of refreshFlightStatus: writes live status, never toasts.
+   *  Deliberately does NOT touch checkIn/checkOut — the times the user entered
+   *  are the source of truth; the flight API's offsets are unreliable and were
+   *  silently corrupting them. Live/estimated times live inside flightStatus. */
   private silentRefreshFlight(booking: Booking) {
     const date = booking.checkIn ? this.toDateStr(booking.checkIn.toDate()) : undefined;
     this.flightService.getStatus(booking.flightNumber!, date).subscribe(res => {
       if (res.error || res.configured === false || !res.found || !res.status) return;
-      const s = res.status;
-      const changes: Partial<Booking> = { flightStatus: { ...s, updatedAt: Timestamp.now() } };
-      const bestDep = s.actualDeparture ?? s.estimatedDeparture ?? s.scheduledDeparture;
-      const bestArr = s.actualArrival ?? s.estimatedArrival ?? s.scheduledArrival;
-      if (bestDep) changes.checkIn = Timestamp.fromDate(new Date(bestDep));
-      if (bestArr) changes.checkOut = Timestamp.fromDate(new Date(bestArr));
+      const changes: Partial<Booking> = { flightStatus: { ...res.status, updatedAt: Timestamp.now() } };
       from(this.bookingService.updateBooking(booking.id!, changes))
         .subscribe({ error: () => { /* silent — next tick retries */ } });
     });
@@ -391,12 +389,11 @@ export class BookingsComponent implements OnInit {
       }
 
       const s = res.status;
-      const flightStatus: FlightStatus = { ...s, updatedAt: Timestamp.now() };
-      const bestDep = s.actualDeparture ?? s.estimatedDeparture ?? s.scheduledDeparture;
-      const bestArr = s.actualArrival ?? s.estimatedArrival ?? s.scheduledArrival;
-      const changes: Partial<Booking> = { flightStatus };
-      if (bestDep) changes.checkIn = Timestamp.fromDate(new Date(bestDep));
-      if (bestArr) changes.checkOut = Timestamp.fromDate(new Date(bestArr));
+      // Store ONLY the live status — never overwrite the departure/arrival times
+      // the user entered. Flight APIs return unreliable timezone offsets, which
+      // was silently shifting correct times by hours. The live/estimated times
+      // are kept inside flightStatus and shown as their own annotation.
+      const changes: Partial<Booking> = { flightStatus: { ...s, updatedAt: Timestamp.now() } };
 
       from(this.bookingService.updateBooking(booking.id!, changes)).subscribe(() =>
         this.snackBar.open(`Updated: ${s.flightStatus ?? 'status'}`, undefined, { duration: 2500 })
