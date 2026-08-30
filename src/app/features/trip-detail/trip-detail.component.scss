@@ -147,14 +147,6 @@
   }
 }
 
-// Highlight the section you're currently on inside the dropdown.
-::ng-deep .page-item-active {
-  color: var(--st-primary) !important;
-  font-weight: 600;
-
-  mat-icon { color: var(--st-primary) !important; }
-}
-
 .tab-body {
   padding: 24px;
   background: var(--st-bg);

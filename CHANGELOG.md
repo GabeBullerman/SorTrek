@@ -1,5 +1,16 @@
 # SorTrek — Changelog
 
+## 2026-08 — Section dropdown styling
+
+### Navigation
+- The dropdown panel now matches the trigger's width exactly — measured on open,
+  since the trigger is full-bleed on phones and fixed on desktop, so it can't be
+  a constant. Material's 280px panel cap is overridden.
+- Each item's icon and label are centered as one group in the panel width,
+  replacing Material's left-aligned layout and its 12px icon gutter.
+- Items tightened from 48px to 40px, separated by a thin hairline inset to 62%
+  of the width so it floats between rows instead of running edge to edge.
+
 ## 2026-08 — Trip sections as a dropdown
 
 ### Navigation
