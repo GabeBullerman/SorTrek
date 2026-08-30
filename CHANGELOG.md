@@ -1,5 +1,28 @@
 # SorTrek — Changelog
 
+## 2026-08 — Photo album: multi-select, save to device, full album
+
+### Photos
+- **Hold to select** — press and hold any photo (or hit **Select**) to enter
+  selection mode: tap to tick more, **Select all**, Esc or ✕ to leave.
+- **Save to your device** — save the selected photos in one go, or a single
+  photo from its tile or the lightbox. Uses the native share sheet on mobile
+  (so "Save Image" lands in the camera roll) and a file download elsewhere,
+  falling back to opening the image if Storage CORS isn't configured.
+- **Delete selected** — bulk-delete the photos you uploaded; other people's
+  selected photos are left untouched.
+- **The whole album is shown again.** The album query ordered by `uploadedAt`,
+  and Firestore drops documents that are missing the ordered field — so photos
+  whose server timestamp hadn't resolved yet never appeared. Photos are now
+  fetched by trip and sorted client-side.
+- **No more silent self-deletion.** A photo that failed to load once had its
+  Firestore document purged automatically, which permanently removed photos on
+  nothing more than an expired token or a flaky connection. Failed images are
+  now retried, then shown as a placeholder with **Try again**; removal is an
+  explicit choice by the photo's owner.
+- Deleting a photo no longer fails outright when the Storage object is already
+  gone — the database record is cleaned up either way.
+
 ## 2026-06 — Rebrand, dark mode, and feature wave
 
 ### Branding
