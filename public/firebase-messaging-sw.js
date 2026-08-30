@@ -16,7 +16,9 @@ self.addEventListener('message', event => {
       const { title, body, icon } = payload.notification ?? {};
       self.registration.showNotification(title ?? 'SorTrek', {
         body: body ?? '',
-        icon: icon ?? '/ClearLogoWhiteCircle.png',
+        // Opaque mark: shown as-is, so it must not vanish on a light shade.
+        icon: icon ?? '/icon-192.png',
+        // Rendered as an alpha silhouette, so the transparent logo suits it.
         badge: '/ClearLogoWhiteCircle.png',
         data: payload.data,
       });

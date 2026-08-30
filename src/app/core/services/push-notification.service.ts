@@ -53,7 +53,10 @@ export class PushNotificationService {
     if (this.permission !== 'granted') return;
     new Notification(title, {
       body,
-      icon: '/ClearLogoWhiteCircle.png',
+      // Shown as-is, so it needs an opaque mark — a white-on-transparent logo
+      // disappears against a light notification shade.
+      icon: '/icon-192.png',
+      // Rendered as an alpha silhouette, so the transparent logo is right here.
       badge: '/ClearLogoWhiteCircle.png',
       ...options,
     });
