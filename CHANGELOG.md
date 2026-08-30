@@ -1,5 +1,23 @@
 # SorTrek — Changelog
 
+## 2026-08 — Groq model refresh
+
+### AI
+- **Every AI feature was failing.** `llama-3.3-70b-versatile` was decommissioned
+  by Groq on 2026-08-16, so packing suggestions, the chat assistant, Find Plans,
+  transport planning and email parsing were all calling a model that no longer
+  exists.
+- Moved to `qwen/qwen3.6-27b`, one of Groq's two named replacements. Both
+  replacements are reasoning models, which these endpoints can't take as-is —
+  a model that spends its token budget thinking returns empty or
+  `<think>`-wrapped output, and the strict-JSON extraction in Find Plans and the
+  email scraper then yields nothing. Qwen is the one that can be turned all the
+  way off, so the helper sends `reasoning_effort: 'none'` for non-thinking mode;
+  gpt-oss only goes down to `low`.
+- `groqChat` takes a `reasoningEffort` option (pass `null` to omit the field for
+  a model that doesn't accept it), and strips a `<think>` block from the content
+  if one ever arrives anyway.
+
 ## 2026-08 — Section dropdown styling
 
 ### Navigation
