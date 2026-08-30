@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, Input, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, Input, OnInit, signal, ViewChild } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { APP_NAME } from '../../core/sortrek-title.strategy';
@@ -112,6 +112,19 @@ export class TripDetailComponent implements OnInit {
       .map((tab, index) => ({ ...tab, index }))
       .filter(tab => tab.label !== 'AI' || this.prefs.aiEnabled())
   );
+
+  @ViewChild('pageSelect') pageSelectRef?: ElementRef<HTMLElement>;
+
+  /** Size the dropdown panel to match its trigger. The panel is rendered in an
+   *  overlay attached to the body, so it can't inherit the trigger's width —
+   *  measure it on open and hand it over as a custom property. The trigger is
+   *  full-width on phones and fixed on desktop, so this can't be a constant. */
+  syncMenuWidth() {
+    const width = this.pageSelectRef?.nativeElement.getBoundingClientRect().width;
+    if (width) {
+      document.documentElement.style.setProperty('--trip-page-menu-w', `${Math.round(width)}px`);
+    }
+  }
 
   /** The section shown on the dropdown trigger. */
   readonly currentTab = computed<TabDef>(() =>

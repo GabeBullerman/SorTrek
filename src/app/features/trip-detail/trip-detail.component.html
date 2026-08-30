@@ -77,7 +77,8 @@
          Replaces the horizontal tab strip: every section is one tap away and
          none are hidden behind a "More" overflow. -->
     <div class="trip-nav">
-      <button class="page-select" [matMenuTriggerFor]="pageMenu"
+      <button #pageSelect class="page-select" [matMenuTriggerFor]="pageMenu"
+              (menuOpened)="syncMenuWidth()"
               aria-haspopup="menu"
               [attr.aria-label]="'Section: ' + currentTab().label + '. Choose a different section'">
         <mat-icon class="page-icon">{{ currentTab().icon }}</mat-icon>
