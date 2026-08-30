@@ -14,7 +14,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { Photo } from '../../../core/models/photo.model';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { Observable, of, from } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, shareReplay } from 'rxjs/operators';
 
 /** How long a press has to be held before it turns into a selection. */
 const LONG_PRESS_MS = 450;
@@ -48,7 +48,10 @@ export class PhotosComponent implements OnInit {
 
   ngOnInit() {
     this.photos$ = this.photoService.getPhotos(this.tripId).pipe(
-      catchError(err => { console.error('Photos query failed:', err); return of([]); })
+      catchError(err => { console.error('Photos query failed:', err); return of([]); }),
+      // The grid and the floating selection pill both subscribe — share the one
+      // Firestore listener between them instead of opening a second.
+      shareReplay({ bufferSize: 1, refCount: true }),
     );
     // The album is a set of Firestore records pointing at files in Storage, and
     // the two can drift apart. Reconcile once on open so photos still sitting in

@@ -1,5 +1,18 @@
 # SorTrek — Changelog
 
+## 2026-08 — Photo album polish
+
+### Photos
+- Selection actions moved into a **floating pill** at the bottom of the screen —
+  the count, Save, delete, and dismiss — instead of a bar that pushed the grid
+  around when a selection started. The grid keeps clearance beneath it so the
+  last row stays reachable.
+- Per-tile save/delete buttons shrunk (26px, 30px on touch) so they sit on the
+  image instead of dominating it.
+- The album count is just the icon and the number now; "photos" was saying
+  nothing the icon didn't.
+- The grid and the pill share one Firestore listener rather than opening two.
+
 ## 2026-08 — Photo album: storage recovery + native saving
 
 ### Photos
