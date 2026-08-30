@@ -83,119 +83,72 @@
   }
 }
 
-// Wrapper holds sticky positioning and the scroll-hint gradient overlay.
-.trip-tab-nav-wrapper {
+// Section navigation: one dropdown trigger showing where you are, sticky so it
+// stays reachable while a long section scrolls.
+.trip-nav {
   position: sticky;
   top: 0;
   z-index: 100;
   background: var(--st-surface);
-
-  // Right-edge fade: tells the user there are more tabs to scroll to
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 48px;
-    background: linear-gradient(to left, rgba(255,255,255,0.95) 20%, transparent);
-    pointer-events: none;
-    z-index: 1;
-
-    // Hide on desktop where all tabs are visible at once
-    @media (min-width: 900px) {
-      display: none;
-    }
-  }
-}
-
-// Plain div — no Angular Material component.
-.trip-tab-nav {
-  background: var(--st-surface);
   border-bottom: 1px solid var(--st-border);
-  display: flex;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-  scrollbar-width: none;
-  &::-webkit-scrollbar { display: none; }
+  padding: 8px 12px;
 }
 
-.tab-link {
-  flex: 1;
-  display: flex;
+.page-select {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 0 12px;
-  height: 48px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
+  gap: 8px;
+  min-width: 200px;
+  max-width: 100%;
+  height: 44px;
+  padding: 0 8px 0 12px;
+  border: 1px solid var(--st-border);
+  border-radius: 10px;
+  background: var(--st-surface);
+  color: var(--st-primary);
   font-family: Roboto, sans-serif;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--st-on-surface-muted);
-  letter-spacing: 0.3px;
-  white-space: nowrap;
-  border-bottom: 3px solid transparent;
-  transition: color 0.2s, border-color 0.2s;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
 
-  mat-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
+  &:hover { border-color: var(--st-primary); background: var(--st-primary-tint-bg); }
+  &:focus-visible { outline: 2px solid var(--st-primary); outline-offset: 2px; }
+
+  .page-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
   }
 
-  &:hover {
-    color: var(--st-primary);
-    background: var(--st-bg);
+  .page-label {
+    flex: 1;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  &.active {
-    color: var(--st-primary);
-    border-bottom-color: var(--st-primary);
+  .page-caret {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    color: var(--st-on-surface-muted);
   }
 
-  // Mobile: icon-only, fixed width — fits ~6 tabs in view, rest scroll
+  // Full width on phones — it's the primary way around the trip there.
   @media (max-width: 639px) {
-    flex: 0 0 52px;
-    flex-direction: column;
-    padding: 0;
-    gap: 0;
-    height: 52px;
-
-    mat-icon {
-      font-size: 22px;
-      width: 22px;
-      height: 22px;
-    }
-
-    .tab-label {
-      display: none;
-    }
+    display: flex;
+    width: 100%;
+    min-width: 0;
   }
 }
 
-// The "More" trigger only exists on phones — desktop shows every tab.
-.tab-link.more-tab {
-  display: none;
-}
-
-@media (max-width: 639px) {
-  // Fold the secondary tabs into the More menu; 5 primary + More = 6 buttons,
-  // which fit a phone width with no horizontal scrolling at all.
-  .tab-link.overflow-tab { display: none; }
-  .tab-link.more-tab     { display: flex; }
-
-  .trip-tab-nav .tab-link { flex: 1 1 0; }
-
-  // No scrolling left to hint at — hide the right-edge fade.
-  .trip-tab-nav-wrapper::after { display: none; }
-}
-
-// Highlight the currently-open tab inside the More menu.
-::ng-deep .more-item-active {
+// Highlight the section you're currently on inside the dropdown.
+::ng-deep .page-item-active {
   color: var(--st-primary) !important;
   font-weight: 600;
 

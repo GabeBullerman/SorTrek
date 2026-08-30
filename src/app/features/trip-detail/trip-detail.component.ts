@@ -1,4 +1,4 @@
-import { Component, effect, ElementRef, inject, Input, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, computed, effect, inject, Input, OnInit, signal } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { APP_NAME } from '../../core/sortrek-title.strategy';
@@ -56,7 +56,6 @@ export interface TabDef {
 })
 export class TripDetailComponent implements OnInit {
   @Input() id!: string;
-  @ViewChild('tabNav') tabNavRef!: ElementRef<HTMLDivElement>;
 
   private tripService = inject(TripService);
   private auth = inject(AuthService);
@@ -106,18 +105,18 @@ export class TripDetailComponent implements OnInit {
     { label: 'Ideas',      icon: 'lightbulb' },
   ];
 
-  /** Tab indexes that fold into the "More" menu on narrow screens
-   *  (Transport, Photos, People, Documents, AI, Ideas — the less-daily tabs). */
-  private readonly overflowTabIdx = new Set([2, 3, 6, 8, 9, 10]);
+  /** The sections offered in the dropdown, each keeping the index the template's
+   *  @switch and the ?tab= query param are keyed on. */
+  readonly visibleTabs = computed<(TabDef & { index: number })[]>(() =>
+    this.tabs
+      .map((tab, index) => ({ ...tab, index }))
+      .filter(tab => tab.label !== 'AI' || this.prefs.aiEnabled())
+  );
 
-  isOverflowTab(i: number): boolean {
-    return this.overflowTabIdx.has(i);
-  }
-
-  /** True when the active tab lives in the More menu (so More shows as active). */
-  overflowActive(): boolean {
-    return this.overflowTabIdx.has(this.selectedTab());
-  }
+  /** The section shown on the dropdown trigger. */
+  readonly currentTab = computed<TabDef>(() =>
+    this.tabs[this.selectedTab()] ?? this.tabs[0]
+  );
 
   ngOnInit() {
     // If the trip doesn't exist or the user isn't a member, the read is denied
@@ -164,12 +163,6 @@ export class TripDetailComponent implements OnInit {
       queryParamsHandling: 'merge',
       replaceUrl: true,
     });
-    // Scroll active tab into centre of the nav bar (helps on mobile)
-    setTimeout(() => {
-      const nav = this.tabNavRef?.nativeElement;
-      const btn = nav?.querySelector<HTMLElement>('.tab-link.active');
-      btn?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-    }, 0);
   }
 
   get tripId() { return this.id; }

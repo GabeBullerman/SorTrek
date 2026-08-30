@@ -1,5 +1,18 @@
 # SorTrek — Changelog
 
+## 2026-08 — Trip sections as a dropdown
+
+### Navigation
+- The horizontal tab strip becomes a **dropdown** that names the section you're
+  on, icon alongside the label, with every section listed in the menu the same
+  way. On phones the strip showed icon-only tabs and hid six sections behind a
+  "More" overflow; now nothing is hidden and the current section is stated
+  rather than inferred from a highlighted icon.
+- The trigger is full-width on phones and sticky, so it stays reachable while a
+  long section scrolls.
+- `?tab=` links still work unchanged, and the overflow bookkeeping the strip
+  needed (and its scroll-into-view) is gone.
+
 ## 2026-08 — Photo album polish
 
 ### Photos
