@@ -122,20 +122,97 @@ export class PhotoService {
     return `${(photo.caption || 'photo').replace(/[^\w.-]+/g, '-').slice(0, 40)}.jpg`;
   }
 
-  /** Save one photo to the device. Uses the native share sheet where the
-   *  platform offers it (that is how you get "Save Image" on iOS/Android),
-   *  otherwise a blob download, otherwise a plain link to the file. */
+  /** Bytes we've already fetched, keyed by photo id. Saving from this cache is
+   *  what makes the native share sheet work: iOS only honours `navigator.share`
+   *  while the user's tap is still "live", so awaiting a download first loses
+   *  the gesture. We prefetch on selection and share straight from here. */
+  private fileCache = new Map<string, File>();
+  private inFlight = new Map<string, Promise<File | null>>();
+
+  /** Warm the cache for a photo the user is likely to save next. */
+  prefetch(photo: Photo): void {
+    void this.fileFor(photo);
+  }
+
+  /** Drop cached bytes (a deleted photo, or a memory-conscious teardown). */
+  forgetCached(photoId: string): void {
+    this.fileCache.delete(photoId);
+    this.inFlight.delete(photoId);
+  }
+
+  private cachedFile(photo: Photo): File | null {
+    return photo.id ? this.fileCache.get(photo.id) ?? null : null;
+  }
+
+  /** Fetch (once) and cache the real bytes for a photo. */
+  private fileFor(photo: Photo, nameOverride?: string): Promise<File | null> {
+    const key = photo.id ?? photo.storagePath;
+    const cached = this.fileCache.get(key);
+    if (cached) return Promise.resolve(cached);
+
+    const pending = this.inFlight.get(key);
+    if (pending) return pending;
+
+    const task = this.downloadFile(photo, nameOverride ?? this.fileNameFor(photo))
+      .then(file => {
+        if (file) this.fileCache.set(key, file);
+        return file;
+      })
+      .finally(() => this.inFlight.delete(key));
+
+    this.inFlight.set(key, task);
+    return task;
+  }
+
+  /** Get the image bytes. Goes through our own `/api/photo-download` first: it
+   *  is same-origin, so there's no bucket CORS to configure and the browser
+   *  will actually save the result instead of opening the image in a new tab.
+   *  Falls back to the Storage URL directly if the endpoint isn't available. */
+  private async downloadFile(photo: Photo, name: string): Promise<File | null> {
+    if (photo.id) {
+      try {
+        const token = await this.auth.currentUser?.getIdToken();
+        if (token) {
+          const res = await fetch(`/api/photo-download?id=${encodeURIComponent(photo.id)}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.ok) {
+            const blob = await res.blob();
+            return new File([blob], name, { type: blob.type || 'image/jpeg' });
+          }
+        }
+      } catch { /* fall through to the direct URL */ }
+    }
+
+    try {
+      const res = await fetch(photo.url, { mode: 'cors', credentials: 'omit' });
+      if (!res.ok) return null;
+      const blob = await res.blob();
+      return new File([blob], name, { type: blob.type || 'image/jpeg' });
+    } catch {
+      return null;
+    }
+  }
+
+  /** Save one photo to the device. */
   async savePhoto(photo: Photo): Promise<void> {
     const name = this.fileNameFor(photo);
-    const file = await this.toFile(photo, name);
-    if (file && await this.shareFiles([file])) return;
-    if (file) { this.downloadBlob(file, name); return; }
+
+    // Cached already? Share synchronously so iOS still counts the user's tap.
+    const ready = this.cachedFile(photo);
+    if (ready && this.shareNow([ready])) return;
+
+    const file = ready ?? await this.fileFor(photo, name);
+    if (file) {
+      if (await this.shareFiles([file])) return;
+      this.downloadBlob(file, name);
+      return;
+    }
     this.openInNewTab(photo.url, name);
   }
 
-  /** Save many photos at once. Tries a single share sheet for the whole batch
-   *  first (one prompt instead of N), then falls back to staggered downloads.
-   *  Resolves with how many actually made it to the device. */
+  /** Save many photos at once — one share sheet for the batch where possible,
+   *  otherwise staggered downloads. Resolves with how many were saved. */
   async savePhotos(photos: Photo[]): Promise<number> {
     if (photos.length === 1) {
       await this.savePhoto(photos[0]);
@@ -143,7 +220,14 @@ export class PhotoService {
     }
 
     const named = photos.map(p => ({ photo: p, name: this.uniqueName(p, photos) }));
-    const files = await Promise.all(named.map(n => this.toFile(n.photo, n.name)));
+
+    // Everything already prefetched → share immediately, gesture intact.
+    const cached = named.map(n => this.cachedFile(n.photo));
+    if (cached.every((f): f is File => !!f) && this.shareNow(cached as File[])) {
+      return cached.length;
+    }
+
+    const files = await Promise.all(named.map(n => this.fileFor(n.photo, n.name)));
     const fetched = files.filter((f): f is File => !!f);
 
     if (fetched.length === named.length && await this.shareFiles(fetched)) {
@@ -177,33 +261,33 @@ export class PhotoService {
       : `${name}-${index + 1}`;
   }
 
-  /** Fetch the bytes so we can hand the browser a real file. Returns null when
-   *  the download is blocked (Storage CORS not configured, offline, …) so the
-   *  caller can fall back to a plain link. */
-  private async toFile(photo: Photo, name: string): Promise<File | null> {
-    try {
-      const res = await fetch(photo.url, { mode: 'cors', credentials: 'omit' });
-      if (!res.ok) return null;
-      const blob = await res.blob();
-      return new File([blob], name, { type: blob.type || 'image/jpeg' });
-    } catch {
-      return null;
-    }
-  }
-
-  private async shareFiles(files: File[]): Promise<boolean> {
-    const nav = navigator as Navigator & {
+  private shareTarget() {
+    return navigator as Navigator & {
       canShare?: (data: ShareData) => boolean;
       share?: (data: ShareData) => Promise<void>;
     };
+  }
+
+  /** Fire the share sheet without awaiting anything first, so the browser still
+   *  associates it with the tap. Returns whether the attempt was made. */
+  private shareNow(files: File[]): boolean {
+    const nav = this.shareTarget();
+    if (!nav.share || !nav.canShare || !nav.canShare({ files })) return false;
+    nav.share({ files, title: files.length === 1 ? files[0].name : 'Trip photos' })
+      .catch(() => { /* dismissed, or the platform declined */ });
+    return true;
+  }
+
+  private async shareFiles(files: File[]): Promise<boolean> {
+    const nav = this.shareTarget();
     if (!nav.share || !nav.canShare || !nav.canShare({ files })) return false;
     try {
       await nav.share({ files, title: files.length === 1 ? files[0].name : 'Trip photos' });
       return true;
-    } catch {
-      // AbortError (user dismissed) or NotAllowedError (gesture expired) —
-      // either way, fall through to the download path.
-      return false;
+    } catch (err) {
+      // The user dismissing the sheet still counts as handled; a gesture that
+      // expired (NotAllowedError) should fall through to a download.
+      return (err as DOMException)?.name === 'AbortError';
     }
   }
 
@@ -225,4 +309,33 @@ export class PhotoService {
     a.rel = 'noopener';
     a.click();
   }
+
+  /** Ask the server to reconcile the album against Storage, restoring records
+   *  for images that are still in the bucket but missing from the album. */
+  async syncWithStorage(tripId: string): Promise<PhotoSyncResult> {
+    const token = await this.auth.currentUser?.getIdToken();
+    const res = await fetch('/api/photo-sync', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ tripId }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body?.error ?? `Sync failed (${res.status})`);
+    return body as PhotoSyncResult;
+  }
+}
+
+/** What `/api/photo-sync` reports back. */
+export interface PhotoSyncResult {
+  /** Image files the trip actually has in Storage. */
+  inStorage: number;
+  /** Photo records the album held before the sync. */
+  inAlbum: number;
+  /** Records written back for files the album was missing. */
+  restored: number;
+  /** Files that couldn't be restored. */
+  failed: number;
 }

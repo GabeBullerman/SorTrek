@@ -29,6 +29,8 @@ const plaidTransactions = require('../api/plaid-transactions');
 const transport         = require('../api/transport');
 const flightStatus      = require('../api/flight-status');
 const placePhoto        = require('../api/place-photo');
+const photoSync         = require('../api/photo-sync');
+const photoDownload     = require('../api/photo-download');
 
 const routes = {
   '/api/ai-advisor':         aiAdvisor,
@@ -39,6 +41,8 @@ const routes = {
   '/api/plaid-transactions': plaidTransactions,
   '/api/transport':          transport,
   '/api/flight-status':      flightStatus,
+  '/api/photo-sync':         photoSync,
+  '/api/photo-download':     photoDownload,
   '/api/place-photo':        placePhoto,
 };
 

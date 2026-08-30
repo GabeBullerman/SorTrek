@@ -1,6 +1,16 @@
 <div class="photos-container">
   <div class="photos-header">
     <h2>Trip Photos</h2>
+    <button mat-stroked-button class="sync-btn" [disabled]="syncing()"
+            matTooltip="Check storage for photos missing from the album"
+            (click)="syncWithStorage(true)">
+      @if (syncing()) {
+        <mat-spinner diameter="18"></mat-spinner>
+      } @else {
+        <mat-icon>cloud_sync</mat-icon>
+      }
+      Sync
+    </button>
     <button mat-flat-button color="primary" (click)="triggerUpload()">
       <mat-icon>add_photo_alternate</mat-icon> Add Photos
     </button>

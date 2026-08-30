@@ -6,8 +6,15 @@
 .photos-header {
   display: flex;
   align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
   justify-content: space-between;
   margin-bottom: 24px;
+
+  .sync-btn {
+    mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    mat-spinner { margin-right: 6px; }
+  }
 
   h2 {
     margin: 0;
