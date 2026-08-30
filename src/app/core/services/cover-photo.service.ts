@@ -16,7 +16,7 @@ const COMPRESSION_OPTIONS = {
  *
  * Google Places photo URLs (from PlacePhoto.getUrl()) are signed and short-lived,
  * so storing them directly means the cover breaks after a while. This service
- * downloads the image once (via the /api/place-photo proxy to dodge browser CORS),
+ * downloads the image once (via the /api/photos?action=place proxy to dodge browser CORS),
  * compresses it, uploads a permanent copy, and returns its stable download URL.
  */
 @Injectable({ providedIn: 'root' })
@@ -44,7 +44,7 @@ export class CoverPhotoService {
 
     // 1. Fetch the bytes server-side (avoids CORS on Google's image hosts).
     const res = await firstValueFrom(
-      this.http.post<{ dataUrl?: string; error?: string }>('/api/place-photo', { url: googlePhotoUrl })
+      this.http.post<{ dataUrl?: string; error?: string }>('/api/photos?action=place', { url: googlePhotoUrl })
     );
     if (!res?.dataUrl) throw new Error(res?.error ?? 'Could not download cover image');
 

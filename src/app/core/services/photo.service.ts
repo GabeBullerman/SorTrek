@@ -164,7 +164,7 @@ export class PhotoService {
     return task;
   }
 
-  /** Get the image bytes. Goes through our own `/api/photo-download` first: it
+  /** Get the image bytes. Goes through our own `/api/photos` first: it
    *  is same-origin, so there's no bucket CORS to configure and the browser
    *  will actually save the result instead of opening the image in a new tab.
    *  Falls back to the Storage URL directly if the endpoint isn't available. */
@@ -173,7 +173,7 @@ export class PhotoService {
       try {
         const token = await this.auth.currentUser?.getIdToken();
         if (token) {
-          const res = await fetch(`/api/photo-download?id=${encodeURIComponent(photo.id)}`, {
+          const res = await fetch(`/api/photos?action=download&id=${encodeURIComponent(photo.id)}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           if (res.ok) {
@@ -314,7 +314,7 @@ export class PhotoService {
    *  for images that are still in the bucket but missing from the album. */
   async syncWithStorage(tripId: string): Promise<PhotoSyncResult> {
     const token = await this.auth.currentUser?.getIdToken();
-    const res = await fetch('/api/photo-sync', {
+    const res = await fetch('/api/photos?action=sync', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -328,7 +328,7 @@ export class PhotoService {
   }
 }
 
-/** What `/api/photo-sync` reports back. */
+/** What `/api/photos?action=sync` reports back. */
 export interface PhotoSyncResult {
   /** Image files the trip actually has in Storage. */
   inStorage: number;
