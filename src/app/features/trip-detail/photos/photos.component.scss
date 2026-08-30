@@ -93,27 +93,62 @@
   color: var(--st-on-surface-faint);
 }
 
-.selection-bar {
-  position: sticky;
-  top: 0;
-  z-index: 5;
+/* ── Floating selection pill ──────────────────────────────────────────────
+   Sits above the content rather than pushing it around, so the grid doesn't
+   reflow the moment a selection starts. */
+.selection-pill {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  z-index: 900;
+
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
-  padding: 8px 12px;
-  border-radius: 12px;
-  background: var(--st-primary-tint-bg);
-  border: 1px solid var(--st-primary-soft);
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 999px;
+  background: var(--st-surface);
+  border: 1px solid var(--st-border);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.28);
+  max-width: calc(100vw - 24px);
 
-  .selection-count {
+  animation: pill-in 0.18s ease-out;
+
+  .pill-count {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 8px 0 6px;
     font-size: 0.9rem;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--st-primary);
+    white-space: nowrap;
+
+    mat-icon { font-size: 18px; width: 18px; height: 18px; }
   }
 
-  mat-spinner { margin-right: 6px; }
+  .pill-save {
+    border-radius: 999px;
+    mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    mat-spinner { display: inline-block; margin-right: 6px; }
+  }
+
+  .pill-delete, .pill-close {
+    width: 36px;
+    height: 36px;
+    line-height: 36px;
+    flex-shrink: 0;
+  }
+}
+
+@keyframes pill-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .selection-pill { animation: none; }
 }
 
 .photo-grid {
@@ -126,7 +161,11 @@
   -webkit-user-select: none;
   user-select: none;
 
-  &.selecting .photo-tile:hover { transform: none; }
+  &.selecting {
+    .photo-tile:hover { transform: none; }
+    // Room for the floating pill.
+    padding-bottom: 72px;
+  }
 }
 
 .photo-tile {
@@ -171,9 +210,18 @@
     .delete-btn, .save-btn {
       color: white;
       background: rgba(0,0,0,0.45);
-      width: 32px;
-      height: 32px;
-      line-height: 32px;
+      width: 26px;
+      height: 26px;
+      line-height: 26px;
+      padding: 0;
+      min-width: 0;
+
+      mat-icon {
+        font-size: 15px;
+        width: 15px;
+        height: 15px;
+        line-height: 15px;
+      }
     }
   }
 
@@ -376,9 +424,9 @@
     background: transparent;
 
     .delete-btn, .save-btn {
-      width: 44px;
-      height: 44px;
-      line-height: 44px;
+      width: 30px;
+      height: 30px;
+      line-height: 30px;
     }
   }
 
