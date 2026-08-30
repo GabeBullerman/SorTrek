@@ -16,6 +16,9 @@
   cross-origin, so `<a download>` is ignored and `fetch` needs bucket CORS —
   which is why every save bounced to a new tab. Photos now stream through
   `api/photo-download` on our own origin, so the browser gets a real file.
+- The three photo endpoints share one function (`api/photos.js`, dispatching on
+  `?action=`) — Vercel's Hobby plan caps a deployment at 12 Serverless Functions
+  and `api/` was already sitting exactly on that limit.
 - **Native share sheet on iOS/Android** ("Save Image" straight to the camera
   roll). The bytes are prefetched the moment a photo is selected or opened, so
   the Save tap can raise the sheet while the gesture is still live — awaiting a

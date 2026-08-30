@@ -118,15 +118,21 @@ service firebase.storage {
 
 ## 5b. Saving photos to a device
 
-Saving photos runs through `/api/photo-download`, which streams the image from
+Saving photos runs through `/api/photos?action=download`, which streams the image from
 our own origin — that is what lets the browser hand over a real file (and iOS
 show "Save Image" / "Save to Files") instead of opening the image in a new tab.
 It needs `FIREBASE_SERVICE_ACCOUNT` set, the same service-account JSON the other
 API routes use.
 
-`/api/photo-sync` uses the same credentials to reconcile a trip's album against
-Storage, restoring records for images that are in the bucket but missing from
-the album.
+`/api/photos?action=sync` uses the same credentials to reconcile a trip's album
+against Storage, restoring records for images that are in the bucket but missing
+from the album.
+
+> **Adding API routes:** Vercel's Hobby plan allows 12 Serverless Functions per
+> deployment and `api/` is exactly at that limit. Every `.js` file under `api/`
+> becomes a function except ones whose name starts with `_`. Add new photo
+> operations as another `?action=` in `api/photos.js` rather than a new file, or
+> the deployment fails with "No more than 12 Serverless Functions".
 
 Bucket CORS is **optional** — it's only the fallback path if the API route is
 unavailable. To enable it anyway, add your origins to `storage.cors.json` and:
