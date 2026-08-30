@@ -73,38 +73,27 @@
       </div>
     </div>
 
-    <!-- Tab navigation — plain div, no Angular Material wrapper.
-         On phones the less-used tabs collapse into a "More" menu instead of
-         a long horizontal scroll. -->
-    <div class="trip-tab-nav-wrapper">
-      <div class="trip-tab-nav" #tabNav>
-        @for (tab of tabs; track tab.label; let i = $index) {
-          @if (tab.label !== 'AI' || prefs.aiEnabled()) {
-            <button class="tab-link" [class.overflow-tab]="isOverflowTab(i)"
-                    [class.active]="selectedTab() === i" (click)="selectTab(i)"
-                    [attr.aria-label]="tab.label">
-              <mat-icon>{{ tab.icon }}</mat-icon>
-              <span class="tab-label">{{ tab.label }}</span>
-            </button>
-          }
-        }
-        <button class="tab-link more-tab" [class.active]="overflowActive()"
-                [matMenuTriggerFor]="moreTabsMenu" aria-label="More tabs">
-          <mat-icon>{{ overflowActive() ? tabs[selectedTab()].icon : 'more_horiz' }}</mat-icon>
-          <span class="tab-label">{{ overflowActive() ? tabs[selectedTab()].label : 'More' }}</span>
-        </button>
-      </div>
+    <!-- Section navigation — a dropdown showing the section you're on.
+         Replaces the horizontal tab strip: every section is one tap away and
+         none are hidden behind a "More" overflow. -->
+    <div class="trip-nav">
+      <button class="page-select" [matMenuTriggerFor]="pageMenu"
+              aria-haspopup="menu"
+              [attr.aria-label]="'Section: ' + currentTab().label + '. Choose a different section'">
+        <mat-icon class="page-icon">{{ currentTab().icon }}</mat-icon>
+        <span class="page-label">{{ currentTab().label }}</span>
+        <mat-icon class="page-caret">arrow_drop_down</mat-icon>
+      </button>
     </div>
 
-    <mat-menu #moreTabsMenu="matMenu">
-      @for (tab of tabs; track tab.label; let i = $index) {
-        @if (isOverflowTab(i) && (tab.label !== 'AI' || prefs.aiEnabled())) {
-          <button mat-menu-item (click)="selectTab(i)"
-                  [class.more-item-active]="selectedTab() === i">
-            <mat-icon>{{ tab.icon }}</mat-icon>
-            <span>{{ tab.label }}</span>
-          </button>
-        }
+    <mat-menu #pageMenu="matMenu" class="page-menu">
+      @for (tab of visibleTabs(); track tab.label) {
+        <button mat-menu-item (click)="selectTab(tab.index)"
+                [class.page-item-active]="selectedTab() === tab.index"
+                [attr.aria-current]="selectedTab() === tab.index ? 'page' : null">
+          <mat-icon>{{ tab.icon }}</mat-icon>
+          <span>{{ tab.label }}</span>
+        </button>
       }
     </mat-menu>
 

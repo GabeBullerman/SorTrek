@@ -149,7 +149,7 @@ const PAGES: GuidePage[] = [
     icon: 'group',
     status: 'implemented',
     statusLabel: 'Fully Implemented',
-    description: 'Invite other SorTrek users to collaborate on a trip by email. Collaborators can view and edit all tabs in real time.',
+    description: 'Invite other SorTrek users to collaborate on a trip by email. Collaborators can view and edit every section in real time.',
     bullets: [
       'Invite any registered SorTrek user by email from the People tab',
       'Shared trips appear in collaborators\' trip lists with a badge',
