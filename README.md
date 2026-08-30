@@ -66,6 +66,14 @@ Set these in Vercel (and locally for the API server as needed):
 > Note: the `api/` functions call Groq via its OpenAI-compatible REST endpoint
 > through `api/_groq.js` (the `groq-sdk` client throws "Connection error" in the
 > Vercel runtime). Don't reintroduce `require('groq-sdk')` server-side.
+>
+> The model is set once, as `DEFAULT_MODEL` in `api/_groq.js`. Groq retires
+> models on a schedule and a decommissioned id fails every AI feature at once,
+> so check <https://console.groq.com/docs/deprecations> when they break. The
+> current replacements are reasoning models, so the helper sends
+> `reasoning_effort: 'none'` — these prompts expect a plain instruct model and
+> a model that spends its budget thinking returns nothing the strict-JSON
+> callers can parse.
 
 ## Deploy
 
