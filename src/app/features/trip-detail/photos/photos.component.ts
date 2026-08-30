@@ -50,11 +50,46 @@ export class PhotosComponent implements OnInit {
     this.photos$ = this.photoService.getPhotos(this.tripId).pipe(
       catchError(err => { console.error('Photos query failed:', err); return of([]); })
     );
+    // The album is a set of Firestore records pointing at files in Storage, and
+    // the two can drift apart. Reconcile once on open so photos still sitting in
+    // the bucket come back on their own.
+    void this.syncWithStorage(false);
   }
 
   uploadProgress = signal<number | null>(null);
   uploadCaption = signal('');
   lightboxPhoto = signal<Photo | null>(null);
+
+  syncing = signal(false);
+
+  /** Reconcile the album against Storage. Quiet on open, chatty when the user
+   *  asks for it explicitly from the header. */
+  async syncWithStorage(announce: boolean) {
+    if (this.syncing()) return;
+    this.syncing.set(true);
+    try {
+      const result = await this.photoService.syncWithStorage(this.tripId);
+      if (result.restored > 0) {
+        this.snackBar.open(
+          `Recovered ${result.restored} photo${result.restored === 1 ? '' : 's'} from storage`,
+          undefined, { duration: 3500 });
+      } else if (announce) {
+        this.snackBar.open(
+          `Album is up to date — ${result.inAlbum} photo${result.inAlbum === 1 ? '' : 's'}, ` +
+          `${result.inStorage} file${result.inStorage === 1 ? '' : 's'} in storage`,
+          undefined, { duration: 4000 });
+      }
+    } catch (err) {
+      console.error('Photo sync failed:', err);
+      if (announce) {
+        this.snackBar.open(
+          (err as Error)?.message ?? 'Could not check storage for missing photos',
+          'Dismiss', { duration: 4000 });
+      }
+    } finally {
+      this.syncing.set(false);
+    }
+  }
 
   /** Selection ("hold to select") state. */
   selectionMode = signal(false);
@@ -185,6 +220,7 @@ export class PhotosComponent implements OnInit {
     if (!photo.id) return;
     this.selectionMode.set(true);
     this.selectedIds.set(new Set([photo.id]));
+    this.photoService.prefetch(photo);
     if ('vibrate' in navigator) navigator.vibrate?.(10);
   }
 
@@ -198,7 +234,14 @@ export class PhotosComponent implements OnInit {
   toggleSelection(photo: Photo) {
     if (!photo.id) return;
     const next = new Set(this.selectedIds());
-    if (next.has(photo.id)) next.delete(photo.id); else next.add(photo.id);
+    if (next.has(photo.id)) {
+      next.delete(photo.id);
+    } else {
+      next.add(photo.id);
+      // Pull the bytes now so the Save tap can open the share sheet instantly —
+      // iOS only allows that while the tap is still live.
+      this.photoService.prefetch(photo);
+    }
     this.selectedIds.set(next);
     if (next.size === 0) this.selectionMode.set(false);
   }
@@ -215,6 +258,7 @@ export class PhotosComponent implements OnInit {
 
   selectAll(photos: Photo[]) {
     this.selectedIds.set(new Set(photos.map(p => p.id).filter((id): id is string => !!id)));
+    photos.forEach(p => this.photoService.prefetch(p));
   }
 
   @HostListener('document:keydown.escape')
@@ -257,6 +301,7 @@ export class PhotosComponent implements OnInit {
 
   openLightbox(photo: Photo) {
     this.lightboxPhoto.set(photo);
+    this.photoService.prefetch(photo);
   }
 
   closeLightbox() {
@@ -315,9 +360,10 @@ export class PhotosComponent implements OnInit {
       data: { title: 'Delete Photo', message: 'Delete this photo? This cannot be undone.' },
     }).afterClosed().subscribe(confirmed => {
       if (confirmed) {
-        from(this.photoService.deletePhoto(photo)).subscribe(() =>
-          this.snackBar.open('Photo deleted', undefined, { duration: 2000 })
-        );
+        from(this.photoService.deletePhoto(photo)).subscribe(() => {
+          if (photo.id) this.photoService.forgetCached(photo.id);
+          this.snackBar.open('Photo deleted', undefined, { duration: 2000 });
+        });
       }
     });
   }
@@ -334,6 +380,7 @@ export class PhotosComponent implements OnInit {
     }).afterClosed().subscribe(async confirmed => {
       if (!confirmed) return;
       const results = await Promise.allSettled(mine.map(p => this.photoService.deletePhoto(p)));
+      mine.forEach(p => p.id && this.photoService.forgetCached(p.id));
       const failed = results.filter(r => r.status === 'rejected').length;
       this.snackBar.open(
         failed ? `Deleted ${mine.length - failed}, ${failed} failed` : `Deleted ${mine.length} photos`,

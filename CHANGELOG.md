@@ -1,5 +1,26 @@
 # SorTrek — Changelog
 
+## 2026-08 — Photo album: storage recovery + native saving
+
+### Photos
+- **Missing photos are recovered from Storage.** The album is a set of Firestore
+  records pointing at files in the bucket, and the two drift apart — an upload
+  whose tab closed before the record was written, or a record removed by the old
+  auto-purge bug, leaves the image sitting in Storage with nothing pointing at
+  it. `api/photo-sync` lists what the trip really has in Storage and writes back
+  a record for anything the album is missing (reusing each object's existing
+  download token, and recovering the original upload time from the filename so
+  it sorts back into place). Runs automatically when the album opens, plus a
+  **Sync** button that reports the album/storage counts.
+- **Saving no longer opens a Firebase tab.** Storage download URLs are
+  cross-origin, so `<a download>` is ignored and `fetch` needs bucket CORS —
+  which is why every save bounced to a new tab. Photos now stream through
+  `api/photo-download` on our own origin, so the browser gets a real file.
+- **Native share sheet on iOS/Android** ("Save Image" straight to the camera
+  roll). The bytes are prefetched the moment a photo is selected or opened, so
+  the Save tap can raise the sheet while the gesture is still live — awaiting a
+  download first is what made iOS refuse it.
+
 ## 2026-08 — Photo album: multi-select, save to device, full album
 
 ### Photos

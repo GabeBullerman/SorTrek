@@ -116,22 +116,25 @@ service firebase.storage {
 
 ---
 
-## 5b. Storage CORS (saving photos to a device)
+## 5b. Saving photos to a device
 
-The photo album lets people select photos and save them straight to their
-device. To hand the browser real image files (instead of just opening them in a
-new tab), the app fetches the bytes from Storage — which needs CORS enabled on
-the bucket. `storage.cors.json` in the repo root has the config; add your own
-origins to it, then apply it with the Google Cloud SDK:
+Saving photos runs through `/api/photo-download`, which streams the image from
+our own origin — that is what lets the browser hand over a real file (and iOS
+show "Save Image" / "Save to Files") instead of opening the image in a new tab.
+It needs `FIREBASE_SERVICE_ACCOUNT` set, the same service-account JSON the other
+API routes use.
+
+`/api/photo-sync` uses the same credentials to reconcile a trip's album against
+Storage, restoring records for images that are in the bucket but missing from
+the album.
+
+Bucket CORS is **optional** — it's only the fallback path if the API route is
+unavailable. To enable it anyway, add your origins to `storage.cors.json` and:
 
 ```bash
 gcloud storage buckets update gs://your-project.appspot.com --cors-file=storage.cors.json
 # or, with the older tool: gsutil cors set storage.cors.json gs://your-project.appspot.com
 ```
-
-Without this the save still works — it falls back to opening the image so the
-browser can save it — but the batch "save all selected" flow is smoother with
-CORS on.
 
 ---
 
