@@ -1,5 +1,29 @@
 # SorTrek — Changelog
 
+## 2026-08 — App icon fixes
+
+### PWA
+- The manifest declared `/ClearLogoWhiteCircle.png` as both 192×192 and
+  512×512, but the file is 467×442 — neither size, and not square. Chrome needs
+  a genuine 512×512 to consider the app installable, and a 1:1 slot was
+  stretching the mark. Generated real `icon-192`, `icon-512`,
+  `icon-maskable-512` and `apple-touch-icon` (180) from the existing black logo:
+  black mark, opaque white ground, same black-and-white identity.
+- That file is a white mark on a transparent background, so the icon was
+  invisible against a light wallpaper and the PWA splash was a white logo on
+  the white `background_color`. The new icons are opaque, so they read the same
+  on any wallpaper and in either theme.
+- `purpose: "any maskable"` promised a safe zone the artwork didn't have, so a
+  circle crop clipped the outer ring. The maskable icon is now a separate asset
+  with the mark inside the 80% safe zone; the plain icons are declared `any`.
+- Notification payloads used the same transparent logo as their `icon`, which
+  is displayed as-is and vanished on a light notification shade — now the
+  opaque icon. The `badge` still uses the transparent logo, which is correct:
+  it's rendered as an alpha silhouette.
+
+Existing home-screen shortcuts keep whatever icon they captured when they were
+added — iOS doesn't refresh it. This applies to new installs.
+
 ## 2026-08 — Repo hygiene
 
 ### Tests
