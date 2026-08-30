@@ -1,0 +1,8 @@
+[
+  {
+    "origin": ["http://localhost:4200", "https://sortrek.vercel.app"],
+    "method": ["GET", "HEAD"],
+    "responseHeader": ["Content-Type", "Content-Disposition", "Content-Length"],
+    "maxAgeSeconds": 3600
+  }
+]

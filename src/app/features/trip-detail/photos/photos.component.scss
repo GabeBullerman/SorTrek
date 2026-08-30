@@ -74,12 +74,52 @@
   }
 
   .shared-hint { color: var(--st-primary-soft); }
+
+  .select-btn mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}
+
+.selection-spacer { flex: 1; }
+
+.hold-hint {
+  margin: -8px 0 16px;
+  font-size: 0.78rem;
+  color: var(--st-on-surface-faint);
+}
+
+.selection-bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--st-primary-tint-bg);
+  border: 1px solid var(--st-primary-soft);
+
+  .selection-count {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--st-primary);
+  }
+
+  mat-spinner { margin-right: 6px; }
 }
 
 .photo-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 12px;
+
+  // A press-and-hold must not turn into a text/image drag selection.
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+
+  &.selecting .photo-tile:hover { transform: none; }
 }
 
 .photo-tile {
@@ -119,8 +159,61 @@
     align-items: flex-start;
     justify-content: flex-end;
     padding: 6px;
+    gap: 4px;
 
-    .delete-btn { color: white; background: rgba(0,0,0,0.45); width: 32px; height: 32px; line-height: 32px; }
+    .delete-btn, .save-btn {
+      color: white;
+      background: rgba(0,0,0,0.45);
+      width: 32px;
+      height: 32px;
+      line-height: 32px;
+    }
+  }
+
+  &.selected {
+    outline: 3px solid var(--st-primary);
+    outline-offset: -3px;
+
+    img { opacity: 0.82; }
+  }
+
+  &.broken { background: var(--st-surface-2); }
+}
+
+.select-check {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.45);
+  line-height: 0;
+  padding: 2px;
+  pointer-events: none;
+
+  mat-icon { color: white; }
+  &.on mat-icon { color: var(--st-primary); background: white; border-radius: 50%; }
+}
+
+.photo-broken {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px;
+  text-align: center;
+  background: var(--st-surface-2);
+  color: var(--st-on-surface-faint);
+  font-size: 0.78rem;
+
+  mat-icon { font-size: 32px; width: 32px; height: 32px; }
+
+  .photo-broken-actions {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: center;
   }
 }
 
@@ -252,8 +345,13 @@
   font-size: 0.875rem;
 }
 
-.lightbox-delete {
+.lightbox-save {
   margin-left: auto;
+  color: white !important;
+  border-color: rgba(255,255,255,0.5) !important;
+}
+
+.lightbox-delete {
   color: #ef9a9a !important;
   border-color: #ef9a9a !important;
 }
@@ -270,7 +368,7 @@
     opacity: 1;
     background: transparent;
 
-    .delete-btn {
+    .delete-btn, .save-btn {
       width: 44px;
       height: 44px;
       line-height: 44px;

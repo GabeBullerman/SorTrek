@@ -29,27 +29,101 @@
     } @else {
       <div class="drop-overlay" (drop)="onDrop($event)" (dragover)="onDragOver($event)">
 
-        <!-- Group header: photo count + who's contributed -->
-        <div class="gallery-meta">
-          <span class="photo-count"><mat-icon>photo_library</mat-icon> {{ visibleCount(photos) }} photo{{ visibleCount(photos) !== 1 ? 's' : '' }}</span>
-          <span class="shared-hint"><mat-icon>group</mat-icon> Shared with everyone on this trip</span>
-        </div>
+        <!-- Selection toolbar -->
+        @if (selectionMode()) {
+          <div class="selection-bar">
+            <button mat-icon-button aria-label="Cancel selection" (click)="exitSelection()">
+              <mat-icon>close</mat-icon>
+            </button>
+            <span class="selection-count">{{ selectedCount() }} selected</span>
 
-        <div class="photo-grid">
+            <button mat-button (click)="selectAll(photos)"
+                    [disabled]="selectedCount() === visibleCount(photos)">
+              Select all
+            </button>
+
+            <span class="selection-spacer"></span>
+
+            @if (ownedCount(photos) > 0) {
+              <button mat-button color="warn" class="selection-delete"
+                      (click)="deleteSelected(photos)"
+                      [matTooltip]="'Delete the ' + ownedCount(photos) + ' selected photo(s) you uploaded'">
+                <mat-icon>delete</mat-icon> Delete ({{ ownedCount(photos) }})
+              </button>
+            }
+
+            <button mat-flat-button color="primary"
+                    [disabled]="selectedCount() === 0 || saving()"
+                    (click)="saveSelected(photos)">
+              @if (saving()) {
+                <mat-spinner diameter="18"></mat-spinner>
+              } @else {
+                <mat-icon>download</mat-icon>
+              }
+              Save ({{ selectedCount() }})
+            </button>
+          </div>
+        } @else {
+          <!-- Group header: photo count + who's contributed -->
+          <div class="gallery-meta">
+            <span class="photo-count"><mat-icon>photo_library</mat-icon> {{ visibleCount(photos) }} photo{{ visibleCount(photos) !== 1 ? 's' : '' }}</span>
+            <span class="shared-hint"><mat-icon>group</mat-icon> Shared with everyone on this trip</span>
+            <span class="selection-spacer"></span>
+            <button mat-stroked-button class="select-btn" (click)="startSelection()">
+              <mat-icon>check_circle_outline</mat-icon> Select
+            </button>
+          </div>
+          <p class="hold-hint">Tip: press and hold a photo to select it, then save the ones you want to your device.</p>
+        }
+
+        <div class="photo-grid" [class.selecting]="selectionMode()">
           @for (photo of photos; track photo.id) {
-            @if (!isFailed(photo.id)) {
-            <div class="photo-tile" (click)="openLightbox(photo)">
-              <img [src]="photo.url" [alt]="photo.caption || ('Trip photo by ' + (photo.uploaderName ?? 'Unknown'))" loading="lazy"
-                   (error)="onImageLoadError(photo)" />
+            <div class="photo-tile"
+                 [class.selected]="isSelected(photo.id)"
+                 [class.broken]="isUnloadable(photo.id)"
+                 (click)="onTileClick(photo)"
+                 (pointerdown)="onTilePointerDown($event, photo)"
+                 (pointermove)="onTilePointerMove($event)"
+                 (pointerup)="onTilePointerUp()"
+                 (pointercancel)="onTilePointerUp()"
+                 (pointerleave)="onTilePointerUp()"
+                 (contextmenu)="onTileContextMenu($event)">
 
-              <div class="photo-overlay">
-                @if (photo.userId === currentUserId) {
-                  <button mat-icon-button class="delete-btn" matTooltip="Delete" aria-label="Delete photo"
-                          (click)="$event.stopPropagation(); deletePhoto(photo)">
-                    <mat-icon>delete</mat-icon>
+              @if (isUnloadable(photo.id)) {
+                <div class="photo-broken">
+                  <mat-icon>broken_image</mat-icon>
+                  <span>Couldn’t load this image</span>
+                  <div class="photo-broken-actions">
+                    <button mat-button (click)="$event.stopPropagation(); retryImage(photo)">Try again</button>
+                    @if (photo.userId === currentUserId) {
+                      <button mat-button color="warn"
+                              (click)="$event.stopPropagation(); removeBrokenPhoto(photo)">Remove</button>
+                    }
+                  </div>
+                </div>
+              } @else {
+                <img [src]="srcFor(photo)" [alt]="photo.caption || ('Trip photo by ' + (photo.uploaderName ?? 'Unknown'))" loading="lazy"
+                     draggable="false" (error)="onImageLoadError(photo)" />
+              }
+
+              @if (selectionMode()) {
+                <div class="select-check" [class.on]="isSelected(photo.id)" aria-hidden="true">
+                  <mat-icon>{{ isSelected(photo.id) ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>
+                </div>
+              } @else {
+                <div class="photo-overlay">
+                  <button mat-icon-button class="save-btn" matTooltip="Save to device" aria-label="Save photo to device"
+                          (click)="$event.stopPropagation(); savePhoto(photo)">
+                    <mat-icon>download</mat-icon>
                   </button>
-                }
-              </div>
+                  @if (photo.userId === currentUserId) {
+                    <button mat-icon-button class="delete-btn" matTooltip="Delete" aria-label="Delete photo"
+                            (click)="$event.stopPropagation(); deletePhoto(photo)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  }
+                </div>
+              }
 
               <!-- Uploader attribution -->
               <div class="photo-footer">
@@ -62,7 +136,6 @@
                 }
               </div>
             </div>
-            }
           }
         </div>
       </div>
@@ -93,6 +166,10 @@
         @if (lightboxPhoto()!.caption) {
           <div class="lightbox-caption">{{ lightboxPhoto()!.caption }}</div>
         }
+        <button mat-stroked-button class="lightbox-save" [disabled]="saving()"
+                (click)="savePhoto(lightboxPhoto()!)">
+          <mat-icon>download</mat-icon> Save
+        </button>
         @if (lightboxPhoto()!.userId === currentUserId) {
           <button mat-stroked-button color="warn" class="lightbox-delete"
                   (click)="deletePhoto(lightboxPhoto()!); closeLightbox()">

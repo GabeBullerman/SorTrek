@@ -116,6 +116,25 @@ service firebase.storage {
 
 ---
 
+## 5b. Storage CORS (saving photos to a device)
+
+The photo album lets people select photos and save them straight to their
+device. To hand the browser real image files (instead of just opening them in a
+new tab), the app fetches the bytes from Storage — which needs CORS enabled on
+the bucket. `storage.cors.json` in the repo root has the config; add your own
+origins to it, then apply it with the Google Cloud SDK:
+
+```bash
+gcloud storage buckets update gs://your-project.appspot.com --cors-file=storage.cors.json
+# or, with the older tool: gsutil cors set storage.cors.json gs://your-project.appspot.com
+```
+
+Without this the save still works — it falls back to opening the image so the
+browser can save it — but the batch "save all selected" flow is smoother with
+CORS on.
+
+---
+
 ## 6. Run the App
 
 ```bash
@@ -135,6 +154,6 @@ npm start
 | **Trips Dashboard** | Card grid with status badges, create/edit/delete |
 | **Daily Schedule** | Timeline view grouped by day with activity categories |
 | **Bookings** | Flights, hotels, Airbnbs with confirmation numbers & status |
-| **Photos** | Upload via click or drag-and-drop, lightbox viewer |
+| **Photos** | Upload via click or drag-and-drop, lightbox viewer, hold-to-select, save photos to your device |
 | **Cost Tracker** | Visual bar chart + per-category itemized breakdown |
 | **Map** | Google Maps with pins for all activities that have coordinates |
