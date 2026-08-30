@@ -6,8 +6,6 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { PhotoService } from '../../../core/services/photo.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -29,7 +27,7 @@ const MAX_IMAGE_RETRIES = 2;
   imports: [
     AsyncPipe, DecimalPipe, DatePipe,
     MatButtonModule, MatIconModule, MatProgressBarModule,
-    MatProgressSpinnerModule, MatFormFieldModule, MatInputModule, MatTooltipModule,
+    MatProgressSpinnerModule, MatTooltipModule,
   ],
   templateUrl: './photos.component.html',
   styleUrl: './photos.component.scss',

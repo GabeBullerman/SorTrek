@@ -1,5 +1,32 @@
 # SorTrek — Changelog
 
+## 2026-08 — Repo hygiene
+
+### Tests
+- `npm test` passes again. `app.spec.ts` failed with `NG0201: No provider found
+  for SwUpdate` — `App` injects `PwaUpdateService`, which injects `SwUpdate`,
+  and the test module never provided it. The spec now registers the worker
+  disabled and provides a router, and its second test asserts the router outlet
+  renders instead of the CLI scaffold's "Hello, travel-organizer" heading.
+- Deleted `src/app/app.html`, the untouched Angular starter placeholder. `App`
+  declares an inline template, so the file was unreferenced — and it bound
+  `title()`, a member the component doesn't have.
+
+### Local dev
+- `npm run dev:api` starts again. `scripts/dev-server.js` required
+  `api/plaid-link`, `api/plaid-exchange` and `api/plaid-transactions`, which
+  were consolidated into `api/plaid.js` — the server threw on startup.
+- It now serves every route in `api/`, not the eight it knew about, and handles
+  GET as well as POST, strips the query string before matching a route, and
+  exposes `req.query` — several routes dispatch on `?action=` or `?token=` and
+  were unreachable. `res.send()` was added for the photo download's image bytes.
+
+### Cleanup
+- Dropped the unused `photos` composite index (`tripId` + `uploadedAt`); that
+  query hasn't ordered server-side since the album fix.
+- Dropped `MatFormFieldModule`/`MatInputModule` from the photos component —
+  imported but never used.
+
 ## 2026-08 — Groq model refresh
 
 ### AI

@@ -20,26 +20,20 @@ try {
   console.warn('Could not load .env.local:', e.message);
 }
 
-const aiAdvisor         = require('../api/ai-advisor');
-const emailScraper      = require('../api/email-scraper');
-const findPlans         = require('../api/find-plans');
-const plaidLink         = require('../api/plaid-link');
-const plaidExchange     = require('../api/plaid-exchange');
-const plaidTransactions = require('../api/plaid-transactions');
-const transport         = require('../api/transport');
-const flightStatus      = require('../api/flight-status');
-const photos            = require('../api/photos');
-
+// One entry per file in api/ — keep this in step with what Vercel deploys,
+// which is every .js there that isn't prefixed with an underscore.
 const routes = {
-  '/api/ai-advisor':         aiAdvisor,
-  '/api/email-scraper':      emailScraper,
-  '/api/find-plans':         findPlans,
-  '/api/plaid-link':         plaidLink,
-  '/api/plaid-exchange':     plaidExchange,
-  '/api/plaid-transactions': plaidTransactions,
-  '/api/transport':          transport,
-  '/api/flight-status':      flightStatus,
-  '/api/photos':             photos,
+  '/api/accept-invite':    require('../api/accept-invite'),
+  '/api/ai-advisor':       require('../api/ai-advisor'),
+  '/api/delete-account':   require('../api/delete-account'),
+  '/api/email-scraper':    require('../api/email-scraper'),
+  '/api/find-plans':       require('../api/find-plans'),
+  '/api/flight-status':    require('../api/flight-status'),
+  '/api/link-preview':     require('../api/link-preview'),
+  '/api/photos':           require('../api/photos'),
+  '/api/plaid':            require('../api/plaid'),
+  '/api/public-itinerary': require('../api/public-itinerary'),
+  '/api/transport':        require('../api/transport'),
 };
 
 // Wrap Node's ServerResponse with Vercel-compatible helpers
@@ -52,21 +46,51 @@ function wrapRes(res) {
       res.writeHead(statusCode, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(data));
     },
+    // Binary or pre-typed bodies (the photo download streams image bytes and
+    // sets its own Content-Type), so don't impose one here.
+    send(body) {
+      res.writeHead(statusCode);
+      res.end(body);
+    },
     end: (s) => res.end(s),
   };
   return wrapped;
 }
 
 http.createServer((req, res) => {
-  const handler = routes[req.url];
-  if (handler && req.method === 'POST') {
-    let body = '';
-    req.on('data', chunk => (body += chunk));
-    req.on('end', async () => {
-      try { req.body = JSON.parse(body); } catch (_) { req.body = {}; }
-      await handler(req, wrapRes(res));
-    });
-  } else {
+  // Routes are keyed on the path; the query string carries params (several
+  // routes dispatch on ?action= or ?token=), which Vercel exposes as req.query.
+  const url = new URL(req.url, 'http://localhost');
+  const handler = routes[url.pathname];
+
+  if (!handler) {
     res.writeHead(404).end('Not found');
+    return;
   }
+
+  req.query = Object.fromEntries(url.searchParams);
+
+  const run = async () => {
+    try {
+      await handler(req, wrapRes(res));
+    } catch (err) {
+      console.error(`[${url.pathname}]`, err);
+      if (!res.headersSent) res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err?.message ?? 'Handler threw' }));
+    }
+  };
+
+  // GET routes (the photo download, the public itinerary) carry no body.
+  if (req.method === 'GET' || req.method === 'HEAD') {
+    req.body = {};
+    void run();
+    return;
+  }
+
+  let body = '';
+  req.on('data', chunk => (body += chunk));
+  req.on('end', () => {
+    try { req.body = JSON.parse(body); } catch (_) { req.body = {}; }
+    void run();
+  });
 }).listen(3001, () => console.log('API dev server → http://localhost:3001'));
