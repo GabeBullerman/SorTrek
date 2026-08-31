@@ -127,6 +127,77 @@ mat-accordion {
   mat-icon { font-size: 18px; width: 18px; height: 18px; }
 }
 
+/* Stops at a glance. A flight with a connection is the case worth noticing,
+   so it carries the accent; "Nonstop" stays quiet. */
+.stops-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--st-surface-2);
+  color: var(--st-on-surface-muted);
+  border: 1px solid var(--st-border);
+
+  mat-icon { font-size: 14px; width: 14px; height: 14px; }
+
+  &.has-stops {
+    background: var(--st-warn-bg);
+    color: var(--st-warn-strong);
+    border-color: var(--st-warn-border);
+  }
+}
+
+/* The route drawn out, so a connection reads as a place you stop rather than
+   another code in a parenthesis. */
+.flight-route {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 2px 0 2px 28px;   // line up with the detail rows' text
+}
+
+.route-point {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--st-on-surface);
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--st-surface-2);
+
+  &.point-stop {
+    background: var(--st-warn-bg);
+    color: var(--st-warn-strong);
+    border: 1px solid var(--st-warn-border);
+  }
+}
+
+.route-leg {
+  flex: 0 0 22px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--st-border);
+}
+
+.flight-route.with-stops .route-leg { background: var(--st-warn-border); }
+
+.layover-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 28px;
+  font-size: 0.78rem;
+  color: var(--st-warn-strong);
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+  strong { letter-spacing: 0.4px; }
+}
+
 .status-badge {
   padding: 2px 8px;
   border-radius: 10px;
