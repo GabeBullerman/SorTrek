@@ -337,9 +337,21 @@
   background: rgba(0,0,0,0.94);
   z-index: 1000;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   padding: 40px;
+
+  // The browser must not claim single-finger gestures inside the viewer:
+  // without this a drag scrolls the page behind, and repeated horizontal ones
+  // trigger the swipe-back navigation that was kicking people out to another
+  // page. `pinch-zoom` blocks panning while still allowing zoom on a photo,
+  // which `none` would have taken away too.
+  touch-action: pinch-zoom;
+  overscroll-behavior: contain;
+  // A drag is a gesture here, never a text/image selection.
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 
   .lightbox-close {
     position: absolute;
@@ -412,18 +424,57 @@
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  max-width: 90vw;
+  width: 100%;
+  max-width: 1100px;
+  min-height: 0;      // let the stage shrink instead of overflowing
+}
+
+// Owns whatever height is left over, so the meta bar sits at the bottom from
+// the first frame rather than drifting up while the image has no dimensions.
+.lightbox-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  will-change: transform;
+
+  // No transition while a finger is down — the drag has to track 1:1.
+  &.animating {
+    transition: transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
 
   img {
     max-width: 100%;
-    max-height: calc(100vh - 200px);
+    max-height: 100%;
     object-fit: contain;
     border-radius: 6px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    // Fade in on decode so a swap never flashes a half-painted image.
+    opacity: 0;
+    transition: opacity 160ms ease-out;
+
+    &.ready { opacity: 1; }
   }
 }
 
+.stage-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lightbox-stage.animating { transition: none; }
+  .lightbox-stage img { transition: none; }
+}
+
 .lightbox-meta {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 16px;

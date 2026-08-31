@@ -1,5 +1,29 @@
 # SorTrek — Changelog
 
+## 2026-08 — Full-screen photo viewer: smoother
+
+### Photos
+- **The photo follows your finger.** The swipe only acted on release before, so
+  the drag itself did nothing and the change arrived late — which read as lag,
+  and led to swiping repeatedly. It now tracks the finger 1:1, resists at the
+  first and last photo, and settles with a short slide.
+- **The page behind no longer scrolls.** The viewer sets `touch-action:
+  pinch-zoom` (panning blocked, zoom kept) and the body is locked while it's
+  open, which also stops the repeated horizontal swipes that were triggering the
+  browser's back gesture and landing people on another page.
+- **A gesture picks an axis once and keeps it,** so a vertical drag is left
+  alone instead of half-swiping.
+- **Nothing jumps while a photo loads.** The viewer is a column with the image
+  stage taking the space that's left, so the uploader and caption bar sit at the
+  bottom from the first frame instead of floating mid-screen. The image fades in
+  when it decodes, and the spinner only appears if the load is actually slow.
+- **Opening is quicker.** The full-size image starts decoding when a tile is
+  pressed rather than when the tap completes, and neighbours are decoded while
+  you look, so a swipe lands on an image that's ready.
+- A drag no longer counts as a tap on the backdrop, so swiping can't dismiss the
+  viewer by accident; tapping the photo still closes it, and tapping the caption
+  bar doesn't.
+
 ## 2026-08 — Swipe between photos, and captions
 
 ### Photos
