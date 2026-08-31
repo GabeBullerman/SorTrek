@@ -56,11 +56,13 @@ export class PhotoService {
     return at?.toMillis ? at.toMillis() : Number.MAX_SAFE_INTEGER;
   }
 
-  uploadPhoto(tripId: string, file: File, caption?: string): Observable<number> {
+  /** Upload progress, and on the final emission the id of the created photo so
+   *  callers can act on the batch they just added (captioning it, say). */
+  uploadPhoto(tripId: string, file: File, caption?: string): Observable<UploadEvent> {
     const userId = this.auth.currentUser!.uid;
 
     return new Observable(observer => {
-      observer.next(0);
+      observer.next({ percent: 0 });
 
       imageCompression(file, COMPRESSION_OPTIONS)
         .then(compressed => {
@@ -70,19 +72,21 @@ export class PhotoService {
 
           uploadTask.on(
             'state_changed',
-            snapshot => observer.next((snapshot.bytesTransferred / snapshot.totalBytes) * 100),
+            snapshot => observer.next({
+              percent: (snapshot.bytesTransferred / snapshot.totalBytes) * 100,
+            }),
             err => observer.error(err),
             async () => {
               const url = await getDownloadURL(uploadTask.snapshot.ref);
               const uploaderName = this.auth.currentUser?.displayName ?? 'Unknown';
-              await this.run(() =>
+              const ref = await this.run(() =>
                 addDoc(collection(this.firestore, 'photos'), {
                   tripId, userId, uploaderName, url, storagePath,
                   caption: caption ?? '',
                   uploadedAt: serverTimestamp(),
                 })
               );
-              observer.next(100);
+              observer.next({ percent: 100, id: ref.id });
               observer.complete();
             }
           );
@@ -326,6 +330,12 @@ export class PhotoService {
     if (!res.ok) throw new Error(body?.error ?? `Sync failed (${res.status})`);
     return body as PhotoSyncResult;
   }
+}
+
+/** Emitted while a photo uploads; the last one carries the new photo's id. */
+export interface UploadEvent {
+  percent: number;
+  id?: string;
 }
 
 /** What `/api/photos?action=sync` reports back. */

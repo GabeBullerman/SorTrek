@@ -134,7 +134,7 @@
     mat-spinner { display: inline-block; margin-right: 6px; }
   }
 
-  .pill-delete, .pill-close {
+  .pill-caption, .pill-delete, .pill-close {
     width: 36px;
     height: 36px;
     line-height: 36px;
@@ -350,6 +350,63 @@
   }
 }
 
+.lightbox-counter {
+  position: absolute;
+  top: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255,255,255,0.75);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px;
+}
+
+// Arrows are for pointer devices; touch uses the swipe.
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: white;
+  background: rgba(255,255,255,0.12);
+  width: 44px;
+  height: 44px;
+
+  &.prev { left: 12px; }
+  &.next { right: 12px; }
+
+  &:hover { background: rgba(255,255,255,0.22); }
+
+  @media (hover: none) {
+    display: none;
+  }
+}
+
+.caption-edit {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1 1 220px;
+  min-width: 200px;
+
+  .caption-field { flex: 1; }
+
+  // The meta bar is dark; Material's outlined field defaults to dark-on-light.
+  ::ng-deep .mat-mdc-text-field-wrapper { background: rgba(255,255,255,0.08); }
+  ::ng-deep input.mat-mdc-input-element { color: white; caret-color: white; }
+  ::ng-deep .mdc-notched-outline__leading,
+  ::ng-deep .mdc-notched-outline__notch,
+  ::ng-deep .mdc-notched-outline__trailing { border-color: rgba(255,255,255,0.3) !important; }
+
+  button { color: white; }
+}
+
+.caption-add {
+  color: rgba(255,255,255,0.75) !important;
+  font-size: 0.82rem;
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}
+
 .lightbox-inner {
   display: flex;
   flex-direction: column;
@@ -398,6 +455,22 @@
   flex: 1;
   color: rgba(255,255,255,0.85);
   font-size: 0.875rem;
+
+  &.editable {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    &:hover { color: white; }
+
+    .caption-pencil {
+      font-size: 15px;
+      width: 15px;
+      height: 15px;
+      opacity: 0.6;
+    }
+  }
 }
 
 .lightbox-save {

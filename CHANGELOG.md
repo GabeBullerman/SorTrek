@@ -1,5 +1,28 @@
 # SorTrek — Changelog
 
+## 2026-08 — Swipe between photos, and captions
+
+### Photos
+- **Swipe to move between photos** in the full-screen view — left for the next,
+  right for the previous, stopping at each end rather than wrapping. A drag
+  under 60px, or one that's more vertical than horizontal, is ignored so a
+  scroll isn't mistaken for a swipe. Pointer devices get arrows and arrow keys;
+  a counter shows where you are.
+- The neighbouring photos are decoded ahead of time, so a swipe lands on an
+  image that's already there.
+- The open photo is tracked by id, not position. The album is a live query — if
+  someone else uploads while you're looking, the list reorders, and an index
+  would quietly leave you on a different photo. If the photo you're viewing is
+  deleted, the view closes on its own.
+- **Captions, without slowing down uploading.** Nothing is asked before or
+  during an upload. Afterwards: the uploader can add or edit a caption inline in
+  the full-screen view; the "uploaded" snackbar offers **Add captions**, which
+  drops you into selection mode with that batch already selected; and the
+  selection pill can write one caption across everything you picked — useful for
+  tagging a run of photos with a day or a place.
+- Captioning is offered only on your own photos, matching the Firestore rule
+  that allows a photo update just for its uploader.
+
 ## 2026-08 — App icon fixes
 
 ### PWA
