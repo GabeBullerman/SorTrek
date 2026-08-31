@@ -1,4 +1,5 @@
 import { Component, HostListener, Input, OnInit, inject, signal, computed, ElementRef, ViewChild } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { AsyncPipe, DecimalPipe, DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -7,12 +8,15 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { PhotoService } from '../../../core/services/photo.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Photo } from '../../../core/models/photo.model';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { CaptionDialogComponent } from './caption-dialog/caption-dialog.component';
 import { Observable, of, from } from 'rxjs';
-import { catchError, shareReplay } from 'rxjs/operators';
+import { catchError, shareReplay, tap } from 'rxjs/operators';
 
 /** How long a press has to be held before it turns into a selection. */
 const LONG_PRESS_MS = 450;
@@ -20,6 +24,10 @@ const LONG_PRESS_MS = 450;
 const LONG_PRESS_SLOP_PX = 10;
 /** Transient image errors are retried this many times before the tile gives up. */
 const MAX_IMAGE_RETRIES = 2;
+/** A horizontal drag past this many px in the lightbox changes photo. */
+const SWIPE_THRESHOLD_PX = 60;
+/** Below this ratio the gesture is a vertical scroll, not a swipe. */
+const SWIPE_HORIZONTAL_RATIO = 1.4;
 
 @Component({
   selector: 'app-photos',
@@ -27,7 +35,8 @@ const MAX_IMAGE_RETRIES = 2;
   imports: [
     AsyncPipe, DecimalPipe, DatePipe,
     MatButtonModule, MatIconModule, MatProgressBarModule,
-    MatProgressSpinnerModule, MatTooltipModule,
+    MatProgressSpinnerModule, MatTooltipModule, MatFormFieldModule, MatInputModule,
+    FormsModule,
   ],
   templateUrl: './photos.component.html',
   styleUrl: './photos.component.scss',
@@ -47,6 +56,9 @@ export class PhotosComponent implements OnInit {
   ngOnInit() {
     this.photos$ = this.photoService.getPhotos(this.tripId).pipe(
       catchError(err => { console.error('Photos query failed:', err); return of([]); }),
+      // Mirror the album into a signal so the lightbox can step through it
+      // without the template having to hand it the list.
+      tap(photos => this.album.set(photos)),
       // The grid and the floating selection pill both subscribe — share the one
       // Firestore listener between them instead of opening a second.
       shareReplay({ bufferSize: 1, refCount: true }),
@@ -58,8 +70,36 @@ export class PhotosComponent implements OnInit {
   }
 
   uploadProgress = signal<number | null>(null);
-  uploadCaption = signal('');
-  lightboxPhoto = signal<Photo | null>(null);
+
+  /** The album as last emitted, so the lightbox can move between photos. */
+  private album = signal<Photo[]>([]);
+
+  /** The open photo, tracked by id rather than position. The album is a live
+   *  query — someone else uploading reorders it, and a stored index would then
+   *  point at a different photo. An id survives that, and resolves to null if
+   *  the photo is deleted, which closes the lightbox on its own. */
+  private lightboxId = signal<string | null>(null);
+  lightboxIndex = computed<number | null>(() => {
+    const id = this.lightboxId();
+    if (!id) return null;
+    const i = this.album().findIndex(p => p.id === id);
+    return i === -1 ? null : i;
+  });
+  lightboxPhoto = computed<Photo | null>(() => {
+    const i = this.lightboxIndex();
+    return i === null ? null : this.album()[i] ?? null;
+  });
+  lightboxCount = computed(() => this.album().length);
+  hasPrev = computed(() => (this.lightboxIndex() ?? 0) > 0);
+  hasNext = computed(() => {
+    const i = this.lightboxIndex();
+    return i !== null && i < this.album().length - 1;
+  });
+
+  /** Inline caption editing inside the lightbox. */
+  editingCaption = signal(false);
+  captionDraft = signal('');
+  savingCaption = signal(false);
 
   syncing = signal(false);
 
@@ -141,6 +181,7 @@ export class PhotosComponent implements OnInit {
   onFilesSelected(event: Event) {
     const files = (event.target as HTMLInputElement).files;
     if (!files?.length) return;
+    this.startBatch(files.length);
     Array.from(files).forEach(file => this.uploadFile(file));
     (event.target as HTMLInputElement).value = '';
   }
@@ -149,25 +190,61 @@ export class PhotosComponent implements OnInit {
     event.preventDefault();
     const files = event.dataTransfer?.files;
     if (!files?.length) return;
-    Array.from(files).forEach(file => {
-      if (file.type.startsWith('image/')) this.uploadFile(file);
-    });
+    const images = Array.from(files).filter(f => f.type.startsWith('image/'));
+    if (!images.length) return;
+    this.startBatch(images.length);
+    images.forEach(file => this.uploadFile(file));
   }
 
   onDragOver(event: DragEvent) {
     event.preventDefault();
   }
 
+  /* ── Uploading ───────────────────────────────────────────────────────────── */
+
+  /** The batch currently uploading. Captioning is offered once the whole batch
+   *  lands, so picking twenty photos gets one prompt rather than twenty. */
+  private batch: { remaining: number; ids: string[] } | null = null;
+
+  private startBatch(count: number) {
+    this.batch = { remaining: count, ids: [] };
+  }
+
+  private finishBatchItem(id?: string) {
+    if (!this.batch) return;
+    if (id) this.batch.ids.push(id);
+    if (--this.batch.remaining > 0) return;
+
+    const ids = this.batch.ids;
+    this.batch = null;
+    if (!ids.length) return;
+
+    // Offered, never imposed: the snackbar times out on its own, and someone
+    // dumping a hundred photos just lets it go.
+    const ref = this.snackBar.open(
+      `${ids.length} photo${ids.length === 1 ? '' : 's'} uploaded`,
+      'Add captions', { duration: 6000 });
+    ref.onAction().subscribe(() => this.selectByIds(ids));
+  }
+
   private uploadFile(file: File) {
     this.uploadProgress.set(0);
-    this.photoService.uploadPhoto(this.tripId, file, this.uploadCaption()).subscribe({
-      next: progress => this.uploadProgress.set(progress),
+    // Held per upload, not on the component: files upload in parallel, so a
+    // shared field would let one file's id land in another's completion.
+    let createdId: string | undefined;
+
+    this.photoService.uploadPhoto(this.tripId, file).subscribe({
+      next: event => {
+        this.uploadProgress.set(event.percent);
+        if (event.id) createdId = event.id;
+      },
       complete: () => {
         this.uploadProgress.set(null);
-        this.snackBar.open('Photo uploaded!', undefined, { duration: 2000 });
+        this.finishBatchItem(createdId);
       },
       error: () => {
         this.uploadProgress.set(null);
+        this.finishBatchItem();
         this.snackBar.open('Upload failed', 'Dismiss', { duration: 3000 });
       },
     });
@@ -264,6 +341,8 @@ export class PhotosComponent implements OnInit {
 
   @HostListener('document:keydown.escape')
   onEscape() {
+    if (this.editingCaption()) { this.cancelCaptionEdit(); return; }
+    if (this.lightboxId() !== null) { this.closeLightbox(); return; }
     if (this.selectionMode()) this.exitSelection();
   }
 
@@ -301,12 +380,146 @@ export class PhotosComponent implements OnInit {
   /* ── Lightbox ────────────────────────────────────────────────────────────── */
 
   openLightbox(photo: Photo) {
-    this.lightboxPhoto.set(photo);
-    this.photoService.prefetch(photo);
+    if (!photo.id) return;
+    this.lightboxId.set(photo.id);
+    this.onLightboxPhotoChanged();
   }
 
   closeLightbox() {
-    this.lightboxPhoto.set(null);
+    this.lightboxId.set(null);
+    this.cancelCaptionEdit();
+  }
+
+  /** Step to another photo. Clamped at both ends — running off the end of the
+   *  album silently wrapping around is disorienting. */
+  showRelative(delta: number) {
+    const i = this.lightboxIndex();
+    if (i === null) return;
+    const target = this.album()[i + delta];
+    if (!target?.id) return;
+    this.cancelCaptionEdit();
+    this.lightboxId.set(target.id);
+    this.onLightboxPhotoChanged();
+  }
+
+  /** Warm the bytes for the open photo (so Save is instant) and decode its
+   *  neighbours, so a swipe lands on an image that's already there. */
+  private onLightboxPhotoChanged() {
+    const photo = this.lightboxPhoto();
+    if (photo) this.photoService.prefetch(photo);
+
+    const i = this.lightboxIndex();
+    if (i === null) return;
+    for (const neighbour of [this.album()[i - 1], this.album()[i + 1]]) {
+      if (neighbour?.url) {
+        const img = new Image();
+        img.src = neighbour.url;
+      }
+    }
+  }
+
+  /* ── Swipe between photos ────────────────────────────────────────────────── */
+
+  private swipeStart: { x: number; y: number } | null = null;
+
+  onLightboxPointerDown(event: PointerEvent) {
+    // Ignore anything starting on a control, and multi-touch (pinch to zoom).
+    if ((event.target as HTMLElement | null)?.closest('button, input')) return;
+    this.swipeStart = { x: event.clientX, y: event.clientY };
+  }
+
+  onLightboxPointerUp(event: PointerEvent) {
+    const start = this.swipeStart;
+    this.swipeStart = null;
+    if (!start) return;
+
+    const dx = event.clientX - start.x;
+    const dy = event.clientY - start.y;
+    if (Math.abs(dx) < SWIPE_THRESHOLD_PX) return;
+    if (Math.abs(dx) < Math.abs(dy) * SWIPE_HORIZONTAL_RATIO) return;
+
+    // Drag left (negative dx) reveals the photo after this one.
+    this.showRelative(dx < 0 ? 1 : -1);
+  }
+
+  onLightboxPointerCancel() {
+    this.swipeStart = null;
+  }
+
+  @HostListener('document:keydown.arrowleft')
+  onArrowLeft() {
+    if (this.lightboxIndex() !== null && !this.editingCaption()) this.showRelative(-1);
+  }
+
+  @HostListener('document:keydown.arrowright')
+  onArrowRight() {
+    if (this.lightboxIndex() !== null && !this.editingCaption()) this.showRelative(1);
+  }
+
+  /* ── Captions ────────────────────────────────────────────────────────────── */
+
+  /** Only the uploader may write a caption — firestore.rules allows an update
+   *  just for the photo's own userId. */
+  canCaption(photo: Photo | null): boolean {
+    return !!photo && photo.userId === this.currentUserId;
+  }
+
+  startCaptionEdit() {
+    const photo = this.lightboxPhoto();
+    if (!this.canCaption(photo)) return;
+    this.captionDraft.set(photo!.caption ?? '');
+    this.editingCaption.set(true);
+  }
+
+  cancelCaptionEdit() {
+    this.editingCaption.set(false);
+    this.captionDraft.set('');
+  }
+
+  async saveCaptionEdit() {
+    const photo = this.lightboxPhoto();
+    if (!photo?.id || this.savingCaption()) return;
+    const caption = this.captionDraft().trim();
+    this.savingCaption.set(true);
+    try {
+      await this.photoService.updateCaption(photo.id, caption);
+      this.editingCaption.set(false);
+    } catch {
+      this.snackBar.open('Could not save the caption', 'Dismiss', { duration: 3000 });
+    } finally {
+      this.savingCaption.set(false);
+    }
+  }
+
+  /** Write one caption across the selected photos you uploaded. */
+  captionSelected(photos: Photo[]) {
+    const mine = this.selectedFrom(photos).filter(p => p.userId === this.currentUserId);
+    if (!mine.length) return;
+
+    this.dialog.open(CaptionDialogComponent, {
+      data: { count: mine.length, caption: mine.length === 1 ? mine[0].caption ?? '' : '' },
+    }).afterClosed().subscribe(async (caption?: string) => {
+      if (caption === undefined) return;   // cancelled; '' deliberately clears
+      const results = await Promise.allSettled(
+        mine.map(p => this.photoService.updateCaption(p.id!, caption))
+      );
+      const failed = results.filter(r => r.status === 'rejected').length;
+      this.snackBar.open(
+        failed
+          ? `Captioned ${mine.length - failed}, ${failed} failed`
+          : `Captioned ${mine.length} photo${mine.length === 1 ? '' : 's'}`,
+        failed ? 'Dismiss' : undefined,
+        { duration: failed ? 3000 : 2000 });
+      this.exitSelection();
+    });
+  }
+
+  /** Select a specific set of photos — used to hand the batch you just
+   *  uploaded straight to the captioning flow. */
+  selectByIds(ids: string[]) {
+    if (!ids.length) return;
+    this.selectionMode.set(true);
+    this.selectedIds.set(new Set(ids));
   }
 
   /* ── Broken images ───────────────────────────────────────────────────────── */

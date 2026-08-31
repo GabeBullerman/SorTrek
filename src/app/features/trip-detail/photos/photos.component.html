@@ -147,6 +147,15 @@
         </button>
       }
 
+      @if (ownedCount(photos) > 0) {
+        <button mat-icon-button class="pill-caption"
+                [matTooltip]="'Caption ' + ownedCount(photos) + ' of yours'"
+                [attr.aria-label]="'Caption ' + ownedCount(photos) + ' selected photos you uploaded'"
+                (click)="captionSelected(photos)">
+          <mat-icon>edit_note</mat-icon>
+        </button>
+      }
+
       <button mat-flat-button color="primary" class="pill-save"
               [disabled]="selectedCount() === 0 || saving()"
               (click)="saveSelected(photos)">
@@ -167,33 +176,83 @@
 }
 
 <!-- Lightbox -->
-@if (lightboxPhoto()) {
-  <div class="lightbox" (click)="closeLightbox()">
+@if (lightboxPhoto(); as photo) {
+  <div class="lightbox" (click)="closeLightbox()"
+       (pointerdown)="onLightboxPointerDown($event)"
+       (pointerup)="onLightboxPointerUp($event)"
+       (pointercancel)="onLightboxPointerCancel()">
+
     <button mat-icon-button class="lightbox-close" (click)="closeLightbox()" aria-label="Close">
       <mat-icon>close</mat-icon>
     </button>
+
+    @if (lightboxCount() > 1) {
+      <span class="lightbox-counter">{{ (lightboxIndex() ?? 0) + 1 }} / {{ lightboxCount() }}</span>
+    }
+
+    <!-- Pointer devices get arrows; touch swipes. -->
+    @if (hasPrev()) {
+      <button mat-icon-button class="lightbox-nav prev" aria-label="Previous photo"
+              (click)="$event.stopPropagation(); showRelative(-1)">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+    }
+    @if (hasNext()) {
+      <button mat-icon-button class="lightbox-nav next" aria-label="Next photo"
+              (click)="$event.stopPropagation(); showRelative(1)">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    }
+
     <div class="lightbox-inner" (click)="$event.stopPropagation()">
-      <img [src]="lightboxPhoto()!.url" [alt]="lightboxPhoto()!.caption || 'Photo'" />
+      <img [src]="photo.url" [alt]="photo.caption || 'Photo'" draggable="false" />
+
       <div class="lightbox-meta">
         <div class="lightbox-uploader">
-          <span class="uploader-avatar lg">{{ (lightboxPhoto()!.uploaderName ?? 'U').charAt(0).toUpperCase() }}</span>
+          <span class="uploader-avatar lg">{{ (photo.uploaderName ?? 'U').charAt(0).toUpperCase() }}</span>
           <div>
-            <div class="lightbox-uploader-name">{{ lightboxPhoto()!.uploaderName ?? 'Unknown' }}</div>
-            @if (lightboxPhoto()!.uploadedAt) {
-              <div class="lightbox-date">{{ lightboxPhoto()!.uploadedAt.toDate() | date:'MMM d, y' }}</div>
+            <div class="lightbox-uploader-name">{{ photo.uploaderName ?? 'Unknown' }}</div>
+            @if (photo.uploadedAt) {
+              <div class="lightbox-date">{{ photo.uploadedAt.toDate() | date:'MMM d, y' }}</div>
             }
           </div>
         </div>
-        @if (lightboxPhoto()!.caption) {
-          <div class="lightbox-caption">{{ lightboxPhoto()!.caption }}</div>
+
+        <!-- Caption: shown to everyone, editable by the uploader. -->
+        @if (editingCaption()) {
+          <div class="caption-edit" (click)="$event.stopPropagation()">
+            <mat-form-field appearance="outline" class="caption-field" subscriptSizing="dynamic">
+              <input matInput [ngModel]="captionDraft()" (ngModelChange)="captionDraft.set($event)"
+                     maxlength="120" placeholder="Add a caption" aria-label="Caption"
+                     (keyup.enter)="saveCaptionEdit()" />
+            </mat-form-field>
+            <button mat-icon-button aria-label="Save caption"
+                    [disabled]="savingCaption()" (click)="saveCaptionEdit()">
+              <mat-icon>check</mat-icon>
+            </button>
+            <button mat-icon-button aria-label="Cancel" (click)="cancelCaptionEdit()">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        } @else if (photo.caption) {
+          <div class="lightbox-caption" [class.editable]="canCaption(photo)"
+               (click)="startCaptionEdit()">
+            {{ photo.caption }}
+            @if (canCaption(photo)) { <mat-icon class="caption-pencil">edit</mat-icon> }
+          </div>
+        } @else if (canCaption(photo)) {
+          <button mat-button class="caption-add" (click)="startCaptionEdit()">
+            <mat-icon>add</mat-icon> Add a caption
+          </button>
         }
+
         <button mat-stroked-button class="lightbox-save" [disabled]="saving()"
-                (click)="savePhoto(lightboxPhoto()!)">
+                (click)="savePhoto(photo)">
           <mat-icon>download</mat-icon> Save
         </button>
-        @if (lightboxPhoto()!.userId === currentUserId) {
+        @if (photo.userId === currentUserId) {
           <button mat-stroked-button color="warn" class="lightbox-delete"
-                  (click)="deletePhoto(lightboxPhoto()!); closeLightbox()">
+                  (click)="deletePhoto(photo); closeLightbox()">
             <mat-icon>delete</mat-icon> Delete
           </button>
         }
