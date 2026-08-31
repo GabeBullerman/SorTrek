@@ -1,5 +1,22 @@
 # SorTrek — Changelog
 
+## 2026-08 — Layovers on the flight itself
+
+### Bookings
+- A **stops badge** sits beside the flight's title: "1 stop" / "2 stops" in the
+  warning accent, or a quiet "Nonstop". Previously a connection only showed as
+  an extra code inside a parenthesised route, which is easy to read past.
+- The route is **drawn** rather than written — each airport as a chip joined by
+  legs, with connection airports picked out in the accent colour.
+- Each connection gets its own line: "Change at LIS — TP123 · departs 14:30",
+  using the connecting-flight details that were already captured in the edit
+  form but never shown anywhere else.
+- Legacy bookings that only carry `layovers` codes render the same way;
+  `connections` wins when both are present, and blank connection rows are
+  ignored.
+- The schedule's flight rows now say "· 1 stop" after the route, so a
+  connection is visible there too.
+
 ## 2026-08 — Full-screen photo viewer: smoother
 
 ### Photos

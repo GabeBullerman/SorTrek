@@ -388,7 +388,13 @@ export class ScheduleComponent implements OnInit {
     for (const b of bookings) {
       if (b.status === 'cancelled') continue;
       if (b.type === 'flight') {
-        const route = [b.departureAirport, ...(b.layovers ?? []), b.arrivalAirport].filter(Boolean).join(' → ');
+        const stops = b.connections?.length
+          ? b.connections.map(c => c.airport).filter(Boolean)
+          : (b.layovers ?? []);
+        const codes = [b.departureAirport, ...stops, b.arrivalAirport].filter(Boolean);
+        // Spell the connection out — a third code in the middle is easy to miss.
+        const route = codes.join(' → ')
+          + (stops.length ? ` · ${stops.length} stop${stops.length === 1 ? '' : 's'}` : '');
         // Departure time/day in the departure airport's zone; arrival in the
         // arrival airport's zone.
         push(b.checkIn,  'flight-depart', { booking: b, icon: 'flight_takeoff', title: `Depart — ${b.title}`, subtitle: route || undefined }, b.departureAirport);

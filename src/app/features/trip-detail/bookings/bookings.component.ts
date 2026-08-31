@@ -299,14 +299,61 @@ export class BookingsComponent implements OnInit {
     return participants.find(p => p.id === booking.paidById)?.name ?? null;
   }
 
-  /** Full route string including any layovers, e.g. "MAD → LIS → JFK". */
+  /** Full route string including any layovers, e.g. "MAD → LIS → JFK".
+   *  Kept for screen readers and tooltips; the card draws the route visually. */
   routeWithLayovers(booking: Booking): string {
     const stops = [
       booking.departureAirport ?? '?',
-      ...(booking.layovers ?? []),
+      ...(this.layoverCodes(booking)),
       booking.arrivalAirport ?? '?',
     ];
     return stops.join(' → ');
+  }
+
+  /** Connection airports in order. `connections` is the richer source; older
+   *  bookings only have the plain `layovers` codes. */
+  layoverCodes(booking: Booking): string[] {
+    if (booking.connections?.length) {
+      return booking.connections.map(c => c.airport).filter((a): a is string => !!a);
+    }
+    return booking.layovers ?? [];
+  }
+
+  stopCount(booking: Booking): number {
+    return this.layoverCodes(booking).length;
+  }
+
+  /** "Nonstop" / "1 stop" / "2 stops" — the thing people scan for. */
+  stopsLabel(booking: Booking): string {
+    const n = this.stopCount(booking);
+    return n === 0 ? 'Nonstop' : `${n} stop${n === 1 ? '' : 's'}`;
+  }
+
+  /** True once there's enough of a route to say anything about stops. */
+  hasRoute(booking: Booking): boolean {
+    return booking.type === 'flight'
+      && !!(booking.departureAirport || booking.arrivalAirport || this.stopCount(booking));
+  }
+
+  /** The route as points to draw: origin, each connection, destination. */
+  routePoints(booking: Booking): { code: string; kind: 'origin' | 'stop' | 'dest' }[] {
+    return [
+      { code: booking.departureAirport || '???', kind: 'origin' as const },
+      ...this.layoverCodes(booking).map(code => ({ code, kind: 'stop' as const })),
+      { code: booking.arrivalAirport || '???', kind: 'dest' as const },
+    ];
+  }
+
+  /** One line per connection: where you change planes and what onto.
+   *  Only connections carrying real detail are worth a line of their own. */
+  connectionDetails(booking: Booking): { airport: string; onward: string | null }[] {
+    return (booking.connections ?? [])
+      .filter(c => !!c.airport)
+      .map(c => {
+        const parts = [c.flightNumber, c.departTime && `departs ${c.departTime}`]
+          .filter(Boolean) as string[];
+        return { airport: c.airport, onward: parts.length ? parts.join(' · ') : null };
+      });
   }
 
   /** Resolve per-passenger ticket numbers to [name, ticket] pairs for display.

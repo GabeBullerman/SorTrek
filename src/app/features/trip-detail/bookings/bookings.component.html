@@ -92,6 +92,16 @@
                             {{ dir === 'arrival' ? 'To Destination' : 'Back Home' }}
                           </span>
                         }
+                        @if (hasRoute(booking)) {
+                          <span class="stops-badge"
+                                [class.has-stops]="stopCount(booking) > 0"
+                                [matTooltip]="stopCount(booking) > 0
+                                  ? 'Connects at ' + layoverCodes(booking).join(', ')
+                                  : 'Direct flight — no connections'">
+                            <mat-icon>{{ stopCount(booking) > 0 ? 'connecting_airports' : 'flight' }}</mat-icon>
+                            {{ stopsLabel(booking) }}
+                          </span>
+                        }
                         <span class="status-badge" [class]="'status-' + booking.status">
                           {{ booking.status === 'suggested' ? 'Suggestion' : (booking.status | titlecase) }}
                         </span>
@@ -146,12 +156,27 @@
                       @if (booking.flightNumber) {
                         <div class="detail-item">
                           <mat-icon>confirmation_number</mat-icon>
-                          <span>Flight <strong>{{ booking.flightNumber }}</strong>
-                            @if (booking.departureAirport || booking.arrivalAirport) {
-                              ({{ routeWithLayovers(booking) }})
-                            }
-                          </span>
+                          <span>Flight <strong>{{ booking.flightNumber }}</strong></span>
                         </div>
+                      }
+
+                      @if (hasRoute(booking)) {
+                        <div class="flight-route" [class.with-stops]="stopCount(booking) > 0"
+                             [attr.aria-label]="'Route: ' + routeWithLayovers(booking) + ', ' + stopsLabel(booking)">
+                          @for (point of routePoints(booking); track $index; let last = $last) {
+                            <span class="route-point" [class]="'point-' + point.kind">{{ point.code }}</span>
+                            @if (!last) {
+                              <span class="route-leg" aria-hidden="true"></span>
+                            }
+                          }
+                        </div>
+
+                        @for (conn of connectionDetails(booking); track conn.airport) {
+                          <div class="layover-line">
+                            <mat-icon>connecting_airports</mat-icon>
+                            <span>Change at <strong>{{ conn.airport }}</strong>@if (conn.onward) { — {{ conn.onward }} }</span>
+                          </div>
+                        }
                       }
 
                       @if (booking.checkIn) {
