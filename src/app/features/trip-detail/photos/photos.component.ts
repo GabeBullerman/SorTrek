@@ -1,4 +1,4 @@
-import { Component, HostListener, Input, OnInit, inject, signal, computed, ElementRef, ViewChild } from '@angular/core';
+import { Component, HostListener, Input, OnDestroy, OnInit, inject, signal, computed, ElementRef, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AsyncPipe, DecimalPipe, DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -24,10 +24,19 @@ const LONG_PRESS_MS = 450;
 const LONG_PRESS_SLOP_PX = 10;
 /** Transient image errors are retried this many times before the tile gives up. */
 const MAX_IMAGE_RETRIES = 2;
-/** A horizontal drag past this many px in the lightbox changes photo. */
+/** Past this much horizontal travel the drag commits to changing photo. Also
+ *  used as a fraction of the viewport, whichever is smaller, so it scales. */
 const SWIPE_THRESHOLD_PX = 60;
-/** Below this ratio the gesture is a vertical scroll, not a swipe. */
-const SWIPE_HORIZONTAL_RATIO = 1.4;
+/** Movement is assigned to an axis once it passes this; a gesture locked to
+ *  vertical is left alone so it never fights a scroll. */
+const AXIS_LOCK_PX = 8;
+/** Resistance applied when dragging past the first or last photo. */
+const RUBBER_BAND = 0.3;
+/** A flick faster than this (px/ms) changes photo regardless of distance. */
+const FLICK_VELOCITY = 0.5;
+/** Only show a spinner if the image is genuinely slow; a cached one appears
+ *  immediately and a spinner flash would look worse than nothing. */
+const SPINNER_DELAY_MS = 180;
 
 @Component({
   selector: 'app-photos',
@@ -41,7 +50,7 @@ const SWIPE_HORIZONTAL_RATIO = 1.4;
   templateUrl: './photos.component.html',
   styleUrl: './photos.component.scss',
 })
-export class PhotosComponent implements OnInit {
+export class PhotosComponent implements OnInit, OnDestroy {
   @Input() tripId!: string;
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
@@ -95,6 +104,12 @@ export class PhotosComponent implements OnInit {
     const i = this.lightboxIndex();
     return i !== null && i < this.album().length - 1;
   });
+
+  /** Whether the open photo has decoded. Drives a fade-in, and a spinner that
+   *  only appears if the load is actually slow. */
+  imageReady = signal(false);
+  showSpinner = signal(false);
+  private spinnerTimer: ReturnType<typeof setTimeout> | null = null;
 
   /** Inline caption editing inside the lightbox. */
   editingCaption = signal(false);
@@ -263,6 +278,9 @@ export class PhotosComponent implements OnInit {
     // Let the overlay's own buttons (save/delete) behave like buttons.
     if ((event.target as HTMLElement | null)?.closest('button')) return;
     this.suppressNextClick = false;
+    // Begin decoding the full-size image now rather than when the tap lands —
+    // opening the viewer felt like a reload because the decode started late.
+    this.warmFullImage(photo);
     this.pressOrigin = { x: event.clientX, y: event.clientY };
     this.cancelPressTimer();
     this.pressTimer = setTimeout(() => {
@@ -282,6 +300,16 @@ export class PhotosComponent implements OnInit {
   onTilePointerUp() {
     this.cancelPressTimer();
   }
+
+  /** Decode a photo ahead of time; harmless to call repeatedly. */
+  private warmFullImage(photo: Photo) {
+    if (!photo.url || this.warmed.has(photo.url)) return;
+    this.warmed.add(photo.url);
+    const img = new Image();
+    img.src = photo.url;
+    img.decode?.().catch(() => { /* decode is a hint, not a requirement */ });
+  }
+  private warmed = new Set<string>();
 
   private cancelPressTimer() {
     if (this.pressTimer) clearTimeout(this.pressTimer);
@@ -382,12 +410,28 @@ export class PhotosComponent implements OnInit {
   openLightbox(photo: Photo) {
     if (!photo.id) return;
     this.lightboxId.set(photo.id);
+    this.lockPageScroll(true);
     this.onLightboxPhotoChanged();
   }
 
   closeLightbox() {
     this.lightboxId.set(null);
+    this.lockPageScroll(false);
+    this.clearSpinnerTimer();
+    this.dragX.set(0);
     this.cancelCaptionEdit();
+  }
+
+  ngOnDestroy() {
+    // Leaving the tab while the viewer is open must not strand the lock.
+    this.lockPageScroll(false);
+    this.clearSpinnerTimer();
+  }
+
+  /** The viewer covers the page, so the page behind it shouldn't scroll —
+   *  that scrolling was leaking through vertical drags on the photo. */
+  private lockPageScroll(locked: boolean) {
+    document.body.classList.toggle('photo-viewer-open', locked);
   }
 
   /** Step to another photo. Clamped at both ends — running off the end of the
@@ -406,44 +450,115 @@ export class PhotosComponent implements OnInit {
    *  neighbours, so a swipe lands on an image that's already there. */
   private onLightboxPhotoChanged() {
     const photo = this.lightboxPhoto();
+    this.beginImageLoad();
     if (photo) this.photoService.prefetch(photo);
 
     const i = this.lightboxIndex();
     if (i === null) return;
     for (const neighbour of [this.album()[i - 1], this.album()[i + 1]]) {
-      if (neighbour?.url) {
-        const img = new Image();
-        img.src = neighbour.url;
-      }
+      if (neighbour) this.warmFullImage(neighbour);
     }
   }
 
   /* ── Swipe between photos ────────────────────────────────────────────────── */
 
-  private swipeStart: { x: number; y: number } | null = null;
+  /** Live horizontal offset of the stage, in px — the photo follows the finger
+   *  rather than jumping on release, which is what made this feel laggy. */
+  dragX = signal(0);
+  /** True while the stage should animate; false while a finger is down, so the
+   *  drag tracks 1:1 instead of easing behind it. */
+  animating = signal(false);
+
+  private gesture: {
+    x: number; y: number; t: number;
+    axis: 'undecided' | 'x' | 'y';
+    pointerId: number;
+  } | null = null;
+
+  /** Set when a drag actually moved, so the click that follows it doesn't also
+   *  count as a tap on the backdrop and close the viewer. */
+  private movedDuringGesture = false;
 
   onLightboxPointerDown(event: PointerEvent) {
-    // Ignore anything starting on a control, and multi-touch (pinch to zoom).
+    // Leave controls alone, and ignore secondary pointers (pinch to zoom).
     if ((event.target as HTMLElement | null)?.closest('button, input')) return;
-    this.swipeStart = { x: event.clientX, y: event.clientY };
+    if (this.gesture) return;
+
+    this.gesture = {
+      x: event.clientX, y: event.clientY, t: event.timeStamp,
+      axis: 'undecided', pointerId: event.pointerId,
+    };
+    this.movedDuringGesture = false;
+    this.animating.set(false);
+    (event.target as HTMLElement)?.setPointerCapture?.(event.pointerId);
+  }
+
+  onLightboxPointerMove(event: PointerEvent) {
+    const g = this.gesture;
+    if (!g || event.pointerId !== g.pointerId) return;
+
+    const dx = event.clientX - g.x;
+    const dy = event.clientY - g.y;
+
+    // Decide once which way this gesture is going, then stick to it — a
+    // wobbling finger shouldn't flip between panning and swiping.
+    if (g.axis === 'undecided') {
+      if (Math.abs(dx) < AXIS_LOCK_PX && Math.abs(dy) < AXIS_LOCK_PX) return;
+      g.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+    }
+    if (g.axis !== 'x') return;
+
+    this.movedDuringGesture = true;
+    // Resist at the ends so it's obvious there's nothing further that way.
+    const atEnd = (dx > 0 && !this.hasPrev()) || (dx < 0 && !this.hasNext());
+    this.dragX.set(atEnd ? dx * RUBBER_BAND : dx);
   }
 
   onLightboxPointerUp(event: PointerEvent) {
-    const start = this.swipeStart;
-    this.swipeStart = null;
-    if (!start) return;
+    const g = this.gesture;
+    this.gesture = null;
+    if (!g || g.axis !== 'x') { this.dragX.set(0); return; }
 
-    const dx = event.clientX - start.x;
-    const dy = event.clientY - start.y;
-    if (Math.abs(dx) < SWIPE_THRESHOLD_PX) return;
-    if (Math.abs(dx) < Math.abs(dy) * SWIPE_HORIZONTAL_RATIO) return;
+    const dx = event.clientX - g.x;
+    const dt = Math.max(1, event.timeStamp - g.t);
+    const velocity = Math.abs(dx) / dt;
 
-    // Drag left (negative dx) reveals the photo after this one.
-    this.showRelative(dx < 0 ? 1 : -1);
+    // Commit on either a long enough drag or a quick flick.
+    const threshold = Math.min(SWIPE_THRESHOLD_PX, window.innerWidth * 0.18);
+    const committed = Math.abs(dx) > threshold || velocity > FLICK_VELOCITY;
+    const direction = dx < 0 ? 1 : -1;
+    const canMove = direction === 1 ? this.hasNext() : this.hasPrev();
+
+    if (committed && canMove) {
+      this.slideTo(direction);
+    } else {
+      this.animating.set(true);
+      this.dragX.set(0);
+    }
   }
 
   onLightboxPointerCancel() {
-    this.swipeStart = null;
+    this.gesture = null;
+    this.animating.set(true);
+    this.dragX.set(0);
+  }
+
+  /** Swap in the neighbouring photo and slide it in from the edge the finger
+   *  was heading towards, so the change reads as one continuous movement. */
+  private slideTo(direction: 1 | -1) {
+    this.showRelative(direction);
+    this.animating.set(false);
+    this.dragX.set(direction * window.innerWidth);
+    requestAnimationFrame(() => {
+      this.animating.set(true);
+      this.dragX.set(0);
+    });
+  }
+
+  /** The backdrop closes on a tap, but not at the end of a drag. */
+  onLightboxBackdropClick() {
+    if (this.movedDuringGesture) { this.movedDuringGesture = false; return; }
+    this.closeLightbox();
   }
 
   @HostListener('document:keydown.arrowleft')
@@ -454,6 +569,27 @@ export class PhotosComponent implements OnInit {
   @HostListener('document:keydown.arrowright')
   onArrowRight() {
     if (this.lightboxIndex() !== null && !this.editingCaption()) this.showRelative(1);
+  }
+
+  /* ── Image load state ────────────────────────────────────────────────────── */
+
+  private beginImageLoad() {
+    this.imageReady.set(false);
+    this.clearSpinnerTimer();
+    // A cached photo paints within a frame or two; showing a spinner for that
+    // is worse than showing nothing, so it waits before appearing.
+    this.spinnerTimer = setTimeout(() => this.showSpinner.set(true), SPINNER_DELAY_MS);
+  }
+
+  onLightboxImageLoad() {
+    this.imageReady.set(true);
+    this.clearSpinnerTimer();
+  }
+
+  private clearSpinnerTimer() {
+    if (this.spinnerTimer) clearTimeout(this.spinnerTimer);
+    this.spinnerTimer = null;
+    this.showSpinner.set(false);
   }
 
   /* ── Captions ────────────────────────────────────────────────────────────── */

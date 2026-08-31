@@ -177,12 +177,15 @@
 
 <!-- Lightbox -->
 @if (lightboxPhoto(); as photo) {
-  <div class="lightbox" (click)="closeLightbox()"
+  <div class="lightbox"
+       (click)="onLightboxBackdropClick()"
        (pointerdown)="onLightboxPointerDown($event)"
+       (pointermove)="onLightboxPointerMove($event)"
        (pointerup)="onLightboxPointerUp($event)"
        (pointercancel)="onLightboxPointerCancel()">
 
-    <button mat-icon-button class="lightbox-close" (click)="closeLightbox()" aria-label="Close">
+    <button mat-icon-button class="lightbox-close" (click)="$event.stopPropagation(); closeLightbox()"
+            aria-label="Close">
       <mat-icon>close</mat-icon>
     </button>
 
@@ -190,7 +193,6 @@
       <span class="lightbox-counter">{{ (lightboxIndex() ?? 0) + 1 }} / {{ lightboxCount() }}</span>
     }
 
-    <!-- Pointer devices get arrows; touch swipes. -->
     @if (hasPrev()) {
       <button mat-icon-button class="lightbox-nav prev" aria-label="Previous photo"
               (click)="$event.stopPropagation(); showRelative(-1)">
@@ -204,10 +206,23 @@
       </button>
     }
 
-    <div class="lightbox-inner" (click)="$event.stopPropagation()">
-      <img [src]="photo.url" [alt]="photo.caption || 'Photo'" draggable="false" />
+    <!-- Column layout: the stage takes the room that's left, so the meta bar
+         is pinned to the bottom from the first frame — before the image has
+         any dimensions of its own. -->
+    <div class="lightbox-inner">
+      <div class="lightbox-stage"
+           [style.transform]="'translate3d(' + dragX() + 'px, 0, 0)'"
+           [class.animating]="animating()">
+        @if (showSpinner() && !imageReady()) {
+          <mat-spinner class="stage-spinner" diameter="36"></mat-spinner>
+        }
+        <img [src]="photo.url" [alt]="photo.caption || 'Photo'"
+             [class.ready]="imageReady()"
+             draggable="false" decoding="async" fetchpriority="high"
+             (load)="onLightboxImageLoad()" (error)="onLightboxImageLoad()" />
+      </div>
 
-      <div class="lightbox-meta">
+      <div class="lightbox-meta" (click)="$event.stopPropagation()">
         <div class="lightbox-uploader">
           <span class="uploader-avatar lg">{{ (photo.uploaderName ?? 'U').charAt(0).toUpperCase() }}</span>
           <div>
@@ -218,7 +233,6 @@
           </div>
         </div>
 
-        <!-- Caption: shown to everyone, editable by the uploader. -->
         @if (editingCaption()) {
           <div class="caption-edit" (click)="$event.stopPropagation()">
             <mat-form-field appearance="outline" class="caption-field" subscriptSizing="dynamic">

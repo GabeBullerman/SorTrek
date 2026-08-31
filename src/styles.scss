@@ -231,6 +231,15 @@ html.dark .auth-logo--dark { display: block; }
   color: var(--st-primary);
 }
 
+/* While the full-screen photo viewer is open the page behind it is frozen.
+   Without this a vertical drag on the photo scrolls the trip page underneath,
+   and the scroll position is lost when the viewer closes. */
+body.photo-viewer-open {
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
