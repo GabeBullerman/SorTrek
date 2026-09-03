@@ -1,5 +1,23 @@
 # SorTrek — Changelog
 
+## 2026-09 — Flight route builder
+
+### Bookings
+- The flight form now builds a **route**, not a list of layovers. From, each
+  stop, and To are nodes in a chain, and every leg between them is labelled
+  live — "Leg 1 · MAD → BOS", "Leg 2 · BOS → DEN" — so a connection reads as
+  part of a journey instead of an airport code in a box on its own.
+- Two ways to add a connection, matching how people actually describe a trip:
+  **"Add a stop before DEN"** inserts a layover into an existing MAD → DEN, and
+  **"Continue on from BOS"** turns MAD → BOS into MAD → BOS → …, moving the old
+  destination into the stop and clearing To for the next airport. Both save
+  identical bookings.
+- Each stop keeps its landing time, onward flight number and departure time on
+  the same row, arranged in the order you travel through them.
+- The stored shape is unchanged (`departureAirport`, `arrivalAirport`,
+  `connections[]`), so saved flights, the cards, the schedule and storage
+  recovery are all unaffected.
+
 ## 2026-08 — Videos in the album, layover duration
 
 ### Photos & Videos

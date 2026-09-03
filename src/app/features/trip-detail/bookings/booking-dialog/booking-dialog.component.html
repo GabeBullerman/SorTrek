@@ -66,59 +66,85 @@
       @if (isFlight()) {
         <div class="section-divider"><span>Flight Details</span></div>
 
-        <div class="three-col mt-16">
-          <mat-form-field appearance="outline">
-            <mat-label>Flight #</mat-label>
-            <input matInput formControlName="flightNumber" placeholder="DL123"
-                   (input)="statusMessage.set(null)" />
-            <mat-icon matPrefix>confirmation_number</mat-icon>
-          </mat-form-field>
+        <mat-form-field appearance="outline" class="mt-16 full-width">
+          <mat-label>Flight #</mat-label>
+          <input matInput formControlName="flightNumber" placeholder="DL123"
+                 (input)="statusMessage.set(null)" />
+          <mat-icon matPrefix>confirmation_number</mat-icon>
+        </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>From (IATA)</mat-label>
-            <input matInput formControlName="departureAirport" placeholder="JFK" maxlength="4" />
-            <mat-icon matPrefix>flight_takeoff</mat-icon>
-          </mat-form-field>
+        <!-- Route builder. The journey is a chain of airports; each leg between
+             them is labelled, so a stop is never just a code in a box. -->
+        <div class="route-builder">
+          <div class="route-builder-label">Route</div>
 
-          <mat-form-field appearance="outline">
-            <mat-label>To (IATA)</mat-label>
-            <input matInput formControlName="arrivalAirport" placeholder="LAX" maxlength="4" />
-            <mat-icon matPrefix>flight_land</mat-icon>
-          </mat-form-field>
+          <div class="route-node">
+            <span class="node-tag origin"><mat-icon>flight_takeoff</mat-icon> From</span>
+            <mat-form-field appearance="outline" class="node-airport">
+              <mat-label>Departure (IATA)</mat-label>
+              <input matInput formControlName="departureAirport" placeholder="MAD" maxlength="4" />
+            </mat-form-field>
+          </div>
+
+          <div formArrayName="connections">
+            @for (row of connections.controls; track $index; let i = $index) {
+              <div class="route-leg">
+                <span class="leg-line" aria-hidden="true"></span>
+                <span class="leg-label">Leg {{ i + 1 }} · {{ legLabel(i) }}</span>
+              </div>
+
+              <div class="route-node stop" [formGroupName]="i">
+                <span class="node-tag stop-tag"><mat-icon>connecting_airports</mat-icon> Stop</span>
+                <mat-form-field appearance="outline" class="node-airport">
+                  <mat-label>Layover (IATA)</mat-label>
+                  <input matInput formControlName="airport" placeholder="BOS" maxlength="4" />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="conn-time">
+                  <mat-label>Lands</mat-label>
+                  <input matInput type="time" formControlName="arriveTime" />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="conn-flight">
+                  <mat-label>Onward flight #</mat-label>
+                  <input matInput formControlName="flightNumber" placeholder="TP1234" />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="conn-time">
+                  <mat-label>Departs</mat-label>
+                  <input matInput type="time" formControlName="departTime" />
+                </mat-form-field>
+                <button mat-icon-button type="button" class="ticket-remove"
+                        (click)="removeConnection(i)" matTooltip="Remove this stop">
+                  <mat-icon>close</mat-icon>
+                </button>
+              </div>
+            }
+          </div>
+
+          <div class="route-leg">
+            <span class="leg-line" aria-hidden="true"></span>
+            <span class="leg-label">Leg {{ connections.length + 1 }} · {{ legLabel(connections.length) }}</span>
+          </div>
+
+          <div class="route-node">
+            <span class="node-tag dest"><mat-icon>flight_land</mat-icon> To</span>
+            <mat-form-field appearance="outline" class="node-airport">
+              <mat-label>Destination (IATA)</mat-label>
+              <input matInput formControlName="arrivalAirport" placeholder="DEN" maxlength="4" />
+            </mat-form-field>
+          </div>
+
+          <!-- The two ways people describe the same trip. -->
+          <div class="route-actions">
+            <button mat-stroked-button type="button" (click)="addStopInMiddle()">
+              <mat-icon>add_location_alt</mat-icon>
+              Add a stop@if (finalDestination()) { before {{ finalDestination() }} }
+            </button>
+            <button mat-stroked-button type="button" (click)="continueToAnotherAirport()">
+              <mat-icon>arrow_forward</mat-icon>
+              Continue on from@if (finalDestination()) { {{ finalDestination() }} }
+            </button>
+          </div>
         </div>
 
-        <!-- Connecting flights through layovers -->
-        <div class="ticket-section" formArrayName="connections">
-          <div class="ticket-section-label">Connecting flights (optional, in order)</div>
-          @for (row of connections.controls; track $index) {
-            <div class="connection-row" [formGroupName]="$index">
-              <mat-form-field appearance="outline" class="conn-airport">
-                <mat-label>Layover</mat-label>
-                <input matInput formControlName="airport" placeholder="LIS" maxlength="4" />
-                <mat-icon matPrefix>connecting_airports</mat-icon>
-              </mat-form-field>
-              <mat-form-field appearance="outline" class="conn-flight">
-                <mat-label>Connecting flight #</mat-label>
-                <input matInput formControlName="flightNumber" placeholder="TP1234" />
-              </mat-form-field>
-              <mat-form-field appearance="outline" class="conn-time">
-                <mat-label>Lands</mat-label>
-                <input matInput type="time" formControlName="arriveTime" />
-              </mat-form-field>
-              <mat-form-field appearance="outline" class="conn-time">
-                <mat-label>Departs</mat-label>
-                <input matInput type="time" formControlName="departTime" />
-              </mat-form-field>
-              <button mat-icon-button type="button" class="ticket-remove"
-                      (click)="removeConnection($index)" matTooltip="Remove">
-                <mat-icon>close</mat-icon>
-              </button>
-            </div>
-          }
-          <button mat-stroked-button type="button" (click)="addConnection()">
-            <mat-icon>add</mat-icon> Add connecting flight
-          </button>
-        </div>
 
         <!-- Free-form per-person ticket numbers -->
         <div class="ticket-section" formArrayName="passengerTickets">
