@@ -335,30 +335,7 @@ export class BookingsComponent implements OnInit {
       && !!(booking.departureAirport || booking.arrivalAirport || this.stopCount(booking));
   }
 
-  /** The route as points to draw: origin, each connection, destination. */
-  routePoints(booking: Booking): { code: string; kind: 'origin' | 'stop' | 'dest' }[] {
-    return [
-      { code: booking.departureAirport || '???', kind: 'origin' as const },
-      ...this.layoverCodes(booking).map(code => ({ code, kind: 'stop' as const })),
-      { code: booking.arrivalAirport || '???', kind: 'dest' as const },
-    ];
-  }
 
-  /** One line per connection: where you change planes and what onto.
-   *  Only connections carrying real detail are worth a line of their own. */
-  connectionDetails(booking: Booking): { airport: string; wait: string | null; onward: string | null }[] {
-    return (booking.connections ?? [])
-      .filter(c => !!c.airport)
-      .map(c => {
-        const parts = [c.flightNumber, c.departTime && `departs ${c.departTime}`]
-          .filter(Boolean) as string[];
-        return {
-          airport: c.airport,
-          wait: layoverDuration(c.arriveTime, c.departTime),
-          onward: parts.length ? parts.join(' · ') : null,
-        };
-      });
-  }
 
   /** Resolve per-passenger ticket numbers to [name, ticket] pairs for display.
    *  Prefers the free-form passengerTickets; falls back to legacy ticketNumbers. */
@@ -386,6 +363,75 @@ export class BookingsComponent implements OnInit {
   arrDateTime(b: Booking): string | null {
     if (!b.checkOut) return null;
     return this.formatZoned(b.checkOut.toDate(), b.type === 'flight' ? b.arrivalAirport : null, this.hasTime(b.checkOut));
+  }
+
+  /** Split into date and time so the timeline can put them on their own lines
+   *  instead of one long "Sep 4, 2026 at 2:05 PM" that wraps three ways. */
+  private splitZoned(instant: Date, airport: string | null | undefined, withTime: boolean) {
+    const timeZone = this.tz.ianaFor(airport) ?? undefined;
+    const fmt = (opts: Intl.DateTimeFormatOptions) => {
+      try { return new Intl.DateTimeFormat('en-US', { timeZone, ...opts }).format(instant); }
+      catch { return new Intl.DateTimeFormat('en-US', opts).format(instant); }
+    };
+    return {
+      date: fmt({ month: 'short', day: 'numeric' }),
+      time: withTime ? fmt({ hour: 'numeric', minute: '2-digit' }) : null,
+    };
+  }
+
+  /** The flight drawn as a timeline: one node per airport, carrying that
+   *  airport's own times. The old layout only ever showed the first departure
+   *  and the last arrival, so the middle of a connecting trip was invisible. */
+  timelineNodes(booking: Booking): {
+    code: string;
+    kind: 'origin' | 'stop' | 'dest';
+    date: string | null;
+    time: string | null;
+    until: string | null;
+    zone: string | null;
+    wait: string | null;
+  }[] {
+    const origin = booking.checkIn
+      ? this.splitZoned(booking.checkIn.toDate(), booking.departureAirport, this.hasTime(booking.checkIn))
+      : { date: null, time: null };
+    const dest = booking.checkOut
+      ? this.splitZoned(booking.checkOut.toDate(), booking.arrivalAirport, this.hasTime(booking.checkOut))
+      : { date: null, time: null };
+
+    return [
+      {
+        code: booking.departureAirport || '???',
+        kind: 'origin' as const,
+        date: origin.date, time: origin.time, until: null,
+        zone: this.depZoneLabel(booking), wait: null,
+      },
+      // A stop shows when you land and when you leave again — the two times
+      // that were previously only in the edit form.
+      ...(booking.connections ?? []).filter(c => !!c.airport).map(c => ({
+        code: c.airport,
+        kind: 'stop' as const,
+        date: null,
+        time: c.arriveTime || null,
+        until: c.departTime || null,
+        zone: null,
+        wait: layoverDuration(c.arriveTime, c.departTime),
+      })),
+      {
+        code: booking.arrivalAirport || '???',
+        kind: 'dest' as const,
+        date: dest.date, time: dest.time, until: null,
+        zone: this.arrZoneLabel(booking), wait: null,
+      },
+    ];
+  }
+
+  /** Flight number for each leg: the booking's own for the first, then each
+   *  connection's onward flight. */
+  timelineLegs(booking: Booking): (string | null)[] {
+    return [
+      booking.flightNumber ?? null,
+      ...(booking.connections ?? []).filter(c => !!c.airport).map(c => c.flightNumber ?? null),
+    ];
   }
 
   private formatZoned(instant: Date, airport: string | null | undefined, withTime: boolean): string {
