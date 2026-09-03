@@ -199,6 +199,45 @@ export class BookingDialogComponent implements OnInit {
     this.connections.removeAt(index);
   }
 
+  /** The route as a chain of airports: origin, each stop in order, destination.
+   *  Everything in the builder is derived from this, so the legs on screen are
+   *  always what will be saved. */
+  routeNodes(): string[] {
+    return [
+      (this.form.controls.departureAirport.value ?? '').toUpperCase(),
+      ...this.connections.controls.map(c => (c.get('airport')?.value ?? '').toUpperCase()),
+      (this.form.controls.arrivalAirport.value ?? '').toUpperCase(),
+    ];
+  }
+
+  /** "MAD → BOS" for the leg that starts at node `index`. */
+  legLabel(index: number): string {
+    const nodes = this.routeNodes();
+    const from = nodes[index] || '—';
+    const to = nodes[index + 1] || '—';
+    return `${from} → ${to}`;
+  }
+
+  /** The airport the journey currently ends at, for button copy. */
+  finalDestination(): string {
+    return (this.form.controls.arrivalAirport.value ?? '').toUpperCase();
+  }
+
+  /** "I'm flying MAD → DEN and want to add the Boston stop in the middle."
+   *  A new stop always lands immediately before the destination. */
+  addStopInMiddle() {
+    this.addConnection();
+  }
+
+  /** "I entered MAD → BOS, now I want to add BOS → DEN."
+   *  The current destination becomes the stop, and the destination is cleared
+   *  for the airport this new leg ends at. */
+  continueToAnotherAirport() {
+    const previousDestination = (this.form.controls.arrivalAirport.value ?? '').toUpperCase();
+    this.addConnection(previousDestination);
+    this.form.patchValue({ arrivalAirport: '' });
+  }
+
   /** Step 1: pick the type, then reveal the rest of the form. */
   chooseType(type: BookingType) {
     this.form.patchValue({ type });

@@ -183,14 +183,88 @@ mat-dialog-content {
   .ticket-remove { color: #b0455a; }
 }
 
-.connection-row {
+/* ── Route builder ────────────────────────────────────────────────────
+   The journey drawn as a chain: airports are nodes, and the legs between
+   them are labelled so a stop reads as part of a route rather than a code
+   in a box on its own. */
+.route-builder {
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid var(--st-border);
+  border-radius: 10px;
+  background: var(--st-surface-2);
+}
+
+.route-builder-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--st-on-surface-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.route-node {
   display: grid;
-  grid-template-columns: 0.9fr 1.1fr 0.9fr auto;
+  grid-template-columns: auto 1fr;
   gap: 10px;
   align-items: center;
 
   mat-form-field { width: 100%; }
   .ticket-remove { color: #b0455a; }
+
+  &.stop {
+    grid-template-columns: auto 1fr 0.7fr 1fr 0.7fr auto;
+  }
+}
+
+.node-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--st-on-surface-muted);
+  white-space: nowrap;
+  align-self: center;
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+
+  &.stop-tag { color: var(--st-warn-strong); }
+}
+
+/* The connecting line and its "Leg 1 · MAD → BOS" caption. */
+.route-leg {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0 2px 18px;
+  min-height: 26px;
+
+  .leg-line {
+    width: 2px;
+    align-self: stretch;
+    background: var(--st-border);
+    border-radius: 1px;
+  }
+
+  .leg-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--st-on-surface-muted);
+    letter-spacing: 0.3px;
+  }
+}
+
+.route-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+
+  button mat-icon { font-size: 18px; width: 18px; height: 18px; }
 }
 
 /* ── Attachments ─────────────────────────────────────────────────────── */
@@ -269,13 +343,17 @@ mat-dialog-content {
     .ticket-remove { justify-self: end; }
   }
 
-  // Layover / connection rows: fields stack, remove button spans full width below
-  .connection-row {
+  // Route nodes: fields stack, remove button sits at the end
+  .route-node,
+  .route-node.stop {
     grid-template-columns: 1fr;
     gap: 4px;
 
+    .node-tag { margin-top: 4px; }
     .ticket-remove { justify-self: end; }
   }
+
+  .route-actions button { flex: 1 1 100%; }
 
   // Flight status leg layout: let the airport blocks wrap rather than overflow
   .status-legs { flex-wrap: wrap; }
