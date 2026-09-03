@@ -14,7 +14,7 @@
     <button mat-flat-button color="primary" (click)="triggerUpload()">
       <mat-icon>add_photo_alternate</mat-icon> Add Photos
     </button>
-    <input #fileInput type="file" accept="image/*" multiple hidden
+    <input #fileInput type="file" accept="image/*,video/*" multiple hidden
            (change)="onFilesSelected($event)" />
   </div>
 
@@ -32,9 +32,9 @@
       <div class="drop-zone" (drop)="onDrop($event)" (dragover)="onDragOver($event)"
            (click)="triggerUpload()">
         <mat-icon>add_photo_alternate</mat-icon>
-        <h3>No photos yet</h3>
-        <p>Be the first to add photos from the trip. Anyone in the group can upload and everyone will see them here.</p>
-        <button mat-flat-button color="primary">Upload Photos</button>
+        <h3>No photos or videos yet</h3>
+        <p>Be the first to add photos or videos from the trip. Anyone in the group can upload and everyone will see them here.</p>
+        <button mat-flat-button color="primary">Upload Photos or Videos</button>
       </div>
     } @else {
       <div class="drop-overlay" (drop)="onDrop($event)" (dragover)="onDragOver($event)">
@@ -77,7 +77,7 @@
               @if (isUnloadable(photo.id)) {
                 <div class="photo-broken">
                   <mat-icon>broken_image</mat-icon>
-                  <span>Couldn’t load this image</span>
+                  <span>Couldn’t load this file</span>
                   <div class="photo-broken-actions">
                     <button mat-button (click)="$event.stopPropagation(); retryImage(photo)">Try again</button>
                     @if (photo.userId === currentUserId) {
@@ -85,6 +85,13 @@
                               (click)="$event.stopPropagation(); removeBrokenPhoto(photo)">Remove</button>
                     }
                   </div>
+                </div>
+              } @else if (isVideo(photo)) {
+                <div class="tile-video">
+                  <video [src]="posterSrc(photo)" preload="metadata" muted playsinline
+                         [attr.aria-label]="photo.caption || ('Trip video by ' + (photo.uploaderName ?? 'Unknown'))"
+                         (error)="onImageLoadError(photo)"></video>
+                  <span class="video-badge" aria-hidden="true"><mat-icon>play_arrow</mat-icon></span>
                 </div>
               } @else {
                 <img [src]="srcFor(photo)" [alt]="photo.caption || ('Trip photo by ' + (photo.uploaderName ?? 'Unknown'))" loading="lazy"
@@ -216,10 +223,15 @@
         @if (showSpinner() && !imageReady()) {
           <mat-spinner class="stage-spinner" diameter="36"></mat-spinner>
         }
-        <img [src]="photo.url" [alt]="photo.caption || 'Photo'"
-             [class.ready]="imageReady()"
-             draggable="false" decoding="async" fetchpriority="high"
-             (load)="onLightboxImageLoad()" (error)="onLightboxImageLoad()" />
+        @if (isVideo(photo)) {
+          <video class="stage-video" [src]="photo.url" controls playsinline preload="metadata"
+                 [attr.aria-label]="photo.caption || 'Video'"></video>
+        } @else {
+          <img [src]="photo.url" [alt]="photo.caption || 'Photo'"
+               [class.ready]="imageReady()"
+               draggable="false" decoding="async" fetchpriority="high"
+               (load)="onLightboxImageLoad()" (error)="onLightboxImageLoad()" />
+        }
       </div>
 
       <div class="lightbox-meta" (click)="$event.stopPropagation()">

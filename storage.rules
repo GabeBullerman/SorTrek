@@ -15,10 +15,17 @@ service firebase.storage {
     match /photos/{userId}/{tripId}/{fileName} {
       // Any signed-in user can read — shared gallery
       allow read: if request.auth != null;
-      // Only the uploader can write (upload) to their own folder
+      // Only the uploader can write (upload) to their own folder. Photos are
+      // compressed client-side so they stay small; videos are uploaded as they
+      // came off the camera, so they get their own (larger) ceiling — kept in
+      // step with MAX_VIDEO_BYTES in photo.service.ts.
       allow create: if request.auth != null && request.auth.uid == userId
-        && request.resource.size < 15 * 1024 * 1024  // 15 MB max
-        && request.resource.contentType.matches('image/.*');
+        && (
+          (request.resource.contentType.matches('image/.*')
+            && request.resource.size < 15 * 1024 * 1024)      // 15 MB
+          || (request.resource.contentType.matches('video/.*')
+            && request.resource.size < 100 * 1024 * 1024)     // 100 MB
+        );
       // Only the uploader can delete their own photo
       allow delete: if request.auth != null && request.auth.uid == userId;
     }

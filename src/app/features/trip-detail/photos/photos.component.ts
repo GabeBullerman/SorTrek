@@ -10,7 +10,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { PhotoService } from '../../../core/services/photo.service';
+import { PhotoService, isSupportedMedia, MAX_VIDEO_BYTES } from '../../../core/services/photo.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Photo } from '../../../core/models/photo.model';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
@@ -167,6 +167,18 @@ export class PhotosComponent implements OnInit, OnDestroy {
   /** IDs that still failed after every retry. Shown as a placeholder tile. */
   private unloadable = signal<ReadonlySet<string>>(new Set());
 
+  readonly maxVideoMb = Math.round(MAX_VIDEO_BYTES / 1024 / 1024);
+
+  isVideo(photo: Photo): boolean {
+    return photo.mediaType === 'video';
+  }
+
+  /** A video tile seeks to the first frame so the grid shows a picture rather
+   *  than a black rectangle; iOS in particular won't paint one otherwise. */
+  posterSrc(photo: Photo): string {
+    return `${photo.url}#t=0.1`;
+  }
+
   isUnloadable(id?: string): boolean {
     return !!id && this.unloadable().has(id);
   }
@@ -205,10 +217,10 @@ export class PhotosComponent implements OnInit, OnDestroy {
     event.preventDefault();
     const files = event.dataTransfer?.files;
     if (!files?.length) return;
-    const images = Array.from(files).filter(f => f.type.startsWith('image/'));
-    if (!images.length) return;
-    this.startBatch(images.length);
-    images.forEach(file => this.uploadFile(file));
+    const media = Array.from(files).filter(isSupportedMedia);
+    if (!media.length) return;
+    this.startBatch(media.length);
+    media.forEach(file => this.uploadFile(file));
   }
 
   onDragOver(event: DragEvent) {
@@ -257,10 +269,10 @@ export class PhotosComponent implements OnInit, OnDestroy {
         this.uploadProgress.set(null);
         this.finishBatchItem(createdId);
       },
-      error: () => {
+      error: (err: Error) => {
         this.uploadProgress.set(null);
         this.finishBatchItem();
-        this.snackBar.open('Upload failed', 'Dismiss', { duration: 3000 });
+        this.snackBar.open(err?.message || 'Upload failed', 'Dismiss', { duration: 4000 });
       },
     });
   }
@@ -303,6 +315,7 @@ export class PhotosComponent implements OnInit, OnDestroy {
 
   /** Decode a photo ahead of time; harmless to call repeatedly. */
   private warmFullImage(photo: Photo) {
+    if (this.isVideo(photo)) return;   // nothing to decode ahead of time
     if (!photo.url || this.warmed.has(photo.url)) return;
     this.warmed.add(photo.url);
     const img = new Image();
@@ -480,8 +493,8 @@ export class PhotosComponent implements OnInit, OnDestroy {
   private movedDuringGesture = false;
 
   onLightboxPointerDown(event: PointerEvent) {
-    // Leave controls alone, and ignore secondary pointers (pinch to zoom).
-    if ((event.target as HTMLElement | null)?.closest('button, input')) return;
+    // Leave controls alone — including a video's, where a drag scrubs.
+    if ((event.target as HTMLElement | null)?.closest('button, input, video')) return;
     if (this.gesture) return;
 
     this.gesture = {
@@ -574,6 +587,13 @@ export class PhotosComponent implements OnInit, OnDestroy {
   /* ── Image load state ────────────────────────────────────────────────────── */
 
   private beginImageLoad() {
+    const photo = this.lightboxPhoto();
+    if (photo && this.isVideo(photo)) {
+      // The <video> element paints its own loading; don't hold it behind a fade.
+      this.imageReady.set(true);
+      this.clearSpinnerTimer();
+      return;
+    }
     this.imageReady.set(false);
     this.clearSpinnerTimer();
     // A cached photo paints within a frame or two; showing a spinner for that

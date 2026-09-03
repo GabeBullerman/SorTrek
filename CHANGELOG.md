@@ -1,5 +1,27 @@
 # SorTrek — Changelog
 
+## 2026-08 — Videos in the album, layover duration
+
+### Photos & Videos
+- **The album takes videos.** Pick or drop them alongside photos; tiles show the
+  first frame with a play badge, and the full-screen viewer plays them in place
+  with normal controls. Saving to your device works the same as for a photo.
+- Videos are uploaded as they came off the camera — a browser can't transcode
+  one — so they're capped at 100 MB, enforced client-side and in the Storage
+  rules, with the reason surfaced if a file is too big. Photos are still
+  compressed as before.
+- Downloads now stream through the API instead of being buffered, since a video
+  is no size to hold in a serverless function's memory.
+- Storage recovery picks up videos too, and records what each file is.
+- Swiping ignores gestures that start on a video, so dragging its scrubber
+  doesn't change photo.
+
+### Bookings
+- **Layover duration.** Connections gained a "Lands" time to go with "Departs",
+  so a flight card can say "Change at LIS — 2h 15m on the ground — TP123
+  departs 14:30". A connection running past midnight is read as overnight
+  rather than negative.
+
 ## 2026-08 — Layovers on the flight itself
 
 ### Bookings

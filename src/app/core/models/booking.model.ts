@@ -77,9 +77,16 @@ export interface Booking {
   arrivalAirport?: string;
   /** Layover/connection airport IATA codes, in order (derived from connections). */
   layovers?: string[];
-  /** Connecting flights through each layover: the airport you connect at plus
-   *  the onward flight's number and departure time. */
-  connections?: { airport: string; flightNumber?: string; departTime?: string }[];
+  /** Connecting flights through each layover: the airport you connect at, when
+   *  you land there, and the onward flight's number and departure time.
+   *  `arriveTime` and `departTime` are local "HH:mm" at the layover airport;
+   *  together they give the time on the ground. */
+  connections?: {
+    airport: string;
+    flightNumber?: string;
+    arriveTime?: string;
+    departTime?: string;
+  }[];
   /** Last live status pulled from the flight-tracking API. */
   flightStatus?: FlightStatus;
 
