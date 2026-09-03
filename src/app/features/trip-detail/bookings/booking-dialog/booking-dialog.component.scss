@@ -190,6 +190,10 @@ mat-dialog-content {
 .route-builder {
   margin-top: 16px;
   padding: 12px;
+
+  // Fields here use subscriptSizing="dynamic"; drop the residual gap so the
+  // rows sit close together.
+  ::ng-deep .mat-mdc-form-field-subscript-wrapper { min-height: 0; }
   border: 1px solid var(--st-border);
   border-radius: 10px;
   background: var(--st-surface-2);
@@ -206,15 +210,17 @@ mat-dialog-content {
 
 .route-node {
   display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 10px;
+  // tag · airport · date · time
+  grid-template-columns: auto 0.9fr 1.1fr 0.8fr;
+  gap: 8px;
   align-items: center;
 
   mat-form-field { width: 100%; }
   .ticket-remove { color: #b0455a; }
 
+  // tag · layover · lands · departs · onward flight · remove
   &.stop {
-    grid-template-columns: auto 1fr 0.7fr 1fr 0.7fr auto;
+    grid-template-columns: auto 0.9fr 0.7fr 0.7fr 1fr auto;
   }
 }
 
@@ -240,8 +246,8 @@ mat-dialog-content {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 2px 0 2px 18px;
-  min-height: 26px;
+  margin: 1px 0 1px 18px;
+  min-height: 20px;
 
   .leg-line {
     width: 2px;
@@ -343,14 +349,29 @@ mat-dialog-content {
     .ticket-remove { justify-self: end; }
   }
 
-  // Route nodes: fields stack, remove button sits at the end
+  // Route nodes on a phone: the tag labels its own row, then the fields pair up
+  // two to a line — one field per line made the form enormous.
   .route-node,
   .route-node.stop {
-    grid-template-columns: 1fr;
-    gap: 4px;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 8px;
+    align-items: start;
 
-    .node-tag { margin-top: 4px; }
-    .ticket-remove { justify-self: end; }
+    .node-tag {
+      grid-column: 1 / -1;
+      margin-top: 2px;
+    }
+
+    // Airport alone on its line; the two times pair up beneath it.
+    .node-airport { grid-column: 1 / -1; }
+  }
+
+  // On a stop the remove button rides alongside the tag rather than being
+  // stranded next to whichever field wrapped last.
+  .route-node.stop {
+    .node-tag { grid-column: 1; }
+    .ticket-remove { grid-row: 1; grid-column: 2; justify-self: end; }
+    .conn-flight { grid-column: 1 / -1; }
   }
 
   .route-actions button { flex: 1 1 100%; }

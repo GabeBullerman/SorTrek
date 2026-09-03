@@ -1,5 +1,22 @@
 # SorTrek — Changelog
 
+## 2026-09 — Flight edit form: landing times and less scrolling
+
+### Bookings
+- **The final leg has a landing time again.** A flight's departure and arrival
+  date/time now sit on the route itself — on the airport each belongs to — so
+  the destination has a "Lands" field beside it. They were always in the form,
+  but in a generic Dates section far below the route, which made the last leg
+  look like it had nowhere to record an arrival.
+- Those fields are no longer repeated in the Dates section for flights, so the
+  form is shorter despite gaining the field that was missing.
+- A stop's two times sit next to each other — Lands then Departs, in the order
+  you experience them — with the onward flight number below, and the remove
+  button beside the STOP label instead of stranded next to whichever field
+  wrapped last.
+- On a phone the route fields pair two to a line rather than one per line, and
+  the space Material reserves under each field is reclaimed.
+
 ## 2026-09 — Flight cards condensed
 
 ### Bookings
