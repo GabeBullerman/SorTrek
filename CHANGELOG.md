@@ -1,5 +1,22 @@
 # SorTrek — Changelog
 
+## 2026-09 — Flight cards condensed
+
+### Bookings
+- **A flight is now a timeline.** Each airport is a row carrying its own times,
+  with the flight covering each leg captioned between them. The card previously
+  showed only the first departure and the last arrival, so on a connecting trip
+  the middle of the journey had no times at all — when you land at the stop,
+  when the onward flight leaves, and which flight it is were all invisible.
+- **Much shorter on a phone.** The old single date row ("Sep 4, 2026 at 2:05 PM
+  → Sep 4, 2026 at 4:15 PM" plus zone labels and icons) wrapped into a stack
+  several lines deep. Dates and times are split onto the airport they belong to,
+  and the same booking renders about a third of its previous height.
+- Badges (direction, stops, status) share a wrapping row instead of taking a
+  line each.
+- A flight with no airports entered yet still shows its flight number and dates
+  in the old row; other booking types are unchanged.
+
 ## 2026-09 — Flight route builder
 
 ### Bookings

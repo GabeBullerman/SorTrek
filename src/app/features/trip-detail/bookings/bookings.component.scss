@@ -119,6 +119,14 @@ mat-accordion {
   }
 }
 
+.booking-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  flex-basis: 100%;   // always its own row, so badges pack side by side
+}
+
 .booking-card-actions {
   display: flex;
   gap: 0;
@@ -151,51 +159,81 @@ mat-accordion {
   }
 }
 
-/* The route drawn out, so a connection reads as a place you stop rather than
-   another code in a parenthesis. */
-.flight-route {
+/* The flight as a vertical timeline. Every airport carries its own times, and
+   the legs between them are labelled — the old layout showed only the first
+   departure and the last arrival, so a connection had no times at all, and the
+   single date row wrapped into an unreadable stack on a phone. */
+.flight-timeline {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin: 2px 0 2px 28px;   // line up with the detail rows' text
+  flex-direction: column;
+  margin: 4px 0 2px;
 }
 
-.route-point {
+.tl-node {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-height: 22px;
+}
+
+.tl-code {
+  flex: 0 0 auto;
+  min-width: 42px;
   font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0.5px;
   color: var(--st-on-surface);
-  padding: 2px 6px;
-  border-radius: 6px;
-  background: var(--st-surface-2);
-
-  &.point-stop {
-    background: var(--st-warn-bg);
-    color: var(--st-warn-strong);
-    border: 1px solid var(--st-warn-border);
-  }
 }
 
-.route-leg {
-  flex: 0 0 22px;
-  height: 2px;
-  border-radius: 1px;
-  background: var(--st-border);
+.tl-node.tl-stop .tl-code { color: var(--st-warn-strong); }
+
+.tl-when {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--st-on-surface-muted);
+  min-width: 0;
 }
 
-.flight-route.with-stops .route-leg { background: var(--st-warn-border); }
+.tl-date { color: var(--st-on-surface-faint); }
+.tl-time, .tl-until { color: var(--st-on-surface); font-variant-numeric: tabular-nums; }
 
-.layover-line {
+.tl-wait {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--st-warn-bg);
+  color: var(--st-warn-strong);
+  border: 1px solid var(--st-warn-border);
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* The rail between two airports, captioned with the flight that covers it. */
+.tl-leg {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-left: 28px;
-  font-size: 0.78rem;
-  color: var(--st-warn-strong);
+  gap: 8px;
+  min-height: 20px;
+  margin-left: 6px;
 
-  mat-icon { font-size: 16px; width: 16px; height: 16px; }
-  strong { letter-spacing: 0.4px; }
+  .tl-rail {
+    width: 2px;
+    align-self: stretch;
+    background: var(--st-border);
+    border-radius: 1px;
+    margin-left: 8px;
+  }
+
+  .tl-flight {
+    font-size: 0.72rem;
+    color: var(--st-on-surface-muted);
+    letter-spacing: 0.2px;
+
+    &.muted { color: var(--st-on-surface-faint); }
+  }
 }
 
 .status-badge {
