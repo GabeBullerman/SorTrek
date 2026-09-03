@@ -80,9 +80,19 @@
 
           <div class="route-node">
             <span class="node-tag origin"><mat-icon>flight_takeoff</mat-icon> From</span>
-            <mat-form-field appearance="outline" class="node-airport">
+            <mat-form-field appearance="outline" class="node-airport" subscriptSizing="dynamic">
               <mat-label>Departure (IATA)</mat-label>
               <input matInput formControlName="departureAirport" placeholder="MAD" maxlength="4" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="node-date" subscriptSizing="dynamic">
+              <mat-label>Date</mat-label>
+              <input matInput [matDatepicker]="depPicker" formControlName="checkIn" />
+              <mat-datepicker-toggle matIconSuffix [for]="depPicker"></mat-datepicker-toggle>
+              <mat-datepicker #depPicker></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="node-time" subscriptSizing="dynamic">
+              <mat-label>Takes off</mat-label>
+              <input matInput type="time" formControlName="checkInTime" />
             </mat-form-field>
           </div>
 
@@ -95,21 +105,22 @@
 
               <div class="route-node stop" [formGroupName]="i">
                 <span class="node-tag stop-tag"><mat-icon>connecting_airports</mat-icon> Stop</span>
-                <mat-form-field appearance="outline" class="node-airport">
+                <mat-form-field appearance="outline" class="node-airport" subscriptSizing="dynamic">
                   <mat-label>Layover (IATA)</mat-label>
                   <input matInput formControlName="airport" placeholder="BOS" maxlength="4" />
                 </mat-form-field>
-                <mat-form-field appearance="outline" class="conn-time">
+                <!-- The two times sit together: you land, you wait, you leave. -->
+                <mat-form-field appearance="outline" class="conn-time" subscriptSizing="dynamic">
                   <mat-label>Lands</mat-label>
                   <input matInput type="time" formControlName="arriveTime" />
                 </mat-form-field>
-                <mat-form-field appearance="outline" class="conn-flight">
-                  <mat-label>Onward flight #</mat-label>
-                  <input matInput formControlName="flightNumber" placeholder="TP1234" />
-                </mat-form-field>
-                <mat-form-field appearance="outline" class="conn-time">
+                <mat-form-field appearance="outline" class="conn-time" subscriptSizing="dynamic">
                   <mat-label>Departs</mat-label>
                   <input matInput type="time" formControlName="departTime" />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="conn-flight" subscriptSizing="dynamic">
+                  <mat-label>Onward flight #</mat-label>
+                  <input matInput formControlName="flightNumber" placeholder="TP1234" />
                 </mat-form-field>
                 <button mat-icon-button type="button" class="ticket-remove"
                         (click)="removeConnection(i)" matTooltip="Remove this stop">
@@ -126,9 +137,19 @@
 
           <div class="route-node">
             <span class="node-tag dest"><mat-icon>flight_land</mat-icon> To</span>
-            <mat-form-field appearance="outline" class="node-airport">
+            <mat-form-field appearance="outline" class="node-airport" subscriptSizing="dynamic">
               <mat-label>Destination (IATA)</mat-label>
               <input matInput formControlName="arrivalAirport" placeholder="DEN" maxlength="4" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="node-date" subscriptSizing="dynamic">
+              <mat-label>Date</mat-label>
+              <input matInput [matDatepicker]="arrPicker" formControlName="checkOut" />
+              <mat-datepicker-toggle matIconSuffix [for]="arrPicker"></mat-datepicker-toggle>
+              <mat-datepicker #arrPicker></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="node-time" subscriptSizing="dynamic">
+              <mat-label>Lands</mat-label>
+              <input matInput type="time" formControlName="checkOutTime" />
             </mat-form-field>
           </div>
 
@@ -253,7 +274,10 @@
         <mat-hint>Shown as "View booking" on the card</mat-hint>
       </mat-form-field>
 
-      <!-- ── Dates AND times ───────────────────────────────────────────── -->
+      <!-- ── Dates AND times ─────────────────────────────────────────────
+           Flights set these inside the route builder above, on the airport
+           each one belongs to, so they aren't repeated here. -->
+      @if (!isFlight()) {
       <div class="datetime-row mt-16">
         <mat-form-field appearance="outline" class="date-field">
           <mat-label>{{ labels().start }} date</mat-label>
@@ -281,6 +305,7 @@
           <mat-icon matPrefix>schedule</mat-icon>
         </mat-form-field>
       </div>
+      }
 
       <div class="two-col mt-16">
         <mat-form-field appearance="outline">
