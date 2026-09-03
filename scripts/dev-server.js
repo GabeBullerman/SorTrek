@@ -36,25 +36,18 @@ const routes = {
   '/api/transport':        require('../api/transport'),
 };
 
-// Wrap Node's ServerResponse with Vercel-compatible helpers
+// Add Vercel's helpers to Node's ServerResponse. It's augmented rather than
+// wrapped so it stays a writable stream — the photo download pipes straight
+// into it rather than buffering a whole video in memory.
 function wrapRes(res) {
-  let statusCode = 200;
-  const wrapped = {
-    setHeader: (k, v) => res.setHeader(k, v),
-    status(code) { statusCode = code; return wrapped; },
-    json(data) {
-      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(data));
-    },
-    // Binary or pre-typed bodies (the photo download streams image bytes and
-    // sets its own Content-Type), so don't impose one here.
-    send(body) {
-      res.writeHead(statusCode);
-      res.end(body);
-    },
-    end: (s) => res.end(s),
+  res.status = (code) => { res.statusCode = code; return res; };
+  res.json = (data) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify(data));
   };
-  return wrapped;
+  // Binary or pre-typed bodies set their own Content-Type, so don't impose one.
+  res.send = (body) => res.end(body);
+  return res;
 }
 
 http.createServer((req, res) => {

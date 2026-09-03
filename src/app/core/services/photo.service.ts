@@ -9,7 +9,7 @@ import {
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import imageCompression from 'browser-image-compression';
-import { Photo } from '../models/photo.model';
+import { Photo, MediaType } from '../models/photo.model';
 import { AuthService } from './auth.service';
 
 const COMPRESSION_OPTIONS = {
@@ -17,6 +17,19 @@ const COMPRESSION_OPTIONS = {
   maxWidthOrHeight: 1920,
   useWebWorker: true,
 };
+
+/** Videos are uploaded as-is — there's no practical in-browser transcode — so
+ *  they need a ceiling. Storage rules enforce the same number server-side. */
+export const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
+
+export function mediaTypeOf(file: File): MediaType {
+  return file.type.startsWith('video/') ? 'video' : 'image';
+}
+
+/** True for anything the album will accept. */
+export function isSupportedMedia(file: File): boolean {
+  return file.type.startsWith('image/') || file.type.startsWith('video/');
+}
 
 @Injectable({ providedIn: 'root' })
 export class PhotoService {
@@ -60,15 +73,30 @@ export class PhotoService {
    *  callers can act on the batch they just added (captioning it, say). */
   uploadPhoto(tripId: string, file: File, caption?: string): Observable<UploadEvent> {
     const userId = this.auth.currentUser!.uid;
+    const mediaType = mediaTypeOf(file);
 
     return new Observable(observer => {
       observer.next({ percent: 0 });
 
-      imageCompression(file, COMPRESSION_OPTIONS)
+      if (mediaType === 'video' && file.size > MAX_VIDEO_BYTES) {
+        observer.error(new Error(
+          `Videos must be under ${Math.round(MAX_VIDEO_BYTES / 1024 / 1024)} MB`));
+        return;
+      }
+
+      // Only images are compressed; a video is uploaded as it came off the
+      // camera, since the browser can't transcode one.
+      const prepare = mediaType === 'video'
+        ? Promise.resolve(file)
+        : imageCompression(file, COMPRESSION_OPTIONS);
+
+      prepare
         .then(compressed => {
           const storagePath = `photos/${userId}/${tripId}/${Date.now()}_${file.name}`;
           const storageRef = ref(this.storage, storagePath);
-          const uploadTask = uploadBytesResumable(storageRef, compressed);
+          const uploadTask = uploadBytesResumable(storageRef, compressed, {
+            contentType: file.type || undefined,
+          });
 
           uploadTask.on(
             'state_changed',
@@ -82,6 +110,8 @@ export class PhotoService {
               const ref = await this.run(() =>
                 addDoc(collection(this.firestore, 'photos'), {
                   tripId, userId, uploaderName, url, storagePath,
+                  mediaType,
+                  contentType: file.type || 'application/octet-stream',
                   caption: caption ?? '',
                   uploadedAt: serverTimestamp(),
                 })
@@ -123,7 +153,8 @@ export class PhotoService {
     const base = (photo.storagePath ?? '').split('/').pop() ?? '';
     const original = base.replace(/^\d+_/, '');
     if (original) return original;
-    return `${(photo.caption || 'photo').replace(/[^\w.-]+/g, '-').slice(0, 40)}.jpg`;
+    const ext = photo.mediaType === 'video' ? 'mp4' : 'jpg';
+    return `${(photo.caption || 'photo').replace(/[^\w.-]+/g, '-').slice(0, 40)}.${ext}`;
   }
 
   /** Bytes we've already fetched, keyed by photo id. Saving from this cache is
@@ -182,7 +213,7 @@ export class PhotoService {
           });
           if (res.ok) {
             const blob = await res.blob();
-            return new File([blob], name, { type: blob.type || 'image/jpeg' });
+            return new File([blob], name, { type: blob.type || photo.contentType || 'image/jpeg' });
           }
         }
       } catch { /* fall through to the direct URL */ }
@@ -192,7 +223,7 @@ export class PhotoService {
       const res = await fetch(photo.url, { mode: 'cors', credentials: 'omit' });
       if (!res.ok) return null;
       const blob = await res.blob();
-      return new File([blob], name, { type: blob.type || 'image/jpeg' });
+      return new File([blob], name, { type: blob.type || photo.contentType || 'image/jpeg' });
     } catch {
       return null;
     }

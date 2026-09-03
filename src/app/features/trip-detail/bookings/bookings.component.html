@@ -174,7 +174,7 @@
                         @for (conn of connectionDetails(booking); track conn.airport) {
                           <div class="layover-line">
                             <mat-icon>connecting_airports</mat-icon>
-                            <span>Change at <strong>{{ conn.airport }}</strong>@if (conn.onward) { — {{ conn.onward }} }</span>
+                            <span>Change at <strong>{{ conn.airport }}</strong>@if (conn.wait) { — <strong>{{ conn.wait }}</strong> on the ground }@if (conn.onward) { — {{ conn.onward }} }</span>
                           </div>
                         }
                       }

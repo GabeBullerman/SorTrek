@@ -163,6 +163,6 @@ npm start
 | **Trips Dashboard** | Card grid with status badges, create/edit/delete |
 | **Daily Schedule** | Timeline view grouped by day with activity categories |
 | **Bookings** | Flights, hotels, Airbnbs with confirmation numbers & status |
-| **Photos** | Upload via click or drag-and-drop, lightbox viewer, hold-to-select, save photos to your device |
+| **Photos & Videos** | Upload via click or drag-and-drop, full-screen viewer with swipe, hold-to-select, save to your device |
 | **Cost Tracker** | Visual bar chart + per-category itemized breakdown |
 | **Map** | Google Maps with pins for all activities that have coordinates |

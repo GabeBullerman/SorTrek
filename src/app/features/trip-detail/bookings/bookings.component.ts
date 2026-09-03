@@ -346,13 +346,17 @@ export class BookingsComponent implements OnInit {
 
   /** One line per connection: where you change planes and what onto.
    *  Only connections carrying real detail are worth a line of their own. */
-  connectionDetails(booking: Booking): { airport: string; onward: string | null }[] {
+  connectionDetails(booking: Booking): { airport: string; wait: string | null; onward: string | null }[] {
     return (booking.connections ?? [])
       .filter(c => !!c.airport)
       .map(c => {
         const parts = [c.flightNumber, c.departTime && `departs ${c.departTime}`]
           .filter(Boolean) as string[];
-        return { airport: c.airport, onward: parts.length ? parts.join(' · ') : null };
+        return {
+          airport: c.airport,
+          wait: layoverDuration(c.arriveTime, c.departTime),
+          onward: parts.length ? parts.join(' · ') : null,
+        };
       });
   }
 
@@ -501,4 +505,29 @@ function byDate(a: Booking, b: Booking): number {
   const ta = a.checkIn?.toMillis() ?? Number.POSITIVE_INFINITY;
   const tb = b.checkIn?.toMillis() ?? Number.POSITIVE_INFINITY;
   return ta - tb;
+}
+
+/** Time on the ground between landing and the onward departure, as "2h 15m".
+ *  Both are local "HH:mm" at the layover airport, so a connection running past
+ *  midnight comes out negative — that's an overnight, so add a day. Returns
+ *  null unless both times are present and parse. */
+function layoverDuration(arrive?: string, depart?: string): string | null {
+  const toMinutes = (t?: string): number | null => {
+    const m = /^(\d{1,2}):(\d{2})$/.exec((t ?? '').trim());
+    if (!m) return null;
+    const h = Number(m[1]), min = Number(m[2]);
+    if (h > 23 || min > 59) return null;
+    return h * 60 + min;
+  };
+
+  const from = toMinutes(arrive);
+  const to = toMinutes(depart);
+  if (from === null || to === null) return null;
+
+  let mins = to - from;
+  if (mins < 0) mins += 24 * 60;      // overnight connection
+  if (mins === 0) return null;         // same minute is a data slip, not a wait
+
+  const h = Math.floor(mins / 60), m = mins % 60;
+  return h && m ? `${h}h ${m}m` : h ? `${h}h` : `${m}m`;
 }

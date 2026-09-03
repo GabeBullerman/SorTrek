@@ -155,10 +155,10 @@ export class BookingDialogComponent implements OnInit {
     for (const pt of saved) this.addPassengerTicket(pt.name, pt.ticket);
 
     // Seed connecting flights from saved data, migrating legacy plain layovers.
-    const conns: { airport: string; flightNumber?: string; departTime?: string }[] =
+    const conns: { airport: string; flightNumber?: string; departTime?: string; arriveTime?: string }[] =
       this.data.booking?.connections
       ?? (this.data.booking?.layovers ?? []).map(a => ({ airport: a }));
-    for (const c of conns) this.addConnection(c.airport, c.flightNumber, c.departTime);
+    for (const c of conns) this.addConnection(c.airport, c.flightNumber, c.departTime, c.arriveTime);
 
     this.participantService.getParticipants(this.data.tripId).subscribe(p => {
       this.participants.set(p);
@@ -186,10 +186,11 @@ export class BookingDialogComponent implements OnInit {
   }
 
   /** Add a connecting-flight row: layover airport + onward flight info. */
-  addConnection(airport = '', flightNumber = '', departTime = '') {
+  addConnection(airport = '', flightNumber = '', departTime = '', arriveTime = '') {
     this.connections.push(this.fb.group({
       airport: new FormControl(airport, { nonNullable: true }),
       flightNumber: new FormControl(flightNumber ?? '', { nonNullable: true }),
+      arriveTime: new FormControl(arriveTime ?? '', { nonNullable: true }),
       departTime: new FormControl(departTime ?? '', { nonNullable: true }),
     }));
   }
@@ -358,18 +359,20 @@ function toDateStr(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-interface ConnectionRow { airport?: string; flightNumber?: string; departTime?: string }
+interface ConnectionRow { airport?: string; flightNumber?: string; arriveTime?: string; departTime?: string }
 
 /** Keep connection rows that have a layover airport; omit empty optional fields
  *  entirely (Firestore rejects `undefined`, even nested inside an array). */
-function cleanConnections(rows: ConnectionRow[]): { airport: string; flightNumber?: string; departTime?: string }[] | undefined {
+function cleanConnections(rows: ConnectionRow[]): { airport: string; flightNumber?: string; arriveTime?: string; departTime?: string }[] | undefined {
   const out = rows
     .map(r => {
       const airport = (r.airport ?? '').trim().toUpperCase();
       const flightNumber = (r.flightNumber ?? '').trim().toUpperCase();
+      const arriveTime = (r.arriveTime ?? '').trim();
       const departTime = (r.departTime ?? '').trim();
-      const conn: { airport: string; flightNumber?: string; departTime?: string } = { airport };
+      const conn: { airport: string; flightNumber?: string; arriveTime?: string; departTime?: string } = { airport };
       if (flightNumber) conn.flightNumber = flightNumber;
+      if (arriveTime) conn.arriveTime = arriveTime;
       if (departTime) conn.departTime = departTime;
       return conn;
     })

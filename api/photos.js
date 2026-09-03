@@ -133,7 +133,10 @@ async function handleSync(req, res) {
     for (const file of orphans) {
       try {
         const [metadata] = await file.getMetadata();
-        if (metadata.contentType && !metadata.contentType.startsWith('image/')) continue;
+        const contentType = metadata.contentType || '';
+        const isVideo = contentType.startsWith('video/');
+        // Anything that isn't recognisable media is something else entirely.
+        if (contentType && !isVideo && !contentType.startsWith('image/')) continue;
 
         const token = await ensureDownloadToken(file, metadata);
         const uid = file.name.split('/')[1] ?? '';
@@ -143,6 +146,8 @@ async function handleSync(req, res) {
           uploaderName: names.get(uid) ?? 'Unknown',
           url: downloadUrl(bucket.name, file.name, token),
           storagePath: file.name,
+          mediaType: isVideo ? 'video' : 'image',
+          contentType: contentType || 'application/octet-stream',
           caption: '',
           uploadedAt: admin.firestore.Timestamp.fromDate(uploadedAtFrom(file.name, metadata)),
           recoveredAt: admin.firestore.Timestamp.now(),
@@ -217,16 +222,28 @@ async function handleDownload(req, res) {
 
     const [metadata] = await file.getMetadata();
     const name = (photo.storagePath.split('/').pop() ?? 'photo.jpg').replace(/^\d+_/, '');
-    const [buf] = await file.download();
 
     res.setHeader('Content-Type', metadata.contentType || 'image/jpeg');
-    res.setHeader('Content-Length', String(buf.length));
+    if (metadata.size) res.setHeader('Content-Length', String(metadata.size));
     res.setHeader('Content-Disposition', contentDisposition(name || 'photo.jpg'));
     // Private: the bytes are trip-scoped and the response carried an ID token.
     res.setHeader('Cache-Control', 'private, max-age=3600');
-    return res.status(200).send(buf);
+
+    // Streamed rather than buffered: videos can be 100 MB, which is no size to
+    // hold in a serverless function's memory.
+    res.statusCode = 200;
+    await new Promise((resolve, reject) => {
+      const stream = file.createReadStream();
+      stream.on('error', reject);
+      stream.on('end', resolve);
+      stream.pipe(res);
+    });
+    return;
   } catch (err) {
     console.error('[photo-download]', err?.message ?? err);
+    // A stream can fail after the headers are out; there's no way to turn that
+    // into a JSON error, so just close the response.
+    if (res.headersSent) return res.end();
     res.setHeader('Content-Type', 'application/json');
     return res.status(500).json({ error: 'Could not fetch the photo.' });
   }

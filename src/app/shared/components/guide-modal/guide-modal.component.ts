@@ -87,13 +87,14 @@ const PAGES: GuidePage[] = [
     gifPath: 'guide/transport.svg',
   },
   {
-    title: 'Photos / Shared Album',
+    title: 'Photos & Videos / Shared Album',
     icon: 'photo_library',
     status: 'implemented',
     statusLabel: 'Fully Implemented',
-    description: 'A shared photo album for the whole trip. Anyone on the trip can upload pictures and everyone sees them in a single gallery, each tagged with who added it.',
+    description: 'A shared album for the whole trip. Anyone on the trip can upload photos and videos, and everyone sees them in a single gallery, each tagged with who added it.',
     bullets: [
-      'Drag-and-drop or pick multiple images, with a live upload progress bar',
+      'Drag-and-drop or pick multiple photos and videos, with a live upload progress bar',
+      'Swipe between photos full-screen; videos play in place',
       'Every photo shows uploader attribution and an optional caption',
       'Tap a photo to open a full-screen lightbox with uploader and date',
       'Press and hold a photo (or tap Select) to pick several at once',
