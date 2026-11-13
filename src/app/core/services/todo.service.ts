@@ -1,7 +1,7 @@
 import { Injectable, inject, Injector, runInInjectionContext } from '@angular/core';
 import {
   Firestore, collection, collectionData, doc,
-  addDoc, updateDoc, deleteDoc, query, where, serverTimestamp,
+  addDoc, updateDoc, deleteDoc, query, where, serverTimestamp, limit,
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { TripTodo } from '../models/trip-todo.model';
@@ -19,7 +19,8 @@ export class TodoService {
     return this.run(() => {
       const q = query(
         collection(this.firestore, 'tripTodos'),
-        where('tripId', '==', tripId)
+        where('tripId', '==', tripId),
+        limit(300)
       );
       return collectionData(q, { idField: 'id' }) as Observable<TripTodo[]>;
     });

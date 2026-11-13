@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
+import { Component, Input, OnInit, inject, signal, computed, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpClient } from '@angular/common/http';
 import { TitleCasePipe, DecimalPipe } from '@angular/common';
@@ -75,6 +75,7 @@ interface TransportGapOption {
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-schedule',
   standalone: true,
   imports: [

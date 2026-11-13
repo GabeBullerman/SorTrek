@@ -59,7 +59,7 @@
           <mat-icon>auto_awesome</mat-icon>
           <span>AI Packing Suggestions</span>
         </div>
-        <button mat-icon-button (click)="showAiPanel.set(false)">
+        <button mat-icon-button aria-label="Close suggestions" (click)="showAiPanel.set(false)">
           <mat-icon>close</mat-icon>
         </button>
       </div>
@@ -150,7 +150,7 @@
               <mat-icon>lock</mat-icon>
               Just me
             </label>
-            <button mat-icon-button type="button" (click)="cancelAdd()" matTooltip="Cancel">
+            <button mat-icon-button type="button" (click)="cancelAdd()" matTooltip="Cancel" aria-label="Cancel">
               <mat-icon>close</mat-icon>
             </button>
             <button mat-flat-button color="primary" type="submit"
@@ -238,7 +238,7 @@
                   </mat-form-field>
                 }
                 <div class="edit-actions">
-                  <button mat-icon-button type="button" (click)="cancelEdit()" matTooltip="Cancel">
+                  <button mat-icon-button type="button" (click)="cancelEdit()" matTooltip="Cancel" aria-label="Cancel">
                     <mat-icon>close</mat-icon>
                   </button>
                   <button mat-flat-button color="primary" type="submit" [disabled]="editForm.invalid">
@@ -274,11 +274,11 @@
                 }
               </div>
               <button mat-icon-button class="edit-btn" (click)="startEdit(item)"
-                      matTooltip="Edit">
+                      matTooltip="Edit" aria-label="Edit">
                 <mat-icon>edit</mat-icon>
               </button>
               <button mat-icon-button class="delete-btn" (click)="deleteItem(item)"
-                      matTooltip="Remove">
+                      matTooltip="Remove" aria-label="Remove">
                 <mat-icon>close</mat-icon>
               </button>
             </div>
@@ -314,7 +314,7 @@
                 <span class="todo-assignee">{{ participantName(todo.assignedTo) }}</span>
               }
             </div>
-            <button mat-icon-button class="todo-delete" (click)="deleteTodo(todo)" matTooltip="Remove">
+            <button mat-icon-button class="todo-delete" (click)="deleteTodo(todo)" matTooltip="Remove" aria-label="Remove">
               <mat-icon>close</mat-icon>
             </button>
           </div>
@@ -336,7 +336,7 @@
               }
             </select>
           }
-          <button mat-icon-button type="submit" [disabled]="!newTodoTitle().trim()" matTooltip="Add to-do">
+          <button mat-icon-button type="submit" [disabled]="!newTodoTitle().trim()" matTooltip="Add to-do" aria-label="Add to-do">
             <mat-icon>add</mat-icon>
           </button>
         </form>

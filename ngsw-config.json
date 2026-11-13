@@ -6,7 +6,13 @@
       "name": "app-shell",
       "installMode": "prefetch",
       "resources": {
-        "files": ["/favicon.ico", "/index.html", "/manifest.webmanifest", "/*.css", "/*.js"]
+        "files": [
+          "/favicon.ico",
+          "/index.html",
+          "/manifest.webmanifest",
+          "/*.css",
+          "/*.js"
+        ]
       }
     },
     {
@@ -14,11 +20,30 @@
       "installMode": "lazy",
       "updateMode": "prefetch",
       "resources": {
-        "files": ["/*.png", "/*.jpg", "/*.jpeg", "/*.svg", "/*.webp", "/*.woff2"]
+        "files": [
+          "/*.png",
+          "/*.jpg",
+          "/*.jpeg",
+          "/*.svg",
+          "/*.webp",
+          "/*.woff2"
+        ]
       }
     }
   ],
   "dataGroups": [
+    {
+      "name": "trip-media",
+      "urls": [
+        "https://firebasestorage.googleapis.com/**"
+      ],
+      "cacheConfig": {
+        "maxSize": 300,
+        "maxAge": "30d",
+        "timeout": "5s",
+        "strategy": "performance"
+      }
+    },
     {
       "name": "weather",
       "urls": [
@@ -34,7 +59,9 @@
     },
     {
       "name": "exchange-rates",
-      "urls": ["https://api.frankfurter.dev/**"],
+      "urls": [
+        "https://api.frankfurter.dev/**"
+      ],
       "cacheConfig": {
         "maxSize": 30,
         "maxAge": "12h",
@@ -44,7 +71,9 @@
     },
     {
       "name": "transport-api",
-      "urls": ["https://v6.db.transport.rest/**"],
+      "urls": [
+        "https://v6.db.transport.rest/**"
+      ],
       "cacheConfig": {
         "maxSize": 20,
         "maxAge": "1h",
@@ -54,7 +83,9 @@
     },
     {
       "name": "overpass-api",
-      "urls": ["https://overpass-api.de/**"],
+      "urls": [
+        "https://overpass-api.de/**"
+      ],
       "cacheConfig": {
         "maxSize": 20,
         "maxAge": "24h",

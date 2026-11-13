@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, inject, signal, DestroyRef } from '@angular/core';
+import { Component, Input, OnInit, inject, signal, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AsyncPipe, DatePipe, CurrencyPipe, TitleCasePipe, DecimalPipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -12,6 +12,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatChipsModule } from '@angular/material/chips';
+import * as route from '../../../core/models/booking-route';
 import { BookingService } from '../../../core/services/booking.service';
 import { FlightService } from '../../../core/services/flight.service';
 import { ParticipantService } from '../../../core/services/participant.service';
@@ -44,6 +45,7 @@ interface BookingsData {
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-bookings',
   standalone: true,
   imports: [
@@ -299,41 +301,33 @@ export class BookingsComponent implements OnInit {
     return participants.find(p => p.id === booking.paidById)?.name ?? null;
   }
 
-  /** Full route string including any layovers, e.g. "MAD → LIS → JFK".
-   *  Kept for screen readers and tooltips; the card draws the route visually. */
-  routeWithLayovers(booking: Booking): string {
-    const stops = [
-      booking.departureAirport ?? '?',
-      ...(this.layoverCodes(booking)),
-      booking.arrivalAirport ?? '?',
-    ];
-    return stops.join(' → ');
+  // Template-facing wrappers. Everything below computes derived data from a
+  // booking, and the template calls them inside @for loops, so Angular would
+  // otherwise re-run them on every change-detection pass. Memoized on the
+  // booking object, which Firestore replaces whenever the data really changes.
+  readonly routeWithLayovers = memoizeByBooking(route.routeWithLayovers);
+  readonly layoverCodes = memoizeByBooking(route.layoverCodes);
+  readonly timelineLegs = memoizeByBooking(route.legFlightNumbers);
+  readonly stopCount = memoizeByBooking(route.stopCount);
+  readonly stopsLabel = memoizeByBooking(route.stopsLabel);
+  readonly hasRoute = (b: Booking) => route.hasRoute(b);
+  readonly timelineNodes = memoizeByBooking((b: Booking) => route.timelineNodes(b, {
+    origin: { ...this.splitAt(b.checkIn, b.departureAirport), zone: this.depZoneLabel(b) },
+    destination: { ...this.splitAt(b.checkOut, b.arrivalAirport), zone: this.arrZoneLabel(b) },
+  }));
+
+  /** Date and time at an airport's own local zone, or nulls when unset. */
+  private splitAt(ts: Timestamp | undefined, airport?: string) {
+    return ts
+      ? this.splitZoned(ts.toDate(), airport, this.hasTime(ts))
+      : { date: null, time: null };
   }
 
-  /** Connection airports in order. `connections` is the richer source; older
-   *  bookings only have the plain `layovers` codes. */
-  layoverCodes(booking: Booking): string[] {
-    if (booking.connections?.length) {
-      return booking.connections.map(c => c.airport).filter((a): a is string => !!a);
-    }
-    return booking.layovers ?? [];
-  }
 
-  stopCount(booking: Booking): number {
-    return this.layoverCodes(booking).length;
-  }
+
 
   /** "Nonstop" / "1 stop" / "2 stops" — the thing people scan for. */
-  stopsLabel(booking: Booking): string {
-    const n = this.stopCount(booking);
-    return n === 0 ? 'Nonstop' : `${n} stop${n === 1 ? '' : 's'}`;
-  }
 
-  /** True once there's enough of a route to say anything about stops. */
-  hasRoute(booking: Booking): boolean {
-    return booking.type === 'flight'
-      && !!(booking.departureAirport || booking.arrivalAirport || this.stopCount(booking));
-  }
 
 
 
@@ -379,60 +373,6 @@ export class BookingsComponent implements OnInit {
     };
   }
 
-  /** The flight drawn as a timeline: one node per airport, carrying that
-   *  airport's own times. The old layout only ever showed the first departure
-   *  and the last arrival, so the middle of a connecting trip was invisible. */
-  timelineNodes(booking: Booking): {
-    code: string;
-    kind: 'origin' | 'stop' | 'dest';
-    date: string | null;
-    time: string | null;
-    until: string | null;
-    zone: string | null;
-    wait: string | null;
-  }[] {
-    const origin = booking.checkIn
-      ? this.splitZoned(booking.checkIn.toDate(), booking.departureAirport, this.hasTime(booking.checkIn))
-      : { date: null, time: null };
-    const dest = booking.checkOut
-      ? this.splitZoned(booking.checkOut.toDate(), booking.arrivalAirport, this.hasTime(booking.checkOut))
-      : { date: null, time: null };
-
-    return [
-      {
-        code: booking.departureAirport || '???',
-        kind: 'origin' as const,
-        date: origin.date, time: origin.time, until: null,
-        zone: this.depZoneLabel(booking), wait: null,
-      },
-      // A stop shows when you land and when you leave again — the two times
-      // that were previously only in the edit form.
-      ...(booking.connections ?? []).filter(c => !!c.airport).map(c => ({
-        code: c.airport,
-        kind: 'stop' as const,
-        date: null,
-        time: c.arriveTime || null,
-        until: c.departTime || null,
-        zone: null,
-        wait: layoverDuration(c.arriveTime, c.departTime),
-      })),
-      {
-        code: booking.arrivalAirport || '???',
-        kind: 'dest' as const,
-        date: dest.date, time: dest.time, until: null,
-        zone: this.arrZoneLabel(booking), wait: null,
-      },
-    ];
-  }
-
-  /** Flight number for each leg: the booking's own for the first, then each
-   *  connection's onward flight. */
-  timelineLegs(booking: Booking): (string | null)[] {
-    return [
-      booking.flightNumber ?? null,
-      ...(booking.connections ?? []).filter(c => !!c.airport).map(c => c.flightNumber ?? null),
-    ];
-  }
 
   private formatZoned(instant: Date, airport: string | null | undefined, withTime: boolean): string {
     const timeZone = this.tz.ianaFor(airport) ?? undefined;
@@ -553,27 +493,23 @@ function byDate(a: Booking, b: Booking): number {
   return ta - tb;
 }
 
-/** Time on the ground between landing and the onward departure, as "2h 15m".
- *  Both are local "HH:mm" at the layover airport, so a connection running past
- *  midnight comes out negative — that's an overnight, so add a day. Returns
- *  null unless both times are present and parse. */
-function layoverDuration(arrive?: string, depart?: string): string | null {
-  const toMinutes = (t?: string): number | null => {
-    const m = /^(\d{1,2}):(\d{2})$/.exec((t ?? '').trim());
-    if (!m) return null;
-    const h = Number(m[1]), min = Number(m[2]);
-    if (h > 23 || min > 59) return null;
-    return h * 60 + min;
+/** Per-object memo for values derived from a booking.
+ *
+ *  These helpers are called from the template, so Angular re-runs them on every
+ *  change-detection pass — timelineNodes() alone allocates arrays and builds
+ *  Intl.DateTimeFormat instances, once per booking per pass. Firestore hands us
+ *  a fresh object whenever a booking actually changes, so caching against the
+ *  object identity recomputes exactly when the data moves and never otherwise.
+ *  A WeakMap keeps it leak-free: entries die with the snapshot that owned them. */
+function memoizeByBooking<T>(compute: (b: Booking) => T): (b: Booking) => T {
+  const cache = new WeakMap<Booking, T>();
+  return (booking: Booking) => {
+    let value = cache.get(booking);
+    if (value === undefined) {
+      value = compute(booking);
+      cache.set(booking, value);
+    }
+    return value;
   };
-
-  const from = toMinutes(arrive);
-  const to = toMinutes(depart);
-  if (from === null || to === null) return null;
-
-  let mins = to - from;
-  if (mins < 0) mins += 24 * 60;      // overnight connection
-  if (mins === 0) return null;         // same minute is a data slip, not a wait
-
-  const h = Math.floor(mins / 60), m = mins % 60;
-  return h && m ? `${h}h ${m}m` : h ? `${h}h` : `${m}m`;
 }
+

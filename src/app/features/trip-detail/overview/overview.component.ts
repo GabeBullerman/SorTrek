@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, inject, signal, effect, untracked, viewChild } from '@angular/core';
+import { Component, Input, OnInit, inject, signal, effect, untracked, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { AsyncPipe, DatePipe, CurrencyPipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -39,6 +39,7 @@ export interface TripDay {
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-overview',
   standalone: true,
   imports: [

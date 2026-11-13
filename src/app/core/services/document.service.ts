@@ -1,7 +1,7 @@
 import { Injectable, inject, Injector, runInInjectionContext } from '@angular/core';
 import {
   Firestore, collection, collectionData, doc,
-  addDoc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp,
+  addDoc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp, limit,
 } from '@angular/fire/firestore';
 import {
   Storage, ref, uploadBytesResumable, getDownloadURL, deleteObject,
@@ -26,7 +26,8 @@ export class DocumentService {
       const q = query(
         collection(this.firestore, 'tripDocuments'),
         where('tripId', '==', tripId),
-        orderBy('uploadedAt', 'desc')
+        orderBy('uploadedAt', 'desc'),
+        limit(300)
       );
       return collectionData(q, { idField: 'id' }) as Observable<TripDocument[]>;
     });

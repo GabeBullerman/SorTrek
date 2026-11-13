@@ -21,7 +21,7 @@ service firebase.storage {
       // step with MAX_VIDEO_BYTES in photo.service.ts.
       allow create: if request.auth != null && request.auth.uid == userId
         && (
-          (request.resource.contentType.matches('image/.*')
+          (request.resource.contentType.matches('image/(png|jpeg|jpg|gif|webp|heic|heif)')
             && request.resource.size < 15 * 1024 * 1024)      // 15 MB
           || (request.resource.contentType.matches('video/.*')
             && request.resource.size < 100 * 1024 * 1024)     // 100 MB
@@ -35,15 +35,27 @@ service firebase.storage {
       allow read: if request.auth != null;
       allow write: if request.auth != null && request.auth.uid == userId
         && request.resource.size < 512 * 1024        // 512 KB max — compressed client-side
-        && request.resource.contentType.matches('image/.*');
+        // Not image/.* : SVG is an image that can carry script.
+        && request.resource.contentType.matches('image/(png|jpeg|jpg|gif|webp|heic|heif)');
       allow delete: if request.auth != null && request.auth.uid == userId;
     }
 
-    // ── Trip documents (any file type, 25 MB max, signed-in only) ────────────
+    // ── Trip documents (25 MB max, signed-in only) ───────────────────────────
+    // Travel documents are PDFs, images, and the occasional office file. HTML
+    // and SVG are excluded deliberately: Storage serves uploads from its own
+    // origin, so an uploaded page would run as live content on a Google domain
+    // under a link that looks like it belongs to the app.
     match /documents/{userId}/{tripId}/{fileName} {
       allow read: if request.auth != null;
       allow create: if request.auth != null && request.auth.uid == userId
-        && request.resource.size < 25 * 1024 * 1024;  // 25 MB max, any content type
+        && request.resource.size < 25 * 1024 * 1024
+        && (
+          request.resource.contentType.matches('image/(png|jpeg|jpg|gif|webp|heic|heif)')
+          || request.resource.contentType == 'application/pdf'
+          || request.resource.contentType.matches('text/plain')
+          || request.resource.contentType.matches('application/vnd.openxmlformats-officedocument.*')
+          || request.resource.contentType.matches('application/msword')
+        );
       allow delete: if request.auth != null && request.auth.uid == userId;
     }
   }

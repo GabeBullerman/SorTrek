@@ -1,7 +1,8 @@
-import { Component, Input, inject, computed } from '@angular/core';
+import { Component, Input, inject, computed, ChangeDetectionStrategy } from '@angular/core';
 import { UserCurrencyService } from '../../../core/services/user-currency.service';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-money',
   standalone: true,
   imports: [],

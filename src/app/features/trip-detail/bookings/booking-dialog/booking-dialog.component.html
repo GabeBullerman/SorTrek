@@ -123,7 +123,7 @@
                   <input matInput formControlName="flightNumber" placeholder="TP1234" />
                 </mat-form-field>
                 <button mat-icon-button type="button" class="ticket-remove"
-                        (click)="removeConnection(i)" matTooltip="Remove this stop">
+                        (click)="removeConnection(i)" matTooltip="Remove this stop" aria-label="Remove this stop">
                   <mat-icon>close</mat-icon>
                 </button>
               </div>
@@ -184,7 +184,7 @@
                 <mat-icon matPrefix>airplane_ticket</mat-icon>
               </mat-form-field>
               <button mat-icon-button type="button" class="ticket-remove"
-                      (click)="removePassengerTicket($index)" matTooltip="Remove">
+                      (click)="removePassengerTicket($index)" matTooltip="Remove" aria-label="Remove">
                 <mat-icon>close</mat-icon>
               </button>
             </div>
@@ -390,7 +390,7 @@
                   {{ att.name }}
                 </a>
                 <button mat-icon-button type="button" class="attachment-remove"
-                        (click)="removeAttachment(att)" matTooltip="Remove">
+                        (click)="removeAttachment(att)" matTooltip="Remove" aria-label="Remove">
                   <mat-icon>close</mat-icon>
                 </button>
               </div>

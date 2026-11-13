@@ -2,7 +2,7 @@ import { Injectable, inject, Injector, runInInjectionContext } from '@angular/co
 import {
   Firestore, collection, collectionData, doc,
   addDoc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp,
-  arrayUnion, arrayRemove,
+  arrayUnion, arrayRemove, limit,
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { PackingItem } from '../models/packing-item.model';
@@ -21,7 +21,8 @@ export class PackingService {
       const q = query(
         collection(this.firestore, 'packingItems'),
         where('tripId', '==', tripId),
-        orderBy('createdAt', 'asc')
+        orderBy('createdAt', 'asc'),
+        limit(500)
       );
       return collectionData(q, { idField: 'id' }) as Observable<PackingItem[]>;
     });

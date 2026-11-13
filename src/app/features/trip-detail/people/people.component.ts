@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnChanges, inject, signal } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -23,6 +23,7 @@ import { Trip } from '../../../core/models/trip.model';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-people',
   standalone: true,
   imports: [

@@ -1,7 +1,7 @@
 import { Injectable, inject, Injector, runInInjectionContext } from '@angular/core';
 import {
   Firestore, collection, collectionData, doc,
-  addDoc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp,
+  addDoc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp, limit,
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { Expense } from '../models/expense.model';
@@ -20,7 +20,8 @@ export class ExpenseService {
       const q = query(
         collection(this.firestore, 'expenses'),
         where('tripId', '==', tripId),
-        orderBy('createdAt', 'desc')
+        orderBy('createdAt', 'desc'),
+        limit(500)
       );
       return collectionData(q, { idField: 'id' }) as Observable<Expense[]>;
     });

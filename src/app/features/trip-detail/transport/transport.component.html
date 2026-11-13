@@ -57,7 +57,7 @@
 
       @if (journeys().length > 0) {
         <div class="results-header">
-          <span class="results-label">{{ journeys().length }} journeys · {{ fromStation() || origin() }} → {{ toStation() || destination() }}</span>
+          <span class="results-label">{{ journeys().length }} journey{{ journeys().length === 1 ? '' : 's' }} · {{ fromStation() || origin() }} → {{ toStation() || destination() }}</span>
         </div>
         <div class="journey-list">
           @for (j of journeys(); track j.id) {

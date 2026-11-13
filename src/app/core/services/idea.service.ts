@@ -1,7 +1,7 @@
 import { Injectable, inject, Injector, runInInjectionContext } from '@angular/core';
 import {
   Firestore, collection, collectionData, doc,
-  addDoc, updateDoc, deleteDoc, query, where, serverTimestamp,
+  addDoc, updateDoc, deleteDoc, query, where, serverTimestamp, limit,
 } from '@angular/fire/firestore';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
@@ -29,7 +29,8 @@ export class IdeaService {
     return this.run(() => {
       const q = query(
         collection(this.firestore, 'tripIdeas'),
-        where('tripId', '==', tripId)
+        where('tripId', '==', tripId),
+        limit(300)
       );
       return collectionData(q, { idField: 'id' }) as Observable<TripIdea[]>;
     });

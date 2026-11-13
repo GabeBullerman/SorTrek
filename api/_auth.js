@@ -44,7 +44,7 @@ async function guard(req, res, { limit = 30, windowMs = 60_000 } = {}) {
   setSecurityHeaders(res);
   const user = await requireAuth(req, res);
   if (!user) return null;
-  if (!enforceRateLimit(res, `${req.url?.split('?')[0]}:${user.uid}`, { limit, windowMs })) return null;
+  if (!await enforceRateLimit(res, `${req.url?.split("?")[0]}:${user.uid}`, { limit, windowMs })) return null;
   return user;
 }
 

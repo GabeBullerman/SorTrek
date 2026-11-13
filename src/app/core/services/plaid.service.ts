@@ -1,7 +1,5 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Firestore, doc, setDoc, getDoc, deleteDoc } from '@angular/fire/firestore';
-import { Auth } from '@angular/fire/auth';
 import { Observable, from, of, Subject } from 'rxjs';
 import { map, catchError, switchMap } from 'rxjs/operators';
 
@@ -20,66 +18,50 @@ export interface PlaidTransaction {
 
 @Injectable({ providedIn: 'root' })
 export class PlaidService {
-  private http      = inject(HttpClient);
-  private auth      = inject(Auth);
-  private firestore = inject(Firestore);
+  private http = inject(HttpClient);
 
-  /** Create a Link token (used by Plaid Link SDK to open the bank connection UI). */
+  /** Create a Link token (used by Plaid Link SDK to open the bank connection UI).
+   *  The server derives the Plaid user id from the verified ID token, so no
+   *  identity is sent from here. */
   createLinkToken(): Observable<string> {
-    return this.http.post<{ link_token: string }>('/api/plaid', {
-      action: 'link',
-      userId: this.auth.currentUser?.uid ?? 'anonymous',
-    }).pipe(map(r => r.link_token));
+    return this.http.post<{ link_token: string }>('/api/plaid', { action: 'link' })
+      .pipe(map(r => r.link_token));
   }
 
-  /** Exchange the public token Plaid Link returns for a persistent access token, save to Firestore. */
-  exchangeAndSave(publicToken: string): Observable<string> {
-    return this.http.post<{ accessToken: string }>('/api/plaid', { action: 'exchange', publicToken }).pipe(
-      switchMap(({ accessToken }) => {
-        const uid = this.auth.currentUser?.uid;
-        if (!uid) return of(accessToken);
-        // Store encrypted-at-rest by Firestore; never send to client in plain text again
-        return from(setDoc(doc(this.firestore, 'plaid_tokens', uid), { accessToken }, { merge: true }))
-          .pipe(map(() => accessToken));
-      })
-    );
+  /** Hand the public token to the server, which exchanges it and stores the
+   *  resulting access token itself. The access token is a bank credential and
+   *  never reaches this client — there is nothing here to save. */
+  exchange(publicToken: string): Observable<boolean> {
+    return this.http.post<{ connected: boolean }>('/api/plaid', { action: 'exchange', publicToken })
+      .pipe(map(r => !!r.connected), catchError(() => of(false)));
   }
 
-  /** Fetch saved access token from Firestore, then pull transactions for the date range. */
+  /** Transactions for the range. The server looks the token up by the caller's
+   *  uid; this request carries no credential. */
   getTransactions(startDate: string, endDate: string): Observable<PlaidTransaction[]> {
-    const uid = this.auth.currentUser?.uid;
-    if (!uid) return of([]);
-
-    return from(getDoc(doc(this.firestore, 'plaid_tokens', uid))).pipe(
-      switchMap(snap => {
-        const token = snap.data()?.['accessToken'];
-        if (!token) return of([]);
-        return this.http.post<{ transactions: PlaidTransaction[] }>('/api/plaid', {
-          action: 'transactions',
-          accessToken: token,
-          startDate,
-          endDate,
-        }).pipe(map(r => r.transactions ?? []));
-      }),
+    return this.http.post<{ transactions: PlaidTransaction[] }>('/api/plaid', {
+      action: 'transactions', startDate, endDate,
+    }).pipe(
+      map(r => r.transactions ?? []),
       catchError(() => of([] as PlaidTransaction[]))
     );
   }
 
-  /** Check if user has a saved Plaid token. */
-  isConnected(): Observable<boolean> {
-    const uid = this.auth.currentUser?.uid;
-    if (!uid) return of(false);
-    return from(getDoc(doc(this.firestore, 'plaid_tokens', uid))).pipe(
-      map(snap => snap.exists() && !!snap.data()?.['accessToken']),
-      catchError(() => of(false))
-    );
+  /** Whether a bank is linked. `shouldRelink` is true when the stored token
+   *  predates the server-side move and was readable by the browser. */
+  connection(): Observable<{ connected: boolean; shouldRelink: boolean }> {
+    return this.http.post<{ connected: boolean; shouldRelink: boolean }>('/api/plaid', { action: 'status' })
+      .pipe(catchError(() => of({ connected: false, shouldRelink: false })));
   }
 
-  /** Disconnect — removes the saved access token from Firestore. */
-  disconnect(): Observable<void> {
-    const uid = this.auth.currentUser?.uid;
-    if (!uid) return of(undefined);
-    return from(deleteDoc(doc(this.firestore, 'plaid_tokens', uid)));
+  isConnected(): Observable<boolean> {
+    return this.connection().pipe(map(c => c.connected));
+  }
+
+  /** Disconnect — the server removes the item at Plaid and deletes the token. */
+  disconnect(): Observable<boolean> {
+    return this.http.post<{ connected: boolean }>('/api/plaid', { action: 'disconnect' })
+      .pipe(map(r => !r.connected), catchError(() => of(false)));
   }
 
   /**
@@ -99,7 +81,7 @@ export class PlaidService {
           const handler = (window as any).Plaid.create({
             token: linkToken,
             onSuccess: (publicToken: string) => {
-              this.exchangeAndSave(publicToken).subscribe({
+              this.exchange(publicToken).subscribe({
                 next: () => { result$.next(true); result$.complete(); },
                 error: () => { result$.next(false); result$.complete(); },
               });
