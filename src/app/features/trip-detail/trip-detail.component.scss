@@ -5,7 +5,7 @@
 .trip-hero {
   height: 200px;
   transition: height 0.2s ease;
-  background: linear-gradient(135deg, #1a237e, #42a5f5);
+  background: var(--st-gradient-hero);
   background-size: cover;
   background-position: center;
   position: relative;

@@ -1,3 +1,4 @@
+@use 'badges';
 :host {
   display: block;
   min-height: 100vh;
@@ -235,16 +236,10 @@
 }
 
 .pub-idea-badge {
-  display: inline-block;
+  @include badges.label();
   margin-left: 6px;
-  padding: 1px 7px;
-  border-radius: 8px;
   background: var(--st-primary);
   color: var(--st-primary-contrast, #fff);
-  font-size: 0.66rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
   vertical-align: middle;
 }
 

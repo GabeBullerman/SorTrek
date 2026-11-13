@@ -1,3 +1,4 @@
+@use 'badges';
 .bookings-container {
   max-width: 900px;
   margin: 0 auto;
@@ -46,12 +47,9 @@ mat-accordion {
   mat-icon { color: var(--st-primary); }
 
   .count-badge {
+    @include badges.count();
     background: var(--st-primary-tint-bg);
     color: var(--st-primary-tint-fg);
-    padding: 1px 7px;
-    border-radius: 10px;
-    font-size: 0.75rem;
-    font-weight: 700;
   }
 }
 
@@ -138,14 +136,7 @@ mat-accordion {
 /* Stops at a glance. A flight with a connection is the case worth noticing,
    so it carries the accent; "Nonstop" stays quiet. */
 .stops-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  white-space: nowrap;
+  @include badges.count(10px);
   background: var(--st-surface-2);
   color: var(--st-on-surface-muted);
   border: 1px solid var(--st-border);
@@ -237,11 +228,8 @@ mat-accordion {
 }
 
 .status-badge {
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  white-space: nowrap;
+  @include badges.count(10px);
+  text-transform: capitalize;
 }
 
 .status-confirmed  { background: var(--st-status-confirmed-bg); color: var(--st-status-confirmed-fg); }
@@ -392,12 +380,7 @@ mat-accordion {
 }
 
 .flight-status-badge {
-  padding: 2px 10px;
-  border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
+  @include badges.label();
   background: #e0e0e0;
   color: #424242;
 

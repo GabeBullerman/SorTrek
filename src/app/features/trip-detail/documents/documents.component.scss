@@ -1,3 +1,4 @@
+@use 'badges';
 .docs-container {
   max-width: 1100px;
   margin: 0 auto;
@@ -252,14 +253,9 @@
 }
 
 .doc-type-badge {
+  @include badges.label(4px);
   background: var(--st-surface-2);
   color: var(--st-on-surface-muted);
-  border-radius: 4px;
-  padding: 1px 6px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
 }
 
 .doc-size {
@@ -308,7 +304,7 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #1a237e, #3949ab);
+  background: var(--st-gradient-panel);
   color: white;
   display: flex;
   align-items: center;

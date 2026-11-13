@@ -1,3 +1,4 @@
+@use 'badges';
 .people-container {
   max-width: 700px;
   margin: 0 auto;
@@ -32,13 +33,7 @@
 
 /* At-a-glance "accounts vs no-account" distinction next to each section heading */
 .role-tag {
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  white-space: nowrap;
+  @include badges.label();
 }
 .role-tag--account   { background: var(--st-success-bg); color: var(--st-success-fg); }
 .role-tag--noaccount { background: var(--st-surface-2); color: var(--st-on-surface-muted); border: 1px solid var(--st-border); }
@@ -126,7 +121,7 @@
 }
 
 .collab-avatar {
-  background: linear-gradient(135deg, #283593, #5c6bc0) !important;
+  background: var(--st-gradient-panel) !important;
 }
 
 .collab-photo {
@@ -230,7 +225,7 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #1a237e, #3949ab);
+  background: var(--st-gradient-panel);
   color: white;
   display: flex;
   align-items: center;

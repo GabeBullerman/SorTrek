@@ -1,3 +1,4 @@
+@use 'badges';
 .overview-grid {
   display: flex;
   flex-direction: column;
@@ -395,10 +396,7 @@
   }
 
   .booking-status {
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-size: 0.75rem;
-    font-weight: 500;
+    @include badges.count(10px);
     text-transform: capitalize;
     background: var(--st-status-confirmed-bg);
     color: var(--st-status-confirmed-fg);

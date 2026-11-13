@@ -1,3 +1,4 @@
+@use 'badges';
 .guide-modal {
   display: flex;
   flex-direction: column;
@@ -53,13 +54,7 @@
 }
 
 .status-badge {
-  display: inline-block;
-  padding: 2px 10px;
-  border-radius: 20px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
+  @include badges.label();
 }
 
 .close-btn {

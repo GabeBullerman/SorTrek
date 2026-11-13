@@ -88,6 +88,15 @@
   --st-warn-accent:       #f9a825;
   --st-warn-fg:           #5d4037;
   --st-warn-strong:       #e65100;
+
+  // Brand gradients — display surfaces that carry white text (trip hero, auth
+  // screens, section headers). These are deliberately NOT derived from
+  // --st-primary: that token lightens in dark mode, which would wash out a
+  // surface whose foreground is always white. Each palette overrides these in
+  // its light block only, so the value carries into dark mode unchanged.
+  --st-gradient-hero:   linear-gradient(135deg, #1a237e, #42a5f5);
+  --st-gradient-panel:  linear-gradient(135deg, #1a237e, #3949ab);
+  --st-gradient-auth:   linear-gradient(135deg, #1a237e 0%, #283593 50%, #303f9f 100%);
 }
 
 html.dark {
@@ -174,6 +183,9 @@ html[data-theme="pink"] {
   --st-primary-soft: #c2185b;
   --st-primary-tint-bg: #ffe4f3;  --st-primary-tint-fg: #6d1140;
   --mat-sys-primary: #c2185b;  --mat-sys-on-primary: #ffffff;
+  --st-gradient-hero:   linear-gradient(135deg, #880e4f, #d81b60);
+  --st-gradient-panel:  linear-gradient(135deg, #ad1457, #c2185b);
+  --st-gradient-auth:   linear-gradient(135deg, #6d1140 0%, #880e4f 50%, #ad1457 100%);
 }
 html[data-theme="pink"].dark {
   --st-primary: #f48fb1;  --st-primary-strong: #f06292;  --st-primary-contrast: #2a0a17;
@@ -200,6 +212,9 @@ html[data-theme="red"] {
   --st-primary-soft: #c62828;
   --st-primary-tint-bg: #ffebee;  --st-primary-tint-fg: #b71c1c;
   --mat-sys-primary: #c62828;  --mat-sys-on-primary: #ffffff;
+  --st-gradient-hero:   linear-gradient(135deg, #b71c1c, #e53935);
+  --st-gradient-panel:  linear-gradient(135deg, #b71c1c, #d32f2f);
+  --st-gradient-auth:   linear-gradient(135deg, #8e0000 0%, #b71c1c 50%, #c62828 100%);
 }
 html[data-theme="red"].dark {
   --st-primary: #ef9a9a;  --st-primary-strong: #e57373;  --st-primary-contrast: #2a0a0a;
@@ -218,6 +233,9 @@ html[data-theme="teal"] {
   --st-primary-soft: #00796b;
   --st-primary-tint-bg: #e0f2f1;  --st-primary-tint-fg: #004d40;
   --mat-sys-primary: #00695c;  --mat-sys-on-primary: #ffffff;
+  --st-gradient-hero:   linear-gradient(135deg, #004d40, #26a69a);
+  --st-gradient-panel:  linear-gradient(135deg, #00695c, #00796b);
+  --st-gradient-auth:   linear-gradient(135deg, #003d33 0%, #004d40 50%, #00695c 100%);
 }
 html[data-theme="teal"].dark {
   --st-primary: #80cbc4;  --st-primary-strong: #4db6ac;  --st-primary-contrast: #06201d;
@@ -236,6 +254,9 @@ html[data-theme="purple"] {
   --st-primary-soft: #7b1fa2;
   --st-primary-tint-bg: #f3e5f5;  --st-primary-tint-fg: #4a148c;
   --mat-sys-primary: #6a1b9a;  --mat-sys-on-primary: #ffffff;
+  --st-gradient-hero:   linear-gradient(135deg, #4a148c, #ab47bc);
+  --st-gradient-panel:  linear-gradient(135deg, #6a1b9a, #7b1fa2);
+  --st-gradient-auth:   linear-gradient(135deg, #38006b 0%, #4a148c 50%, #6a1b9a 100%);
 }
 html[data-theme="purple"].dark {
   --st-primary: #ce93d8;  --st-primary-strong: #ba68c8;  --st-primary-contrast: #21082a;

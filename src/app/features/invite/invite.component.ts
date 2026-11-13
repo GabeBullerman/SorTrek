@@ -39,7 +39,7 @@ const PENDING_INVITE_KEY = 'pendingInviteToken';
       align-items: center;
       justify-content: center;
       gap: 16px;
-      background: linear-gradient(135deg, #1a237e 0%, #303f9f 100%);
+      background: var(--st-gradient-auth);
       color: white;
       text-align: center;
       padding: 24px;
