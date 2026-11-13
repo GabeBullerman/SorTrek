@@ -1,3 +1,4 @@
+@use 'badges';
 .trips-page {
   max-width: 1200px;
   margin: 0 auto;
@@ -44,7 +45,7 @@
 
   .trip-cover {
     height: 160px;
-    background: linear-gradient(135deg, #1a237e, #42a5f5);
+    background: var(--st-gradient-hero);
     background-size: cover;
     background-position: center;
     position: relative;
@@ -151,13 +152,7 @@ mat-card-content {
 }
 
 .trip-status-badge {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  @include badges.label();
 
   &.status-upcoming {
     background: rgba(255, 255, 255, 0.9);

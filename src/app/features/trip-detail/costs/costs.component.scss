@@ -1,3 +1,4 @@
+@use 'badges';
 .costs-container {
   max-width: 900px;
   margin: 0 auto;
@@ -190,7 +191,7 @@
 }
 
 .total-card {
-  background: linear-gradient(135deg, #1a237e, #3949ab) !important;
+  background: var(--st-gradient-panel) !important;
   border-radius: 14px !important;
   margin-bottom: 20px;
   color: white;
@@ -316,7 +317,7 @@
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #1a237e, #3949ab);
+  background: var(--st-gradient-panel);
   color: white;
   display: flex;
   align-items: center;
@@ -341,14 +342,9 @@
 }
 
 .organizer-tag {
-  font-size: 0.68rem;
-  font-weight: 600;
-  padding: 1px 6px;
-  border-radius: 8px;
+  @include badges.label();
   background: var(--st-primary-tint-bg);
   color: var(--st-primary-tint-fg);
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
 }
 
 .person-share-detail {

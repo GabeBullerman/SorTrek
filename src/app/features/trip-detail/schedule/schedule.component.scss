@@ -1,3 +1,4 @@
+@use 'badges';
 .schedule-container {
   max-width: 800px;
   margin: 0 auto;
@@ -681,14 +682,9 @@
   .booking-entry-time { color: var(--st-on-surface-muted); font-weight: 500; }
   .booking-entry-sub { font-size: 0.8rem; color: var(--st-on-surface-muted); }
   .booking-entry-tag {
-    font-size: 0.66rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
+    @include badges.label();
     color: var(--st-accent);
     background: var(--st-primary-tint-bg);
-    padding: 2px 8px;
-    border-radius: 999px;
   }
 }
 
@@ -754,16 +750,10 @@
 }
 
 .today-tag {
-  display: inline-block;
+  @include badges.label();
   margin-left: 6px;
-  padding: 1px 6px;
-  border-radius: 8px;
   background: var(--st-primary);
   color: #fff;
-  font-size: 0.62rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
   vertical-align: middle;
 }
 

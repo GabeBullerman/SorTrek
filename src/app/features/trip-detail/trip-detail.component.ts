@@ -1,4 +1,4 @@
-import { Component, computed, effect, ElementRef, inject, Input, OnInit, signal, ViewChild, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, Input, OnDestroy, OnInit, signal, viewChild, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { APP_NAME } from '../../core/sortrek-title.strategy';
@@ -55,7 +55,7 @@ export interface TabDef {
   templateUrl: './trip-detail.component.html',
   styleUrl: './trip-detail.component.scss',
 })
-export class TripDetailComponent implements OnInit {
+export class TripDetailComponent implements OnInit, OnDestroy {
   @Input() id!: string;
 
   private tripService = inject(TripService);
@@ -80,6 +80,19 @@ export class TripDetailComponent implements OnInit {
       if (!this.prefs.aiEnabled() && this.tabs[this.selectedTab()]?.label === 'AI') {
         this.selectedTab.set(0);
       }
+    });
+
+    effect(() => {
+      const el = this.heroSentinel()?.nativeElement;
+      this.heroObserver?.disconnect();
+      if (!el || typeof IntersectionObserver === 'undefined') return;
+      // An observer rather than a scroll handler: no work per frame, and the
+      // signal write schedules exactly the one update OnPush needs.
+      this.heroObserver = new IntersectionObserver(
+        ([entry]) => this.heroCollapsed.set(!entry.isIntersecting),
+        { threshold: 0 },
+      );
+      this.heroObserver.observe(el);
     });
   }
 
@@ -115,6 +128,19 @@ export class TripDetailComponent implements OnInit {
   );
 
   @ViewChild('pageSelect') pageSelectRef?: ElementRef<HTMLElement>;
+  /** Signal query, not @ViewChild: the hero only exists once the trip
+   *  resolves, so a one-shot ngAfterViewInit would observe nothing. */
+  private readonly heroSentinel = viewChild<ElementRef<HTMLElement>>('heroSentinel');
+
+  /** True once the hero has scrolled out of view. The hero is 200px of banner
+   *  repeated on every section; collapsing it gives the content the top of the
+   *  screen back while keeping the trip name and the way out reachable. */
+  readonly heroCollapsed = signal(false);
+  private heroObserver?: IntersectionObserver;
+
+  ngOnDestroy() {
+    this.heroObserver?.disconnect();
+  }
 
   /** Size the dropdown panel to match its trigger. The panel is rendered in an
    *  overlay attached to the body, so it can't inherit the trigger's width —

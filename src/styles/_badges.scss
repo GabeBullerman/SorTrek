@@ -1,0 +1,46 @@
+// ============================================================================
+//  Badge geometry
+//  --------------------------------------------------------------------------
+//  Before this existed, 38 badge rules across the app defined 35 distinct
+//  shapes: padding ranged from 1px 6px to 3px 10px, radius from 4px to 999px,
+//  font-size from 0.62rem to 0.78rem, weight from 500 to 700. Every one had
+//  been eyeballed separately, so two badges sitting side by side rarely shared
+//  a height or a corner.
+//
+//  These mixins fix the SHAPE only. Colour stays with each badge, because that
+//  is what actually carries meaning (confirmed / pending / role / direction).
+//
+//  Pick by role, not by size:
+//    label  — uppercase status or type markers ("PENDING", "OWNER", "PDF")
+//    count  — a number or short value riding next to a title ("3", "2 stops")
+// ============================================================================
+
+/// Uppercase status / type marker.
+/// $radius: 999px for a pill, or a px value for a softer rounded rectangle
+/// where a full pill would look out of place against a squared-off neighbour.
+@mixin label($radius: 999px) {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: $radius;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1.6;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/// A number or short value, not uppercased (so "2 stops" and "3" read normally).
+@mixin count($radius: 999px) {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: $radius;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+}

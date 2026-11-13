@@ -311,7 +311,7 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #1a237e, #3949ab);
+  background: var(--st-gradient-panel);
   color: white;
   display: flex;
   align-items: center;

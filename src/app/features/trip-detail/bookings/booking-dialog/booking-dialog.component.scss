@@ -1,3 +1,4 @@
+@use 'badges';
 .two-col {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -100,12 +101,7 @@
 }
 
 .flight-status-badge {
-  padding: 2px 10px;
-  border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
+  @include badges.label();
   background: #e0e0e0;
   color: #424242;
 

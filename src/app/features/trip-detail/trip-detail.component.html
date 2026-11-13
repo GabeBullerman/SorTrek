@@ -76,7 +76,20 @@
     <!-- Section navigation — a dropdown showing the section you're on.
          Replaces the horizontal tab strip: every section is one tap away and
          none are hidden behind a "More" overflow. -->
-    <div class="trip-nav">
+    <!-- Watched by an IntersectionObserver: once this leaves the viewport the
+         hero is off-screen, and the sticky bar below takes over its job. -->
+    <div class="hero-sentinel" #heroSentinel aria-hidden="true"></div>
+
+    <div class="trip-nav" [class.collapsed]="heroCollapsed()">
+      <!-- Only present once the hero has scrolled away, so the trip you're in
+           and the way back stay reachable without re-showing 260px of banner. -->
+      @if (heroCollapsed()) {
+        <button mat-icon-button class="nav-back" (click)="back()"
+                matTooltip="Back to trips" aria-label="Back to trips">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <span class="nav-trip-name">{{ trip.name }}</span>
+      }
       <button #pageSelect class="page-select" [matMenuTriggerFor]="pageMenu"
               (menuOpened)="syncMenuWidth()"
               aria-haspopup="menu"
