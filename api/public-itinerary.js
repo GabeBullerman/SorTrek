@@ -1,5 +1,6 @@
 const { getAdmin, toIso } = require('./_firebaseAdmin');
 const { setSecurityHeaders } = require('./_auth');
+const { enforceRateLimit, clientIp } = require('./_ratelimit');
 
 /**
  * Read-only public itinerary for a share token. Returns a SANITIZED view of a
@@ -44,6 +45,10 @@ module.exports = async (req, res) => {
 
   const token = String(req.query.token ?? '').trim();
   if (!token) return res.status(400).json({ error: 'Missing token' });
+
+  // No auth on this route, so limit by IP: each hit runs four Firestore
+  // queries, which is a free way to burn the project's quota otherwise.
+  if (!await enforceRateLimit(res, `public-itinerary:${clientIp(req)}`, { limit: 30, windowMs: 60_000 })) return;
 
   try {
     const db = admin.firestore();

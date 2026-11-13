@@ -1,4 +1,4 @@
-import { Component, Input, signal, inject } from '@angular/core';
+import { Component, Input, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -20,6 +20,7 @@ const QUICK_PROMPTS = [
 ];
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-ai-assistant',
   standalone: true,
   imports: [

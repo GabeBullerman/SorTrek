@@ -1,6 +1,5 @@
 import {
-  Component, Input, OnInit, inject, signal, ElementRef, ViewChild,
-} from '@angular/core';
+  Component, Input, OnInit, inject, signal, ElementRef, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { AsyncPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -25,6 +24,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
 const EXPIRY_CATEGORIES: DocumentCategory[] = ['passport', 'visa', 'insurance'];
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-documents',
   standalone: true,
   imports: [

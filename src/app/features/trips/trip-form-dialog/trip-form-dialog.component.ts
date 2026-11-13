@@ -1,4 +1,4 @@
-import { Component, inject, signal, NgZone, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, signal, NgZone, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectionStrategy } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -66,6 +66,7 @@ export const TRIP_TYPES: TripTypeMeta[] = [
 ];
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-trip-form-dialog',
   standalone: true,
   imports: [

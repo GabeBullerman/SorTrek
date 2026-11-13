@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
+import { Component, inject, signal, OnInit, AfterViewInit, ElementRef, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -50,6 +50,7 @@ export const CURRENCIES = [
 ];
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-profile',
   standalone: true,
   imports: [

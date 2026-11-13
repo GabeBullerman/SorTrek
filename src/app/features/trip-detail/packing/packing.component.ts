@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
+import { Component, Input, OnInit, inject, signal, computed, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Timestamp } from '@angular/fire/firestore';
@@ -41,6 +41,7 @@ interface CategoryGroup {
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-packing',
   standalone: true,
   imports: [

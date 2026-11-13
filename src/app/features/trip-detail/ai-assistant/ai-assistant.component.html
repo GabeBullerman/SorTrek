@@ -9,7 +9,7 @@
       </div>
     </div>
     @if (messages().length > 0) {
-      <button mat-icon-button (click)="clearChat()" matTooltip="Clear chat">
+      <button mat-icon-button (click)="clearChat()" matTooltip="Clear chat" aria-label="Clear chat">
         <mat-icon>restart_alt</mat-icon>
       </button>
     }

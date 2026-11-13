@@ -59,11 +59,15 @@ service cloud.firestore {
       // gap.
       allow read: if isMemberOfTrip(resource.data);
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      // Members can edit the trip, but only owners may change ownership / sharing
-      // fields (prevents a collaborator self-promoting or hijacking the share link).
+      // Members can edit trip content, but only owners may change ownership,
+      // sharing, or who is on the trip. Without collaboratorIds/Emails in this
+      // list any collaborator could add outsiders or drop other collaborators.
       allow update: if isMemberOfTrip(resource.data) && (
         isOwnerOfTrip(resource.data) ||
-        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['ownerIds', 'userId', 'scheduleEditorIds', 'shareToken', 'shareEnabled'])
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'ownerIds', 'userId', 'scheduleEditorIds', 'shareToken', 'shareEnabled',
+          'collaboratorIds', 'collaboratorEmails'
+        ])
       );
       allow delete: if isOwnerOfTrip(resource.data);
     }
@@ -188,16 +192,25 @@ service cloud.firestore {
     // ── Plaid tokens ──────────────────────────────────────────────────────────
     // Strictly owner-only: the saved bank access token is the most sensitive
     // credential in the app.
+    // Plaid access tokens are bank credentials and are held only by the server
+    // (collection `plaidItems`, which has no rule here, so Firestore denies all
+    // client access). This legacy collection was client-readable; the API
+    // migrates any token out of it on first use. Deny everything meanwhile —
+    // nothing in the app reads it any more.
     match /plaid_tokens/{uid} {
-      allow read, write: if isSignedIn() && request.auth.uid == uid;
+      allow read, write: if false;
     }
 
     // ── User profiles ─────────────────────────────────────────────────────────
-    // The profile doc is readable by any signed-in user (needed to resolve member
-    // names/avatars and to look up an invitee by email). Sensitive data (e.g. the
-    // FCM push token) lives in a private subcollection readable only by the owner.
+    // `get` but not `list`. Resolving a member's name or avatar means reading a
+    // uid you already have from a trip you belong to, which `get` covers. `list`
+    // would let any signed-in account enumerate the collection and walk off with
+    // every user's email address, so it is denied outright — invite-by-email is
+    // resolved server-side (api/accept-invite, action "invite") instead.
+    // Sensitive data (e.g. the FCM push token) lives in the private subcollection.
     match /users/{uid} {
-      allow read: if isSignedIn();
+      allow get: if isSignedIn();
+      allow list: if false;
       allow write: if isSignedIn() && request.auth.uid == uid;
 
       match /private/{docId} {

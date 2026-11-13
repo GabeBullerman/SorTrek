@@ -1,4 +1,4 @@
-import { Component, HostListener, inject, signal, computed } from '@angular/core';
+import { Component, HostListener, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -218,6 +218,7 @@ const PAGES: GuidePage[] = [
 ];
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-guide-modal',
   standalone: true,
   imports: [MatButtonModule, MatIconModule, MatDialogModule, MatTooltipModule],

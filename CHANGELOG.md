@@ -1,5 +1,52 @@
 # SorTrek — Changelog
 
+## 2026-11 — Security, performance and correctness pass
+
+### Security
+- **Plaid access tokens no longer touch the browser.** The exchange endpoint
+  returned the bank access token to the client, which stored it in a
+  client-readable Firestore document and posted it back on every sync — and the
+  transactions endpoint accepted whatever token the request carried, without
+  checking it belonged to the caller. The token is now written by the server to
+  `plaidItems/{uid}`, a collection with no client rule at all, and every read is
+  keyed on the uid from the verified ID token. Tokens from the old flow are
+  migrated server-side on first use and flagged for re-linking; disconnecting
+  also revokes the item at Plaid.
+- **The user directory is no longer harvestable.** `users/{uid}` allowed `read`,
+  which in Firestore includes `list`, so any signed-in account could enumerate
+  every user's email. It is now `get` only; invite-by-email is resolved
+  server-side, and only a trip owner may invite.
+- Collaborators can no longer change `collaboratorIds`/`collaboratorEmails` —
+  membership is owner-only, like the other ownership fields.
+- Uploads are restricted by content type. HTML and SVG are rejected: Storage
+  serves uploads from its own origin, so either would run as live content.
+- **Rate limiting is global.** The limiter was an in-memory Map, i.e. per
+  serverless instance — no limit at all under load. It is now Firestore-backed.
+  The unauthenticated public-itinerary endpoint is limited by IP.
+- Dropped `groq-sdk` (a dependency nothing imported), patched Angular out of
+  its advisory range, and moved to `firebase-admin` 14. Production advisories:
+  26 → 5, none reachable from the browser.
+
+### Performance
+- 29 components moved to OnPush change detection.
+- Booking route/timeline derivation is memoized per booking object. The template
+  called these inside loops, so they re-ran on every change-detection pass,
+  building `Intl.DateTimeFormat` instances each time; a 20-booking trip went
+  from ~2,400 recomputations per 60 frames to 20.
+- Every trip-scoped live query now has a row limit; they were unbounded.
+- The flight-reminder cron caches trip lookups instead of re-reading the same
+  trip once per flight.
+
+### Correctness & quality
+- Route derivation extracted to `core/models/booking-route.ts` as pure
+  functions, with 22 tests covering stops, legacy layovers, overnight
+  connections and malformed times. The suite had 2 assertions before.
+- "1 plans" / "1 journeys" — pluralization fixed.
+- Every icon button has an accessible name; every image has alt text.
+- Photos and documents are cached offline, so an album or a boarding pass still
+  opens with no signal. (Trip data was already offline-capable via Firestore's
+  local cache.)
+
 ## 2026-09 — Flight edit form: landing times and less scrolling
 
 ### Bookings

@@ -6,7 +6,7 @@
         <button mat-stroked-button (click)="fetchTransactions()" [disabled]="loadingTransactions()">
           <mat-icon>account_balance</mat-icon> Sync Bank
         </button>
-        <button mat-icon-button matTooltip="Disconnect bank" (click)="disconnectBank()">
+        <button mat-icon-button matTooltip="Disconnect bank" (click)="disconnectBank()" aria-label="Disconnect bank">
           <mat-icon>link_off</mat-icon>
         </button>
       } @else {
@@ -46,7 +46,7 @@
                   {{ (tx.amount < 0 ? '+' : '') }}{{ tx.amount | number:'1.2-2' }} {{ tx.currency }}
                 </span>
                 @if (tx.amount > 0) {
-                  <button mat-icon-button matTooltip="Add as expense" (click)="addTransactionAsExpense(tx)">
+                  <button mat-icon-button matTooltip="Add as expense" (click)="addTransactionAsExpense(tx)" aria-label="Add as expense">
                     <mat-icon>add_circle_outline</mat-icon>
                   </button>
                 }
@@ -91,7 +91,7 @@
             </mat-form-field>
 
             <button mat-icon-button class="swap-btn" (click)="swapConverter()"
-                    matTooltip="Swap currencies">
+                    matTooltip="Swap currencies" aria-label="Swap currencies">
               <mat-icon>swap_horiz</mat-icon>
             </button>
 
@@ -458,10 +458,10 @@
                     }
                   </div>
                   <div class="expense-actions">
-                    <button mat-icon-button (click)="openEditExpense(expense)" matTooltip="Edit">
+                    <button mat-icon-button (click)="openEditExpense(expense)" matTooltip="Edit" aria-label="Edit">
                       <mat-icon>edit</mat-icon>
                     </button>
-                    <button mat-icon-button class="delete-btn" (click)="deleteExpense(expense)" matTooltip="Delete">
+                    <button mat-icon-button class="delete-btn" (click)="deleteExpense(expense)" matTooltip="Delete" aria-label="Delete">
                       <mat-icon>delete</mat-icon>
                     </button>
                   </div>

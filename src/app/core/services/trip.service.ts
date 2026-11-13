@@ -106,29 +106,26 @@ export class TripService {
     return this.run(() => deleteDoc(doc(this.firestore, 'trips', id)));
   }
 
-  /** Look up a registered user by email and add them as a collaborator on the trip. */
+  /** Add a registered user to the trip by email.
+   *
+   *  Done server-side: resolving an email to an account needs a query over
+   *  `users`, and allowing that from the client meant any signed-in account
+   *  could list every user's email address. The endpoint also checks the
+   *  caller owns the trip, which Firestore rules alone can't express for an
+   *  arrayUnion on someone else's document. */
   async inviteCollaborator(tripId: string, email: string): Promise<{ success: boolean; message: string }> {
     const normalizedEmail = email.trim().toLowerCase();
-    const usersRef = collection(this.firestore, 'users');
-    const q = query(usersRef, where('email', '==', normalizedEmail));
-    const snapshot = await getDocs(q);
-
-    if (snapshot.empty) {
-      return { success: false, message: 'No account found with that email' };
+    try {
+      const res = await firstValueFrom(
+        this.http.post<{ success: boolean; message: string }>('/api/accept-invite', {
+          action: 'invite', tripId, email: normalizedEmail,
+        })
+      );
+      return { success: !!res?.success, message: res?.message ?? 'Could not add that person' };
+    } catch (err) {
+      const message = (err as { error?: { error?: string } })?.error?.error;
+      return { success: false, message: message ?? 'Could not add that person to the trip' };
     }
-
-    const userDoc = snapshot.docs[0];
-    const uid = userDoc.id;
-
-    await updateDoc(doc(this.firestore, 'trips', tripId), {
-      collaboratorIds: arrayUnion(uid),
-      collaboratorEmails: arrayUnion(normalizedEmail),
-      updatedAt: serverTimestamp(),
-    });
-
-    const profile = userDoc.data() as { displayName?: string };
-    const name = profile.displayName || normalizedEmail;
-    return { success: true, message: `${name} added as collaborator` };
   }
 
   /** Grant trip access to an email that may not have an account yet. */

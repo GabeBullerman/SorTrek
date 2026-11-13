@@ -1,7 +1,7 @@
 import { Injectable, inject, Injector, runInInjectionContext } from '@angular/core';
 import {
   Firestore, collection, collectionData, doc,
-  addDoc, updateDoc, deleteDoc, query, where, serverTimestamp,
+  addDoc, updateDoc, deleteDoc, query, where, serverTimestamp, limit,
 } from '@angular/fire/firestore';
 import {
   Storage, ref, uploadBytesResumable, getDownloadURL, deleteObject,
@@ -54,7 +54,8 @@ export class PhotoService {
     return this.run(() => {
       const q = query(
         collection(this.firestore, 'photos'),
-        where('tripId', '==', tripId)
+        where('tripId', '==', tripId),
+        limit(500)
       );
       return (collectionData(q, { idField: 'id' }) as Observable<Photo[]>).pipe(
         map(photos => [...photos].sort((a, b) => this.uploadedMillis(b) - this.uploadedMillis(a)))

@@ -1,7 +1,7 @@
 import { Injectable, inject, Injector, runInInjectionContext } from '@angular/core';
 import {
   Firestore, collection, collectionData, addDoc, updateDoc, deleteDoc,
-  doc, query, where, serverTimestamp,
+  doc, query, where, serverTimestamp, limit,
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -19,7 +19,9 @@ export class ParticipantService {
   getParticipants(tripId: string): Observable<TripParticipant[]> {
     return this.run(() =>
       collectionData(
-        query(collection(this.firestore, 'participants'), where('tripId', '==', tripId)),
+        query(collection(this.firestore, 'participants'), where('tripId', '==', tripId),
+        limit(200)
+      ),
         { idField: 'id' }
       ) as Observable<TripParticipant[]>
     );
@@ -29,7 +31,9 @@ export class ParticipantService {
   getAcceptedParticipations(userId: string): Observable<TripParticipant[]> {
     return this.run(() =>
       (collectionData(
-        query(collection(this.firestore, 'participants'), where('userId', '==', userId)),
+        query(collection(this.firestore, 'participants'), where('userId', '==', userId),
+        limit(200)
+      ),
         { idField: 'id' }
       ) as Observable<TripParticipant[]>).pipe(
         map(ps => ps.filter(p => p.inviteStatus === 'accepted'))
@@ -41,7 +45,9 @@ export class ParticipantService {
   getPendingInvitesByEmail(email: string): Observable<TripParticipant[]> {
     return this.run(() =>
       (collectionData(
-        query(collection(this.firestore, 'participants'), where('inviteEmail', '==', email)),
+        query(collection(this.firestore, 'participants'), where('inviteEmail', '==', email),
+        limit(200)
+      ),
         { idField: 'id' }
       ) as Observable<TripParticipant[]>).pipe(
         map(ps => ps.filter(p => p.inviteStatus === 'pending'))

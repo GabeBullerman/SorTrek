@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ViewChild, signal } from '@angular/core';
+import { Component, inject, OnInit, ViewChild, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -20,6 +20,7 @@ import { GuideModalComponent } from '../../shared/components/guide-modal/guide-m
 import { PwaInstallPromptComponent } from '../../shared/components/pwa-install-prompt/pwa-install-prompt.component';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-shell',
   standalone: true,
   imports: [

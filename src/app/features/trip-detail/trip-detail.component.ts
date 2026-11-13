@@ -1,4 +1,4 @@
-import { Component, computed, effect, ElementRef, inject, Input, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, Input, OnInit, signal, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { APP_NAME } from '../../core/sortrek-title.strategy';
@@ -40,6 +40,7 @@ export interface TabDef {
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-trip-detail',
   standalone: true,
   imports: [

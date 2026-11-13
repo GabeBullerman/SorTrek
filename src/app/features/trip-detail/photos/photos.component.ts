@@ -1,4 +1,4 @@
-import { Component, HostListener, Input, OnDestroy, OnInit, inject, signal, computed, ElementRef, ViewChild } from '@angular/core';
+import { Component, HostListener, Input, OnDestroy, OnInit, inject, signal, computed, ElementRef, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AsyncPipe, DecimalPipe, DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -39,6 +39,7 @@ const FLICK_VELOCITY = 0.5;
 const SPINNER_DELAY_MS = 180;
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-photos',
   standalone: true,
   imports: [

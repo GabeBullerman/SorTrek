@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, inject, signal } from '@angular/core';
+﻿import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
@@ -10,6 +10,7 @@ import { TripService } from '../../core/services/trip.service';
 const PENDING_INVITE_KEY = 'pendingInviteToken';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-invite',
   standalone: true,
   imports: [MatProgressSpinnerModule, MatIconModule, MatButtonModule],

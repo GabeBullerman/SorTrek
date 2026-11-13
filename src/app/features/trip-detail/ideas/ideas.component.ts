@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
+import { Component, Input, OnInit, inject, signal, computed, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,6 +12,7 @@ import { TripIdea } from '../../../core/models/trip-idea.model';
 import { Trip } from '../../../core/models/trip.model';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-ideas',
   standalone: true,
   imports: [

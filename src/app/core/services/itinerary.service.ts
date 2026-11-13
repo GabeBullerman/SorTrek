@@ -1,7 +1,7 @@
 import { Injectable, inject, Injector, runInInjectionContext } from '@angular/core';
 import {
   Firestore, collection, collectionData, doc,
-  addDoc, updateDoc, deleteDoc, query, where, deleteField,
+  addDoc, updateDoc, deleteDoc, query, where, deleteField, limit,
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { ItineraryItem } from '../models/itinerary-item.model';
@@ -19,7 +19,8 @@ export class ItineraryService {
     return this.run(() => {
       const q = query(
         collection(this.firestore, 'itinerary'),
-        where('tripId', '==', tripId)
+        where('tripId', '==', tripId),
+        limit(500)
       );
       return collectionData(q, { idField: 'id' }) as Observable<ItineraryItem[]>;
     });

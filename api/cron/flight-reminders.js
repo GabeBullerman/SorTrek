@@ -72,12 +72,22 @@ module.exports = async (req, res) => {
 
     let sent = 0;
 
+    // Several flights usually belong to the same trip, so fetch each trip once
+    // rather than re-reading it per flight inside the loop.
+    const tripCache = new Map();
+    async function tripFor(tripId) {
+      if (tripCache.has(tripId)) return tripCache.get(tripId);
+      const snap = await db.collection('trips').doc(tripId).get();
+      const data = snap.exists ? snap.data() : null;
+      tripCache.set(tripId, data);
+      return data;
+    }
+
     for (const docSnap of flights) {
       const b = docSnap.data();
 
-      const tripSnap = await db.collection('trips').doc(b.tripId).get();
-      if (!tripSnap.exists) continue;
-      const trip = tripSnap.data();
+      const trip = await tripFor(b.tripId);
+      if (!trip) continue;
 
       const tokens = await tokensFor(trip);
 

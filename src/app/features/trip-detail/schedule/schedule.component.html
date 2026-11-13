@@ -31,7 +31,7 @@
             </span>
             <span class="chip-date">{{ day.shortLabel }}</span>
             @if (day.items.length > 0) {
-              <span class="chip-count">{{ day.items.length }} plans</span>
+              <span class="chip-count">{{ day.items.length }} plan{{ day.items.length === 1 ? '' : 's' }}</span>
             }
           </button>
         }
@@ -71,7 +71,7 @@
                   }
                 </div>
               </div>
-              <button mat-icon-button matTooltip="Dismiss for this day" (click)="dismissGap()">
+              <button mat-icon-button matTooltip="Dismiss for this day" (click)="dismissGap()" aria-label="Dismiss for this day">
                 <mat-icon>close</mat-icon>
               </button>
             </div>
@@ -187,7 +187,7 @@
                         <button mat-stroked-button class="approve-btn" (click)="approveItem(item)" matTooltip="Approve this proposal">
                           <mat-icon>check</mat-icon> Approve
                         </button>
-                        <button mat-icon-button (click)="rejectItem(item)" matTooltip="Reject proposal">
+                        <button mat-icon-button (click)="rejectItem(item)" matTooltip="Reject proposal" aria-label="Reject proposal">
                           <mat-icon>close</mat-icon>
                         </button>
                       } @else if (item.proposed && isMyProposal(item)) {
@@ -195,10 +195,10 @@
                           <mat-icon>hourglass_empty</mat-icon> Pending approval
                         </span>
                       } @else if (!item.proposed) {
-                        <button mat-icon-button (click)="openEditItem(item, day.items)" matTooltip="Edit">
+                        <button mat-icon-button (click)="openEditItem(item, day.items)" matTooltip="Edit" aria-label="Edit">
                           <mat-icon>edit</mat-icon>
                         </button>
-                        <button mat-icon-button (click)="deleteItem(item)" matTooltip="Remove">
+                        <button mat-icon-button (click)="deleteItem(item)" matTooltip="Remove" aria-label="Remove">
                           <mat-icon>delete</mat-icon>
                         </button>
                       }
@@ -293,7 +293,7 @@
               <mat-icon>auto_awesome</mat-icon>
               <span>Suggested plans for Day {{ day.dayNumber }} in {{ trip.destination }}</span>
             </div>
-            <button mat-icon-button (click)="closePlanPanel()">
+            <button mat-icon-button aria-label="Close planner" (click)="closePlanPanel()">
               <mat-icon>close</mat-icon>
             </button>
           </div>

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { AsyncPipe, DatePipe, TitleCasePipe, CurrencyPipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -20,6 +20,7 @@ import { catchError, map, take } from 'rxjs/operators';
 import { localDayNum, utcDayNum, daysUntilCalendar } from '../../core/util/trip-date.util';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-trips',
   standalone: true,
   imports: [

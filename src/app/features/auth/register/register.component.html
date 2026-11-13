@@ -50,7 +50,8 @@
                  autocomplete="new-password" />
           <mat-icon matPrefix>lock</mat-icon>
           <button mat-icon-button matSuffix type="button"
-                  (click)="hidePassword.set(!hidePassword())">
+                  (click)="hidePassword.set(!hidePassword())"
+                  [attr.aria-label]="hidePassword() ? 'Show password' : 'Hide password'">
             <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
           </button>
           @if (form.get('password')?.hasError('minlength') && form.get('password')?.touched) {
