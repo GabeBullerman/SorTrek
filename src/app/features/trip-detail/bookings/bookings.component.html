@@ -85,28 +85,6 @@
                     <div class="booking-card-header">
                       <div class="booking-title-row">
                         <h3>{{ booking.title }}</h3>
-                        <div class="booking-badges">
-                        @if (flightDirection(booking); as dir) {
-                          <span class="direction-badge" [class]="'dir-' + dir"
-                                [matTooltip]="dir === 'arrival' ? 'Outbound flight to your destination' : 'Return flight back home'">
-                            <mat-icon>{{ dir === 'arrival' ? 'flight_takeoff' : 'home' }}</mat-icon>
-                            {{ dir === 'arrival' ? 'To Destination' : 'Back Home' }}
-                          </span>
-                        }
-                        @if (hasRoute(booking)) {
-                          <span class="stops-badge"
-                                [class.has-stops]="stopCount(booking) > 0"
-                                [matTooltip]="stopCount(booking) > 0
-                                  ? 'Connects at ' + layoverCodes(booking).join(', ')
-                                  : 'Direct flight — no connections'">
-                            <mat-icon>{{ stopCount(booking) > 0 ? 'connecting_airports' : 'flight' }}</mat-icon>
-                            {{ stopsLabel(booking) }}
-                          </span>
-                        }
-                        <span class="status-badge" [class]="'status-' + booking.status">
-                          {{ booking.status === 'suggested' ? 'Suggestion' : (booking.status | titlecase) }}
-                        </span>
-                        </div>
                       </div>
                       <div class="booking-card-actions">
                         @if (booking.type === 'flight' && booking.flightNumber) {
@@ -128,6 +106,28 @@
                           <mat-icon>delete</mat-icon>
                         </button>
                       </div>
+                    </div>
+                    <div class="booking-badges">
+                    @if (flightDirection(booking); as dir) {
+                      <span class="direction-badge" [class]="'dir-' + dir"
+                            [matTooltip]="dir === 'arrival' ? 'Outbound flight to your destination' : 'Return flight back home'">
+                        <mat-icon>{{ dir === 'arrival' ? 'flight_takeoff' : 'home' }}</mat-icon>
+                        {{ dir === 'arrival' ? 'To Destination' : 'Back Home' }}
+                      </span>
+                    }
+                    @if (hasRoute(booking)) {
+                      <span class="stops-badge"
+                            [class.has-stops]="stopCount(booking) > 0"
+                            [matTooltip]="stopCount(booking) > 0
+                              ? 'Connects at ' + layoverCodes(booking).join(', ')
+                              : 'Direct flight — no connections'">
+                        <mat-icon>{{ stopCount(booking) > 0 ? 'connecting_airports' : 'flight' }}</mat-icon>
+                        {{ stopsLabel(booking) }}
+                      </span>
+                    }
+                    <span class="status-badge" [class]="'status-' + booking.status">
+                      {{ booking.status === 'suggested' ? 'Suggestion' : (booking.status | titlecase) }}
+                    </span>
                     </div>
 
                     <div class="booking-details">

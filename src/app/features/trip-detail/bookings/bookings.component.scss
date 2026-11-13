@@ -117,12 +117,18 @@ mat-accordion {
   }
 }
 
+// Sits BELOW .booking-card-header rather than inside .booking-title-row. In
+// the old nesting the title row had to share the header's width with four
+// 32px action buttons, so it was left ~142px of ~282px and every badge wrapped
+// onto a line of its own, making the card far taller than it needed to be on a
+// phone. As a sibling of the header it gets the card's full width and the
+// badges actually pack side by side.
 .booking-badges {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  flex-basis: 100%;   // always its own row, so badges pack side by side
+  margin-top: 6px;
 }
 
 .booking-card-actions {
